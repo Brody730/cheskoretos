@@ -874,11 +874,6 @@
         let lastTickSection = -1;
         let soundEnabled = true;
 
-        // === NUEVO: Variables para animación idle continua ===
-        let idleAnimationId = null;     // ID para la animación idle
-        let isIdleSpinning = false;     // Bandera: está en modo idle?
-        let idleRotation = 0;           // Rotación acumulada del idle
-        const IDLE_SPEED = 0.008;       // Velocidad de giro idle (radianes por frame)
         /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
            SONIDOS - Web Audio API (sin archivos externos)
            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -1350,41 +1345,6 @@
             }
 
         /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-           FUNCION: ANIMACION IDLE CONTINUA
-           La ruleta gira suavemente en bucle para ser llamativa
-           %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-        function startIdleSpin() {
-            if (isIdleSpinning || isSpinning) return;
-            isIdleSpinning = true;
-
-            function idleAnimate() {
-                if (!isIdleSpinning) return;
-
-                idleRotation += IDLE_SPEED;
-                // Mantener dentro de 0-2PI para evitar overflow
-                if (idleRotation > 2 * Math.PI) {
-                    idleRotation -= 2 * Math.PI;
-                }
-
-                // Combinar rotación idle con rotación actual
-                currentRotation = idleRotation;
-                drawWheel();
-
-                idleAnimationId = requestAnimationFrame(idleAnimate);
-            }
-
-            idleAnimationId = requestAnimationFrame(idleAnimate);
-        }
-
-        function stopIdleSpin() {
-            isIdleSpinning = false;
-            if (idleAnimationId) {
-                cancelAnimationFrame(idleAnimationId);
-                idleAnimationId = null;
-            }
-        }
-
-        /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
            FUNCION: ANIMAR EL GIRO
            Gira la ruleta con animacion fluida y desaceleracion
            usando la tecnica de "easing" ease-out
@@ -1395,9 +1355,6 @@
 
             SoundFX.init();
             SoundFX.playSpinStart();
-
-            // === NUEVO: Detener animación idle antes de girar ===
-            stopIdleSpin();
 
             isSpinning = true;
             spinBtn.disabled = true;
@@ -1488,14 +1445,6 @@
 
                     // Normalizar la rotacion para mantener numeros manejables
                     currentRotation = currentRotation % (2 * Math.PI);
-                    idleRotation = currentRotation; // Sincronizar idle con posición final
-
-                    // === NUEVO: Reiniciar animación idle después del resultado ===
-                    setTimeout(function() {
-                        if (!isSpinning) {
-                            startIdleSpin();
-                        }
-                    }, 3000); // Esperar 3 segundos después del resultado
 
                     return;  // Terminar la animacion
                 }
@@ -1628,9 +1577,6 @@
         createLights();
         renderSavedRetosList();
         loadStoredFileHandle();
-
-        // === NUEVO: Iniciar animación idle continua al cargar ===
-        startIdleSpin();
 
         /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
            GUIA RAPIDA PARA MODIFICAR LA RULETA:
