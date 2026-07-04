@@ -1,0 +1,258 @@
+/* ═══════════════════════════════════════════
+   LANDING PAGE - ESTILOS ESPECIFICOS
+   ═══════════════════════════════════════════ */
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+}
+
+/* ═══════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════ */
+header {
+    text-align: center;
+    padding: 40px 20px 30px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.btn-comic.btn-secondary {
+    background: linear-gradient(180deg, #9C27B0 0%, #7B1FA2 100%);
+    box-shadow: 0 6px 0 #000000, 0 8px 20px rgba(156, 39, 176, 0.5);
+}
+
+.btn-comic.btn-secondary:hover {
+    background: linear-gradient(180deg, #AB47BC 0%, #8E24AA 100%);
+}
+
+/* ═══════════════════════════════════════════
+   SECCION RULETA
+   ═══════════════════════════════════════════ */
+.seccion-ruleta {
+    background: rgba(0, 0, 0, 0.6);
+    border: var(--borde-comic);
+    border-radius: 20px;
+    padding: 35px 25px;
+    margin: 30px 0;
+    box-shadow:
+        0 0 0 4px var(--amarillo),
+        0 10px 0 #000000,
+        0 0 30px rgba(255, 102, 0, 0.3);
+    text-align: center;
+}
+
+.grid-retos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.tarjeta-reto {
+    background: rgba(0, 0, 0, 0.7);
+    border: 3px solid #000;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 4px 4px 0 #000000;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: left;
+    animation: bounceIn 0.6s ease backwards;
+}
+
+.tarjeta-reto:nth-child(1) { animation-delay: 0.05s; }
+.tarjeta-reto:nth-child(2) { animation-delay: 0.1s; }
+.tarjeta-reto:nth-child(3) { animation-delay: 0.15s; }
+.tarjeta-reto:nth-child(4) { animation-delay: 0.2s; }
+.tarjeta-reto:nth-child(5) { animation-delay: 0.25s; }
+.tarjeta-reto:nth-child(6) { animation-delay: 0.3s; }
+.tarjeta-reto:nth-child(7) { animation-delay: 0.35s; }
+
+.tarjeta-reto:hover {
+    transform: scale(1.04) rotate(1deg);
+    box-shadow: 6px 6px 0 #000000, 0 0 20px rgba(255, 102, 0, 0.4);
+}
+
+.tarjeta-reto h3 {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: clamp(1.1rem, 3vw, 1.35rem);
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.tarjeta-reto p {
+    font-family: 'Bangers', sans-serif;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 1px 1px 0 #000;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.tarjeta-reto .precio {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 var(--rojo), 4px 4px 0 #000;
+    margin: 0;
+}
+
+.tarjeta-reto .precio.gratis {
+    color: #FFD700;
+    text-shadow: 2px 2px 0 var(--naranja), 4px 4px 0 #000;
+    animation: jackpotPulse 0.8s ease infinite alternate;
+}
+
+@keyframes jackpotPulse {
+    0% { text-shadow: 2px 2px 0 var(--naranja), 4px 4px 0 #000, 0 0 10px rgba(255, 215, 0, 0.5); }
+    100% { text-shadow: 2px 2px 0 var(--naranja), 4px 4px 0 #000, 0 0 25px rgba(255, 215, 0, 1); }
+}
+
+/* Colores de gajos (igual que la ruleta) */
+.reto-intelectual { border-color: #2196F3; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(33, 150, 243, 0.3); }
+.reto-flamenco    { border-color: #E91E63; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(233, 30, 99, 0.3); }
+.reto-lengua      { border-color: #FFEB3B; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(255, 235, 59, 0.3); }
+.reto-retador     { border-color: #F44336; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(244, 67, 54, 0.3); }
+.reto-donativo    { border-color: #4CAF50; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(76, 175, 80, 0.3); }
+.reto-suertudote  { border-color: #FFD700; box-shadow: 4px 4px 0 #000, 0 0 15px rgba(255, 215, 0, 0.5); }
+.reto-inventor    { border-color: #9C27B0; box-shadow: 4px 4px 0 #000, 0 0 12px rgba(156, 39, 176, 0.3); }
+
+.reto-intelectual:hover { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(33, 150, 243, 0.5); }
+.reto-flamenco:hover    { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(233, 30, 99, 0.5); }
+.reto-lengua:hover      { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(255, 235, 59, 0.5); }
+.reto-retador:hover     { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(244, 67, 54, 0.5); }
+.reto-donativo:hover    { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(76, 175, 80, 0.5); }
+.reto-suertudote:hover  { box-shadow: 6px 6px 0 #000, 0 0 30px rgba(255, 215, 0, 0.7); }
+.reto-inventor:hover    { box-shadow: 6px 6px 0 #000, 0 0 25px rgba(156, 39, 176, 0.5); }
+
+/* ═══════════════════════════════════════════
+   SECCION MENU
+   ═══════════════════════════════════════════ */
+.seccion-menu {
+    margin: 50px 0;
+}
+
+.menu-box {
+    background: rgba(0, 0, 0, 0.75);
+    color: var(--blanco);
+    border: var(--borde-comic);
+    border-radius: 20px;
+    padding: 35px 30px;
+    box-shadow:
+        0 0 0 4px var(--amarillo),
+        8px 8px 0 var(--naranja),
+        16px 16px 0 #000000;
+}
+
+.menu-box .section-title {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.item-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px dashed var(--amarillo);
+    padding: 18px 0;
+    gap: 15px;
+}
+
+.item-menu:last-child {
+    border-bottom: none;
+}
+
+.item-nombre {
+    font-family: 'Bangers', sans-serif;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0 #000;
+    flex: 1;
+}
+
+.item-precio {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 var(--rojo), 3px 3px 0 #000;
+    white-space: nowrap;
+}
+
+.item-precio.gratis {
+    color: #FFD700;
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════ */
+footer {
+    background: rgba(0, 0, 0, 0.9);
+    border-top: var(--borde-comic);
+    border-top-color: var(--amarillo);
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 40px;
+    box-shadow: 0 -5px 20px rgba(255, 102, 0, 0.2);
+}
+
+.info-local {
+    font-family: 'Bangers', sans-serif;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+}
+
+.footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 600px) {
+    header {
+        padding: 30px 15px 20px;
+    }
+
+    .seccion-ruleta {
+        padding: 25px 15px;
+    }
+
+    .menu-box {
+        padding: 25px 18px;
+    }
+
+    .item-menu {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-actions,
+    .footer-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-comic {
+        width: 100%;
+        max-width: 320px;
+        text-align: center;
+    }
+}
