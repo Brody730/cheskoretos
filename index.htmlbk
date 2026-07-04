@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChesKoretos - ¡El chesco que te reta!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <style>
+        /* =========================================================================
+           ESTILOS PARA EL MODAL DE AVISO (ESTILO CÓMIC CHESKORETOS)
+           ========================================================================= */
+        .modal-aviso {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-contenido {
+            background-color: #111111;
+            border: 4px solid #000000;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0px 0px 25px rgba(255, 102, 0, 0.6);
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-aviso.activo {
+            display: flex;
+        }
+
+        .modal-aviso.activo .modal-contenido {
+            transform: scale(1);
+        }
+
+        .modal-titulo {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 2.5rem;
+            color: #FFCC00;
+            text-shadow: 3px 3px 0px #FF3300, 5px 5px 0px #000;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .modal-texto {
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            color: #FFFFFF;
+            line-height: 1.4;
+            margin-bottom: 25px;
+        }
+
+        .modal-texto span {
+            color: #FF6600;
+        }
+
+        /* Botón para abrir Maps */
+        .btn-maps {
+            display: inline-block;
+            background-color: #46A928; /* Verde */
+            color: #FFFFFF;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 1.3rem;
+            text-decoration: none;
+            padding: 12px 25px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            box-shadow: 4px 4px 0px #000;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            transition: transform 0.1s;
+        }
+
+        .btn-maps:active {
+            transform: translateY(4px);
+            box-shadow: 0px 0px 0px #000;
+        }
+
+        /* Botón de cerrar */
+        .btn-cerrar {
+            background-color: #FF3300;
+            color: #FFFFFF;
+            font-family: 'Bangers', cursive;
+            font-size: 1.1rem;
+            border: 2px solid #000;
+            border-radius: 5px;
+            padding: 5px 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="lights" id="lights"></div>
+
+    <div class="container">
+        <!-- HERO -->
+        <header>
+            <div class="logo-container">
+                <h1 class="logo-text">
+                    <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+                </h1>
+                <p class="slogan">&iexcl;El chesco que te reta!</p>
+            </div>
+            <div class="hero-actions">
+                <!-- Cambiado temporalmente a href="#" para controlarlo con JS -->
+                <a href="#" class="btn-comic btn-girar-ruleta">&iexcl;Girar la Ruleta!</a>
+            </div>
+        </header>
+
+        <!-- CÓMO FUNCIONA LA RULETA -->
+        <section class="seccion-ruleta">
+            <h2 class="section-title">&iquest;C&oacute;mo jala la Ruleta? 🎲</h2>
+            <p class="section-text">
+                Llegas al puesto, pides tu chesco y tiras la ruleta gigante. Si cumples el reto que te toque,
+                &iexcl;te aplicamos tu descuentazo al momento! 100% familiar, cero penas.
+            </p>
+
+            <div class="grid-retos">
+                <div class="tarjeta-reto reto-intelectual">
+                    <h3>🧠 El Intelectual</h3>
+                    <p>Suelta un dato curioso r&aacute;pido. Si se bloquea, la fila le puede ayudar.</p>
+                    <p class="precio">$25</p>
+                </div>
+                <div class="tarjeta-reto reto-flamenco">
+                    <h3>🦩 El Flamenco</h3>
+                    <p>Ordena, paga y espera tu chesco saltando en un solo pie.</p>
+                    <p class="precio">$25</p>
+                </div>
+                <div class="tarjeta-reto reto-lengua">
+                    <h3>👅 El Trabalenguas</h3>
+                    <p>Recita el trabalenguas de la cartulina en menos de 10 segundos sin trabarte.</p>
+                    <p class="precio">$25</p>
+                </div>
+                <div class="tarjeta-reto reto-retador">
+                    <h3>✊ El Retador</h3>
+                    <p>Piedra, Papel o Tijera a muerte s&uacute;bita contra caja. &iexcl;Si ganas, te llevas el descuento!</p>
+                    <p class="precio">$25</p>
+                </div>
+                <div class="tarjeta-reto reto-donativo">
+                    <h3>😇 El Donativo</h3>
+                    <p>Sin esfuerzo f&iacute;sico. Pagas $30 y los $5 extras van a la caja de buena onda.</p>
+                    <p class="precio">$30</p>
+                </div>
+                <div class="tarjeta-reto reto-suertudote">
+                    <h3>🌟 &iexcl;El Suertudote!</h3>
+                    <p>El gajo de la suerte m&aacute;xima. Sin retos, sin preguntas. &iexcl;De a grapa!</p>
+                    <p class="precio gratis">&iexcl;GRATIS!</p>
+                </div>
+                <div class="tarjeta-reto reto-inventor">
+                    <h3>🎲 El Inventor</h3>
+                    <p>Inventa un minireto r&aacute;pido y se lo aplicas al cliente que sigue en la fila.</p>
+                    <p class="precio">$25</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- EL MENÚ -->
+        <section class="seccion-menu">
+            <div class="menu-box">
+                <h2 class="section-title">El Men&uacute; ChesKoreto 🥤</h2>
+
+                <div class="item-menu">
+                    <div class="item-nombre">Refresco Gigante con Hielo (Precio de Lista)</div>
+                    <div class="item-precio">$35</div>
+                </div>
+                <div class="item-menu">
+                    <div class="item-nombre">Refresco con Reto Cumplido (Precio Ruleta)</div>
+                    <div class="item-precio">$25</div>
+                </div>
+                <div class="item-menu">
+                    <div class="item-nombre">El Donativo Solidario</div>
+                    <div class="item-precio">$30</div>
+                </div>
+                <div class="item-menu">
+                    <div class="item-nombre">&iexcl;El Suertudote! (Si cae en la Ruleta)</div>
+                    <div class="item-precio gratis">&iexcl;GRATIS!</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <div class="info-local">
+            📍 Encu&eacute;ntranos cada semana en nuestro puesto del Tianguis local.<br>
+            &iexcl;B&uacute;scanos por la ruleta gigante de colores y el mejor mitote del pasillo!
+        </div>
+        <div class="footer-actions">
+            <!-- Cambiado temporalmente a href="#" para controlarlo con JS -->
+            <a href="#" class="btn-comic btn-girar-ruleta">&iexcl;Girar la Ruleta!</a>
+            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-comic btn-secondary">&iexcl;Ver Ubicaci&oacute;n Exacta!</a>
+        </div>
+    </footer>
+
+    <!-- INTERFAZ MODAL INTERACTIVA (AVISO TIANGUIS) -->
+    <div class="modal-aviso" id="modalAvisoTianguis">
+        <div class="modal-content-wrapper modal-contenido">
+            <div class="modal-titulo">¡Falta Mitote! 🎡</div>
+            <div class="modal-texto">
+                Visítanos en el <span>tianguis nocturno el sábado a partir de las 7:30pm</span> para poder girarla. ¡Nos vemoooos! 👋🥤
+            </div>
+            <!-- Enlace directo a la ubicación provista -->
+            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-maps">📍 Ver ubicación en Maps</a><br>
+            <button class="btn-cerrar" id="btnCerrarModal">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="js/landing.js"></script>
+    <script>
+        // Lógica interactiva para capturar el clic y mostrar el aviso
+        const modal = document.getElementById('modalAvisoTianguis');
+        const botonesGirar = document.querySelectorAll('.btn-girar-ruleta');
+        const botonCerrar = document.getElementById('btnCerrarModal');
+
+        // Al dar clic en cualquier botón de "Girar la Ruleta" se despliega el aviso
+        botonesGirar.forEach(boton => {
+            boton.addEventListener('click', (e) => {
+                e.preventDefault(); // Evita que intente recargar o navegar
+                modal.classList.add('activo');
+            });
+        });
+
+        // Cerrar el modal al presionar el botón rojo
+        botonCerrar.addEventListener('click', () => {
+            modal.classList.remove('activo');
+        });
+
+        // Cerrar el modal si dan clic fuera de la cajita negra
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('activo');
+            }
+        });
+    </script>
+</body>
+</html>
