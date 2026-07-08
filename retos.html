@@ -12,6 +12,44 @@
     <style>
         .nav-links { margin-top: 15px; }
         .nav-links .btn-comic { margin: 5px; font-size: 1rem; padding: 8px 15px; }
+
+        /* Estructura limpia para las tarjetas autogeneradas */
+        .tarjeta-reto {
+            border: 3px solid #000;
+            border-radius: 10px;
+            padding: 15px;
+            background: #1a1a1a;
+            color: #fff;
+            box-shadow: 5px 5px 0px #000;
+            transition: transform 0.2s;
+        }
+        .tarjeta-reto h3 {
+            font-family: 'Bangers', sans-serif;
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px #000;
+        }
+        .tarjeta-reto p {
+            font-size: 0.95rem;
+            font-family: sans-serif;
+            line-height: 1.4;
+        }
+        .tarjeta-reto .precio {
+            font-family: 'Luckiest Guy', sans-serif;
+            color: #FFCC00;
+            font-size: 1.4rem;
+            margin-top: 10px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        .tarjeta-reto .precio.gratis {
+            color: #FFD700;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
     </style>
 </head>
 <body>
@@ -39,50 +77,15 @@
                 A partir de las <strong>7:00 PM</strong>, cada giro decide tu destino. ¡Cumple el reto de tu gajo y asegura el descuentazo!
             </p>
 
-            <div class="grid-retos">
-                <div class="tarjeta-reto reto-intelectual">
-                    <h3>🧠 El Intelectual</h3>
-                    <p>Suelta un dato curioso r&aacute;pido. Si se bloquea, la fila le puede ayudar.</p>
-                    <p class="precio">$25</p>
-                </div>
-                <div class="tarjeta-reto reto-flamenco">
-                    <h3>🦩 El Flamenco</h3>
-                    <p>Ordena, paga y espera tu chesco saltando en un solo pie.</p>
-                    <p class="precio">$25</p>
-                </div>
-                <div class="tarjeta-reto reto-lengua">
-                    <h3>👅 El Trabalenguas</h3>
-                    <p>Recita el trabalenguas de la cartulina en menos de 10 segundos sin trabarte.</p>
-                    <p class="precio">$25</p>
-                </div>
-                <div class="tarjeta-reto reto-retador">
-                    <h3>✊ El Retador</h3>
-                    <p>Piedra, Papel o Tijera a muerte s&uacute;bita contra caja. &iexcl;Si ganas, te llevas el descuento!</p>
-                    <p class="precio">$25</p>
-                </div>
-                <div class="tarjeta-reto reto-donativo">
-                    <h3>😇 El Donativo</h3>
-                    <p>Sin esfuerzo f&iacute;sico. Pagas $30 y los $5 extras van a la caja de buena onda.</p>
-                    <p class="precio">$30</p>
-                </div>
-                <div class="tarjeta-reto reto-suertudote">
-                    <h3>🌟 &iexcl;El Suertudote!</h3>
-                    <p>El gajo de la suerte m&aacute;xima. Sin retos, sin preguntas. &iexcl;De a grapa!</p>
-                    <p class="precio gratis">&iexcl;GRATIS!</p>
-                </div>
-                <div class="tarjeta-reto reto-inventor">
-                    <h3>🎲 El Inventor</h3>
-                    <p>Inventa un minireto r&aacute;pido y se lo aplicas al cliente que sigue en la fila.</p>
-                    <p class="precio">$25</p>
-                </div>
-            </div>
+            <!-- El contenedor se llena dinámicamente con JavaScript -->
+            <div class="grid-retos" id="contenedorRetos"></div>
         </section>
     </div>
 
     <!-- PIE DE PÁGINA -->
     <footer>
         <div class="info-local">
-            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.
+            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.[cite: 1]
         </div>
         <div class="footer-actions">
             <a href="index.html" class="btn-comic">🏠 Volver al Inicio</a>
@@ -90,6 +93,30 @@
         </div>
     </footer>
 
+    <!-- Scripts de sincronización -->
+    <script src="js/challenges.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const retos = window.CHALLENGES || [];
+            const contenedor = document.getElementById("contenedorRetos");
+
+            if (retos.length === 0) {
+                contenedor.innerHTML = "<p style='color: #fff;'>Cargando los retos de la suerte...</p>";
+                return;
+            }
+
+            contenedor.innerHTML = retos.map(function(reto) {
+                const esGratis = reto.wheelText === 'GRATIS' ? 'gratis' : '';
+                return `
+                    <div class="tarjeta-reto" style="border-color: ${reto.color}; box-shadow: 5px 5px 0px ${reto.color}80, 5px 5px 0px #000;">
+                        <h3 style="color: ${reto.color};">${reto.emoji} ${reto.text}</h3>
+                        <p>${reto.description}</p>
+                        <p class="precio ${esGratis}">${reto.price === '¡GRATIS!' ? reto.price : 'Cumple y paga: ' + reto.price}</p>
+                    </div>
+                `;
+            }).join('');
+        });
+    </script>
     <script src="js/landing.js"></script>
 </body>
 </html>
