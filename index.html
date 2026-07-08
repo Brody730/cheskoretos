@@ -3,155 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChesKoretos - ¡El chesco que te reta!</title>
+    <title>ChesKoretos - ¡Refrescos Locos y Retos Extremos!</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ChesKoretos: Bebidas locas y preparados extremos de 700 ml sin alcohol en el Parque Montes De Oca. Gira la ruleta y gana tu chesco gratis.">
+    <meta name="keywords" content="ChesKoretos, refrescos preparados, ruleta de retos, parque montes de oca, bebidas locas, preparados sin alcohol">
+    <meta name="author" content="ChesKoretos Team">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    
+    <!-- Shared Styles -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
-    <style>
-        /* =========================================================================
-           ESTILOS PARA EL MODAL DE AVISO (ESTILO CÓMIC CHESKORETOS)
-           ========================================================================= */
-        .modal-aviso {
-            display: none; /* Oculto por defecto */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-contenido {
-            background-color: #111111;
-            border: 4px solid #000000;
-            border-radius: 20px;
-            max-width: 500px;
-            width: 100%;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0px 0px 25px rgba(255, 102, 0, 0.6);
-            position: relative;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-aviso.activo {
-            display: flex;
-        }
-
-        .modal-aviso.activo .modal-contenido {
-            transform: scale(1);
-        }
-
-        .modal-titulo {
-            font-family: 'Luckiest Guy', cursive;
-            font-size: 2.5rem;
-            color: #FFCC00;
-            text-shadow: 3px 3px 0px #FF3300, 5px 5px 0px #000;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .modal-texto {
-            font-family: 'Bangers', cursive;
-            font-size: 1.5rem;
-            letter-spacing: 1px;
-            color: #FFFFFF;
-            line-height: 1.4;
-            margin-bottom: 25px;
-        }
-
-        .modal-texto span {
-            color: #FF6600;
-        }
-
-        /* Botón para abrir Maps */
-        .btn-maps {
-            display: inline-block;
-            background-color: #46A928; /* Verde */
-            color: #FFFFFF;
-            font-family: 'Luckiest Guy', cursive;
-            font-size: 1.3rem;
-            text-decoration: none;
-            padding: 12px 25px;
-            border: 3px solid #000;
-            border-radius: 10px;
-            box-shadow: 4px 4px 0px #000;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            transition: transform 0.1s;
-        }
-
-        .btn-maps:active {
-            transform: translateY(4px);
-            box-shadow: 0px 0px 0px #000;
-        }
-
-        /* Botón de cerrar */
-        .btn-cerrar {
-            background-color: #FF3300;
-            color: #FFFFFF;
-            font-family: 'Bangers', cursive;
-            font-size: 1.1rem;
-            border: 2px solid #000;
-            border-radius: 5px;
-            padding: 5px 15px;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .nav-links {
-            margin-top: 15px;
-        }
-        .nav-links .btn-comic {
-            margin: 5px;
-            font-size: 1rem;
-            padding: 8px 15px;
-        }
-    </style>
 </head>
 <body>
 
     <div class="lights" id="lights"></div>
 
-    <div class="container">
-        <!-- HERO -->
-        <header>
-            <div class="logo-container">
-                <h1 class="logo-text">
-                    <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
-                </h1>
-                <p class="slogan">&iexcl;El chesco que te reta!</p>
-            </div>
-            
-            <!-- Navegación integrada -->
-            <div class="nav-links">
-                <a href="retos.html" class="btn-comic btn-secondary">🎲 Ver Retos</a>
-                <a href="menu.html" class="btn-comic btn-secondary">🥤 Ver Menú</a>
-            </div>
+    <!-- Navigation Header -->
+    <nav class="navbar-comic">
+        <a href="index.html" class="nav-brand-comic">
+            <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        </a>
+        <div class="nav-menu-comic">
+            <a href="menu.html" class="nav-link-comic">🥤 Menú</a>
+            <a href="retos.html" class="nav-link-comic">🎲 Retos</a>
+            <a href="#" class="nav-link-comic btn-girar-ruleta nav-link-ruleta">🎡 Ruleta</a>
+        </div>
+    </nav>
 
-            <div class="hero-actions" style="margin-top: 25px;">
-                <a href="#" class="btn-comic btn-girar-ruleta">&iexcl;Girar la Ruleta!</a>
+    <div class="container">
+        <!-- HERO / BIENVENIDA -->
+        <header class="hero-header">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <span class="hero-badge">⚡ ¡SABOR EXTREMO LOCAL! ⚡</span>
+                    <h1 class="logo-text hero-logo">
+                        <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+                    </h1>
+                    <p class="slogan hero-slogan">¡Sacia tu sed con estilo y diversión!</p>
+                    <p class="hero-desc">
+                        Las bebidas preparadas más locas, refrescantes y divertidas de 700 ml te esperan en el parque. Gira la ruleta, cumple un reto en familia y llévate tu bebida con descuento o incluso <strong>¡GRATIS!</strong>
+                    </p>
+                    <div class="hero-cta">
+                        <a href="menu.html" class="btn-comic">🥤 Ver Menú Preparado</a>
+                        <a href="retos.html" class="btn-comic btn-secondary">🎲 Aceptar un Reto</a>
+                    </div>
+                </div>
+                <div class="mascot-container">
+                    <div class="mascot-bg"></div>
+                    <img src="assets/cheskin_no_bg.png" alt="Cheskin" class="mascot-img">
+                </div>
             </div>
         </header>
 
-        <!-- CÓMO FUNCIONA LA RULETA -->
-        <section class="seccion-ruleta">
-            <h2 class="section-title">&iquest;C&oacute;mo jala la Ruleta? 🎲</h2>
-            <p class="section-text" style="font-size: 1.6rem; line-height: 1.6;">
-                De 6:00 PM a 7:00 PM todos los refrescos gigantes cuestan <strong>$30</strong>.<br><br>
-                A partir de las <strong>7:00 PM</strong> comienza la verdadera acci&oacute;n con la <strong>Ruleta ChesKoretos</strong>: <br>
-                ¡Llegas, giras la ruleta, cumples el reto que te toque y te llevas tu chesco por solo <strong>$25</strong> o incluso <strong>&iexcl;GRATIS!</strong>!
+        <!-- SECCIÓN: ACERCA DE NOSOTROS -->
+        <section class="section-about" id="nosotros">
+            <h2 class="section-title text-center">💬 ¡EL MITOTE DETRÁS DEL VASO! 💬</h2>
+            <div class="about-grid">
+                <div class="about-visual">
+                    <div class="polaroid">
+                        <img src="assets/cheskincool.jpg" alt="Mascota Cheskin">
+                        <div class="polaroid-caption">¡Puro sabor local! 😎🥤</div>
+                    </div>
+                </div>
+                <div class="about-bubble-container">
+                    <div class="speech-bubble">
+                        <p>¡Qué onda, gente! Somos un equipo de <strong>jóvenes con muchas ganas de crecer</strong> y salir adelante, impulsando este emprendimiento familiar y 100% local en nuestro amado parque.</p>
+                        <p>Nos encuentras instalados en el <strong>Parque Dr. Montes De Oca, justo detrás del kiosco principal</strong>. Ofrecemos unas riquísimas <strong>Bebidas Locas y Preparados Extremos de 700 ml</strong> sin alcohol, ideales para refrescar a toda la familia.</p>
+                        <p>¡Pero el mitote no acaba en el vaso! Combinamos la frescura de nuestras bebidas con dinámicas súper divertidas como nuestra famosa <strong>Ruleta Loca y Retos Divertidos</strong>. ¡Giras la ruleta, cumples el reto que te toque y pagas menos o te la llevas gratis!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: ANUNCIOS Y PRÓXIMAS PROMOS -->
+        <section class="promos-section" id="promos">
+            <h2 class="section-title">💥 ¡PRÓXIMAS PROMOS Y DINÁMICAS! 💥</h2>
+            <p class="section-text">
+                ¡El desmadre y los premios apenas comienzan! Muy pronto lanzaremos promociones exclusivas, descuentos salvajes de la ruleta y sorteos especiales. ¡Síguenos en nuestros canales oficiales para no perderte de nada!
             </p>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="retos.html" class="btn-comic" style="background-color: #FF6600;">¡Conoce los Retos aquí! 🧠✊</a>
+            <div class="promo-grid">
+                <!-- WHATSAPP -->
+                <div class="promo-card whatsapp">
+                    <span class="promo-badge">¡ÚNETE!</span>
+                    <div class="promo-card-icon">💬</div>
+                    <h3>WhatsApp Channel</h3>
+                    <p>Entérate antes que nadie de promociones flash de fin de semana, avisos en vivo y nuevos retos locos en el parque.</p>
+                    <a href="#" class="btn-comic btn-whatsapp">Unirse al Canal</a>
+                </div>
+                <!-- INSTAGRAM -->
+                <div class="promo-card instagram">
+                    <span class="promo-badge">¡SÍGUENOS!</span>
+                    <div class="promo-card-icon">📸</div>
+                    <h3>Instagram</h3>
+                    <p>Sube tu foto disfrutando tu ChesKoreto, etiquétanos para salir en nuestras historias y mira los retos más graciosos.</p>
+                    <a href="#" class="btn-comic btn-instagram">Seguir en Instagram</a>
+                </div>
+                <!-- FACEBOOK -->
+                <div class="promo-card facebook">
+                    <span class="promo-badge">¡SÍGUENOS!</span>
+                    <div class="promo-card-icon">👥</div>
+                    <h3>Facebook Page</h3>
+                    <p>Sé parte de la comunidad de ChesKoretos, participa en dinámicas familiares y comparte fotos del mitote en el pasillo.</p>
+                    <a href="#" class="btn-comic btn-facebook">Seguir en Facebook</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: BUZÓN DE SUGERENCIAS DIGITAL -->
+        <section class="sugerencias-box" id="buzon">
+            <h2 class="section-title">📬 ¡EL BUZÓN DE LOS KORETOS! 📬</h2>
+            <p class="section-text mb-10">
+                ¿Se te ocurrió un ingrediente loco para las bebidas de 700 ml? ¿O quieres proponer un reto extremo para la ruleta? ¡Tu idea nos ayuda a mejorar el menú y el ambiente del parque!
+            </p>
+            <form class="sugerencias-form" id="formSugerencias">
+                <div class="sugerencias-row">
+                    <input type="text" id="inputNickname" placeholder="Tu Apodo Cómic... (Opcional)" aria-label="Apodo">
+                    <input type="text" id="inputSugerencia" placeholder="Escribe tu sugerencia o reto aquí..." required aria-label="Sugerencia o reto">
+                </div>
+                <button type="submit" class="btn-comic btn-submit-sugerencia">
+                    💥 Enviar Sugerencia 💥
+                </button>
+            </form>
+            <div class="success-burst" id="sugerenciaExito">
+                ¡BOOM! 💥 Tu sugerencia ha sido enviada con éxito. ¡Gracias por aportar al mitote de <span>ChesKoretos</span>! 👋🥤
             </div>
         </section>
     </div>
@@ -159,13 +138,16 @@
     <!-- PIE DE PÁGINA -->
     <footer>
         <div class="info-local">
-            📍 Encu&eacute;ntranos cada semana en nuestro puesto del Tianguis local.<br>
-            &iexcl;B&uacute;scanos por la ruleta gigante de colores y el mejor mitote del pasillo!
+            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.<br>
+            ¡Búscanos por la ruleta gigante y disfruta el mejor sabor con dinámicas en familia!
         </div>
         <div class="footer-actions">
-            <a href="#" class="btn-comic btn-girar-ruleta">&iexcl;Girar la Ruleta!</a>
-            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-comic btn-secondary">&iexcl;Ver Ubicaci&oacute;n Exacta!</a>
+            <a href="#" class="btn-comic btn-girar-ruleta">🎡 ¡Girar la Ruleta!</a>
+            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-comic btn-secondary">🗺️ Ver Ubicación en Maps</a>
         </div>
+        <p class="footer-credits">
+            © 2026 ChesKoretos. ¡El refresco que te reta! Todos los derechos reservados. Creado por jóvenes emprendedores locales. ⚡
+        </p>
     </footer>
 
     <!-- INTERFAZ MODAL INTERACTIVA (AVISO TIANGUIS) -->
@@ -175,34 +157,12 @@
             <div class="modal-texto">
                 Visítanos en el <span>tianguis nocturno el sábado a partir de las 7:30pm</span> para poder girarla. ¡Nos vemoooos! 👋🥤
             </div>
-            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-maps">📍 Ver ubicación en Maps</a><br>
-            <button class="btn-cerrar" id="btnCerrarModal">Cerrar</button>
+            <a href="https://www.google.com/maps/place/Parque+Dr.+Montes+De+Oca/@20.935459,-97.555678,21z/data=!4m6!3m5!1s0x85d9f625a09f45a5:0xe541f769770a5cc5!8m2!3d20.9353715!4d-97.5556182!16s%2Fg%2F11dxnlm_f9?entry=ttu&g_ep=EgoyMDI2MDYyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-comic btn-maps">📍 Ver ubicación en Maps</a>
+            <button class="btn-comic btn-cerrar" id="btnCerrarModal">Cerrar</button>
         </div>
     </div>
 
+    <!-- Scripts externos -->
     <script src="js/landing.js"></script>
-    <script>
-        const modal = document.getElementById('modalAvisoTianguis');
-        const botonesGirar = document.querySelectorAll('.btn-girar-ruleta');
-        const botonCerrar = document.getElementById('btnCerrarModal');
-
-        botonesGirar.forEach(boton => {
-            boton.addEventListener('click', (e) => {
-                e.preventDefault();
-                modal.classList.add('activo');
-            });
-        });
-
-        botonCerrar.addEventListener('click', () => {
-            modal.classList.remove('remove'); // Corrección lógica para la consistencia
-            modal.classList.remove('activo');
-        });
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('activo');
-            }
-        });
-    </script>
 </body>
 </html>

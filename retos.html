@@ -9,48 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
-    <style>
-        .nav-links { margin-top: 15px; }
-        .nav-links .btn-comic { margin: 5px; font-size: 1rem; padding: 8px 15px; }
 
-        /* Estructura limpia para las tarjetas autogeneradas */
-        .tarjeta-reto {
-            border: 3px solid #000;
-            border-radius: 10px;
-            padding: 15px;
-            background: #1a1a1a;
-            color: #fff;
-            box-shadow: 5px 5px 0px #000;
-            transition: transform 0.2s;
-        }
-        .tarjeta-reto h3 {
-            font-family: 'Bangers', sans-serif;
-            font-size: 1.6rem;
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 0px #000;
-        }
-        .tarjeta-reto p {
-            font-size: 0.95rem;
-            font-family: sans-serif;
-            line-height: 1.4;
-        }
-        .tarjeta-reto .precio {
-            font-family: 'Luckiest Guy', sans-serif;
-            color: #FFCC00;
-            font-size: 1.4rem;
-            margin-top: 10px;
-            text-shadow: 2px 2px 0 #000;
-        }
-        .tarjeta-reto .precio.gratis {
-            color: #FFD700;
-            animation: pulse 1s infinite alternate;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.05); }
-        }
-    </style>
 </head>
 <body>
     <div class="lights" id="lights"></div>
@@ -95,28 +54,6 @@
 
     <!-- Scripts de sincronización -->
     <script src="js/challenges.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const retos = window.CHALLENGES || [];
-            const contenedor = document.getElementById("contenedorRetos");
-
-            if (retos.length === 0) {
-                contenedor.innerHTML = "<p style='color: #fff;'>Cargando los retos de la suerte...</p>";
-                return;
-            }
-
-            contenedor.innerHTML = retos.map(function(reto) {
-                const esGratis = reto.wheelText === 'GRATIS' ? 'gratis' : '';
-                return `
-                    <div class="tarjeta-reto" style="border-color: ${reto.color}; box-shadow: 5px 5px 0px ${reto.color}80, 5px 5px 0px #000;">
-                        <h3 style="color: ${reto.color};">${reto.emoji} ${reto.text}</h3>
-                        <p>${reto.description}</p>
-                        <p class="precio ${esGratis}">${reto.price === '¡GRATIS!' ? reto.price : 'Cumple y paga: ' + reto.price}</p>
-                    </div>
-                `;
-            }).join('');
-        });
-    </script>
     <script src="js/landing.js"></script>
 </body>
 </html>
