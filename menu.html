@@ -12,20 +12,52 @@
 
 </head>
 <body>
+
+    <!-- Barra de Navegación Estilo Cómic -->
+<nav class="navbar-comic">
+    <!-- Marca ChesKoretos (Con C y K mayúsculas resaltadas) -->
+    <a href="index.html" class="nav-brand-comic">
+        <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+    </a>
+    
+    <!-- Enlaces de navegación -->
+    <div class="nav-menu-comic">
+        <a href="index.html" class="nav-link-comic">🏠 INICIO</a>
+        <a href="retos.html" class="nav-link-comic">🎲 RETOS</a>
+        <a href="ruleta.html" class="nav-link-comic btn-girar-ruleta nav-link-ruleta">🎡 RULETA</a>
+    </div>
+</nav>
     <div class="lights" id="lights"></div>
 
     <div class="container">
         <!-- HERO / HEADER -->
-        <header>
-            <div class="logo-container">
-                <h1 class="logo-text">
-                    <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        <!-- Reemplaza el encabezado actual de tu menu.html con esta estructura -->
+        <header class="hero-header">
+            <!-- Centramos el contenido ya que aquí no llevamos a la mascota al lado -->
+            <div class="hero-content" style="align-items: center; text-align: center; margin: 40px auto;">
+                
+                <!-- 1. El Badge amarillo superior característico de la IMG 2 -->
+                <span class="hero-badge">⚡ ¡SABOR EXTREMO LOCAL! ⚡</span>
+                
+                <!-- 2. El título apilado en dos líneas -->
+                <h1 class="logo-text hero-logo" style="line-height: 0.85; margin: 15px 0;">
+                    <span style="display: block;"><span class="letter-c">C</span>hes<span class="letter-k">K</span></span>
+                    <span style="display: block;">ORETOS</span>
                 </h1>
-                <p class="slogan">&iexcl;Sacia tu sed con estilo!</p>
-            </div>
-            <div class="nav-links">
-                <a href="index.html" class="btn-comic btn-secondary">🏠 Inicio</a>
-                <a href="retos.html" class="btn-comic btn-secondary">🎲 Ver Retos</a>
+                
+                <!-- 3. Tu eslogan con estilo adaptado para que resalte -->
+                <p class="hero-desc" style="color: var(--amarillo); font-size: 1.5rem; text-transform: uppercase;">
+                    ★ ¡Sacia tu sed con estilo! ★
+                </p>
+                
+                <!-- 4. Los botones anchos y llamativos de la IMG 2 -->
+                <div class="hero-cta" style="justify-content: center; gap: 20px; max-width: 600px; margin: 30px auto 0;">
+                    <!-- Botón primario (Naranja) -->
+                    <a href="index.html" class="btn-comic">🏠 INICIO</a>
+                    <!-- Botón secundario (Morado) -->
+                    <a href="retos.html" class="btn-comic btn-secondary">🎲 VER RETOS</a>
+                </div>
+                
             </div>
         </header>
 
@@ -34,85 +66,102 @@
             <div class="menu-box">
                 <h2 class="section-title">El Men&uacute; ChesKoreto 🥤</h2>
 
-                <!-- DINÁMICA DE LA RULETA -->
-                <div class="item-menu">
-                    <div class="item-nombre">Refresco Gigante Simple (6:00 PM - 7:00 PM)</div>
-                    <div class="item-precio">$30</div>
+                <!-- NUEVO CONTENEDOR PARA LA DINÁMICA DE PRECIOS Y RETOS -->
+                <div class="comic-panel-promo">
+                    <div class="item-menu">
+                        <div class="item-nombre">Refresco Gigante Simple (6:00 PM - 7:00 PM)</div>
+                        <div class="item-precio-sticker">$35</div>
+                    </div>
+                    <div class="item-menu">
+                        <div class="item-nombre">🎲 La ruleta loca comienza a las 7:00 PM</div>
+                        <div class="item-precio-sticker especial">¡Desde $20!</div>
+                    </div>
+                    <div class="item-menu">
+                        <div class="item-nombre">Refresco Simple con Reto Cumplido (Ahorra de $5 a $15)</div>
+                        <div class="item-precio-sticker">$20 - $30</div>
+                    </div>
+                    <div class="item-menu">
+                        <div class="item-nombre">¡El Suertudote! (Si cae en el gajo especial)</div>
+                        <div class="item-precio-sticker gratis">¡GRATIS!</div>
+                    </div>
                 </div>
-                <div class="item-menu">
-                    <div class="item-nombre">🎲 La ruleta loca comienza a las 7:00 PM</div>
-                    <div class="item-precio">¡Desde $25 o GRATIS!</div>
-                </div>
-                <div class="item-menu">
-                    <div class="item-nombre">Refresco Simple con Reto Cumplido</div>
-                    <div class="item-precio">$25</div>
-                </div>
-                <div class="item-menu">
-                    <div class="item-nombre">&iexcl;El Suertudote! (Si cae en la Ruleta)</div>
-                    <div class="item-precio gratis">&iexcl;GRATIS!</div>
-                </div>
+                
+                <!-- TÍTULOS CON ESTILO BURBUJA DE COMIC -->
+                <div class="categoria-titulo-comic">🚀 Los Preparados (700 ml)</div>
 
-                <!-- NUEVA SECCIÓN: LAS ESPECIALIDADES DE LA CASA -->
-                <div class="categoria-titulo">🚀 Los ChesKoretos Preparados (700 ml)</div>
+                <div class="productos-container">
+                    <!-- Bebida 1 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🥭 La Pócima-Mangonosa</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Nuestra fórmula secreta más densa y tropical. El balance perfecto entre el fuego del cuartel y el golpe dulce de la fruta reina. ¡Un clásico de ChesKoretos!</div>
+                    </div>
 
-                <!-- Bebida 1 -->
-                <div class="item-menu">
-                    <div class="item-nombre">🥭 La Mangonada Loca</div>
-                    <div class="item-precio">$35</div>
-                </div>
-                <div class="item-descripcion">Vaso gigante escarchado con chamoy y Tajín, base ultra refrescante de Fresca o Sprite, cargado con trocitos de mango natural.</div>
+                    <!-- Bebida 2 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🍍 Burbujas-Tropic</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Burbujas extremas con el toque exacto de acidez y frescura local. Un viaje directo al oasis que te va a reiniciar el día en un segundo.</div>
+                    </div>
 
-                <!-- Bebida 2 -->
-                <div class="item-menu">
-                    <div class="item-nombre">🍍 Rusa Tropical</div>
-                    <div class="item-precio">$35</div>
-                </div>
-                <div class="item-descripcion">El balance perfecto: Topo Chico bien fría con un toque cítrico de limón, sal, chamoy y trozos de piña picada en el fondo.</div>
+                    <!-- Bebida 3 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🔥 BLACK-TWIST</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">El misterio oscuro de la casa con un inesperado 'twist' frutal que desafía las reglas tradicionales. Si buscas algo diferente, esto te volará la cabeza.</div>
+                    </div>
 
-                <!-- Bebida 3 -->
-                <div class="item-menu">
-                    <div class="item-nombre">🔥 Black Tropic</div>
-                    <div class="item-precio">$35</div>
-                </div>
-                <div class="item-descripcion">Para los amantes de la Coca-Cola. Vaso escarchado con chamoy y Tajín, jugo de limón y trocitos de piña que le dan un giro completamente nuevo.</div>
+                    <!-- Bebida 4 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🍃 Punto Zen Blast</div>
+                            <div class="item-precio-sticker">$38</div>
+                        </div>
+                        <div class="item-descripcion">La fusión mística más ligera y balanceada de la barra. Notas herbales y cítricas chocando en un flujo refrescante para los que buscan calmar la sed con estilo.</div>
+                    </div>
 
-                <!-- Bebida 4 -->
-                <div class="item-menu">
-                    <div class="item-nombre">🍃 Fuze Herbal Blast</div>
-                    <div class="item-precio">$38</div>
-                </div>
-                <div class="item-descripcion">Una mezcla súper fresca de Fuze Tea Té Verde con Sprite, limón, un toque de sal y cubos de mango natural. ¡Súper ligera!</div>
+                    <!-- Bebida 5 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">⚡ Special Power</div>
+                            <div class="item-precio-sticker">$45</div>
+                        </div>
+                        <div class="item-descripcion">Poder puro en el vaso. Un choque electrizante y oscuro diseñado para darte los beats de energía necesarios para conquistar la noche en el parque.</div>
+                    </div>
 
-                <!-- Bebida 5 -->
-                <div class="item-menu">
-                    <div class="item-nombre">⚡ Predator Frutos del Bosque</div>
-                    <div class="item-precio">$45</div>
-                </div>
-                <div class="item-descripcion">Energía pura. Media lata de Predator combinada con Fuze Tea Té Negro, un toque cítrico de limón y escarchado de Tajín.</div>
+                    <!-- Bebida 6 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">💥 MONSTER Max</div>
+                            <div class="item-precio-sticker">$60</div>
+                        </div>
+                        <div class="item-descripcion">El jefe pesado del menú. Nuestra fórmula secreta de alta densidad cítrica reservada solo para los verdaderos campeones del parque. ¡Máximo impacto de sabor!</div>
+                    </div>
 
-                <!-- Bebida 6 -->
-                <div class="item-menu">
-                    <div class="item-nombre">💥 Monster Energy Mix</div>
-                    <div class="item-precio">$60</div>
-                </div>
-                <div class="item-descripcion">El jefe de la casa. Media lata de Monster combinada con Fresca de toronja, jugo de limón, sal y un toque ligero de chamoy. ¡Máximo sabor!</div>
-
-                <!-- Bebida 7 -->
-                <div class="item-menu">
-                    <div class="item-nombre">🌋 El Volcán ChesKoreto</div>
-                    <div class="item-precio">$40</div>
-                </div>
-                <div class="item-descripcion">¡Una explosión ácida! Topo Chico mezclada con mucho limón, sal, un extra de chamoy líquido y gomitas/dulces picantes en el fondo.</div>
-
+                    <!-- Bebida 7 
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🌋 El Volcán ChesKoreto</div>
+                            <div class="item-precio-sticker">$40</div>
+                        </div>
+                        <div class="item-descripcion">¡Una explosión ácida! Topo Chico mezclada con mucho limón, sal, un extra de chamoy líquido y gomitas/dulces picantes en el fondo.</div>
+                    </div>-->
+                </div> 
                 <!-- EXTRAS -->
                 <div class="categoria-titulo">➕ Extras y Solidaridad</div>
                 <div class="item-menu">
                     <div class="item-nombre">Vaso simple con hielo</div>
-                    <div class="item-precio">$10</div>
+                    <div class="item-precio-sticker">$10</div>
                 </div>
                 <div class="item-menu">
                     <div class="item-nombre">El Donativo Solidario</div>
-                    <div class="item-precio">$30</div>
+                    <div class="item-precio-sticker">$30</div>
                 </div>
             </div>
         </section>

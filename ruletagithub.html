@@ -13,9 +13,6 @@
     <!-- Shared Styles -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
-
-    <!-- html2canvas para capturar la tabla como imagen -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="ruleta-body">
 
@@ -64,44 +61,6 @@
                     <button type="button" id="linkTxtBtn">Vincular archivo .txt</button>
                     <button type="button" id="downloadTxtBtn">Descargar .txt</button>
                 </div>
-            </div>
-        </div>
-
-        <!-- LEYENDA DE RETOS (Guía visual con números) -->
-        <div class="legend-panel">
-            <h3>📋 GUÍA DE RETOS</h3>
-            <ul class="legend-list" id="legendList"></ul>
-        </div>
-
-        <!-- SCOREBOARD - PARTICIPANTES DEL DÍA -->
-        <div class="scoreboard-section">
-            <div class="scoreboard-title">🔥 PARTICIPANTES DEL DÍA 🔥</div>
-            <div class="scoreboard-subtitle">Registrados: <span id="scoreboardCount">0</span></div>
-            <div class="scoreboard-table-wrap">
-                <table class="scoreboard-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Usuario</th>
-                            <th>Reto Tocado</th>
-                            <th>¿Cumplió?</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scoreboardBody">
-                        <tr class="empty-row"><td colspan="4">Aún no hay participantes registrados</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="scoreboard-form">
-                <label for="participantInput">@</label>
-                <input type="text" id="participantInput" placeholder="usuario">
-                <div class="checkbox-group">
-                    <label><input type="radio" name="cumplio" id="checkYes" value="yes"> ✅ Sí</label>
-                    <label><input type="radio" name="cumplio" id="checkNo" value="no" checked> ❌ No</label>
-                </div>
-                <button type="button" class="btn-scoreboard register" id="registerParticipantBtn">REGISTRAR</button>
-                <button type="button" class="btn-scoreboard clear" id="clearScoreboardBtn">Limpiar Tabla</button>
-                <button type="button" class="btn-scoreboard share" id="shareScoreboardBtn">📸 COMPARTIR EN REDES</button>
             </div>
         </div>
     </div>
