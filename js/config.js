@@ -16,8 +16,8 @@ var AppConfig = (function() {
     /* ═══════════════════════════════════════════
        CREDENCIALES — ¡REEMPLAZA CON TUS VALORES!
        ═══════════════════════════════════════════ */
-    var SUPABASE_URL    = 'https://TU_PROJECT_ID.supabase.co';
-    var SUPABASE_ANON_KEY = 'TU_ANON_KEY_AQUI';
+    var SUPABASE_URL    = 'https://rpscbkwtbbzqizhkkkpk.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwc2Nia3d0YmJ6cWl6aGtra3BrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5ODgzNTAsImV4cCI6MjA5OTU2NDM1MH0.Qyb2OWoeI0YamU2w1GAD2oBUWsrJrpBf5rPtdNlOB9o';
 
     /* ═══════════════════════════════════════════
        CONSTANTES DE NEGOCIO
