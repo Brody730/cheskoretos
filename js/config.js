@@ -8,7 +8,6 @@
  * 1. Ve a https://supabase.com → tu proyecto → Settings → API
  * 2. Copia la "Project URL" → pégala en SUPABASE_URL
  * 3. Copia la "anon public" key → pégala en SUPABASE_ANON_KEY
- * 4. En Authentication → Providers, habilita "Phone" (Twilio)
  */
 var AppConfig = (function() {
     'use strict';

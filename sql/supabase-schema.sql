@@ -1,16 +1,18 @@
 /**
  * ═══════════════════════════════════════════════════════════════════
- * CHESKORETOS — ESQUEMA COMPLETO PARA SUPABASE
+ * CHESKORETOS — ESQUEMA COMPLETO PARA SUPABASE (PIN-BASED)
  * ═══════════════════════════════════════════════════════════════════
+ *
+ * AUTH: PIN de 4 dígitos (sin SMS, sin email, sin proveedores externos).
+ * RLS: Deshabilitado para simplificar (app de negocio local, admin presente).
  *
  * INSTRUCCIONES:
  * 1. Crea un proyecto en https://supabase.com
  * 2. Ve a SQL Editor → New Query
  * 3. Pega TODO este script y ejecútalo
- * 4. En Authentication → Providers, habilita "Phone" (Twilio)
- * 5. Copia tu URL y anon key a js/config.js
+ * 4. Copia tu URL y anon key a js/config.js
  *
- * Para asignar rol de admin a un usuario, ejecuta:
+ * Para asignar rol de admin:
  *   UPDATE profiles SET rol = 'admin' WHERE telefono = '55XXXXXXXX';
  *
  * ═══════════════════════════════════════════════════════════════════
@@ -20,11 +22,12 @@
 -- 1. TABLAS
 -- ═══════════════════════════════════════════
 
--- Perfil extendido (referencia auth.users por UUID)
+-- Perfil extendido (sin auth.users, UUID auto-generado)
 CREATE TABLE IF NOT EXISTS profiles (
-  id        UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username  TEXT UNIQUE NOT NULL DEFAULT 'Sin Nombre',
   telefono  TEXT UNIQUE NOT NULL DEFAULT '',
+  pin       TEXT NOT NULL DEFAULT '',
   rol       TEXT NOT NULL DEFAULT 'usuario'
             CHECK (rol IN ('admin', 'empleado', 'usuario')),
   creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -62,6 +65,7 @@ CREATE TABLE IF NOT EXISTS promociones (
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_profiles_telefono   ON profiles(telefono);
+CREATE INDEX IF NOT EXISTS idx_profiles_username   ON profiles(username);
 CREATE INDEX IF NOT EXISTS idx_lealtad_usuario     ON lealtad(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_historial_usuario   ON historial_retos(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_historial_reto      ON historial_retos(reto_id);
@@ -69,131 +73,108 @@ CREATE INDEX IF NOT EXISTS idx_promociones_activa  ON promociones(activa);
 
 
 -- ═══════════════════════════════════════════
--- 2. ROW LEVEL SECURITY (RLS)
+-- 2. ROW LEVEL SECURITY — DESHABILITADO
 -- ═══════════════════════════════════════════
+-- App de negocio local con admin físico presente.
+-- Seguridad manejada por la app (PIN + roles).
 
-ALTER TABLE profiles        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE lealtad         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE historial_retos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE promociones     ENABLE ROW LEVEL SECURITY;
-
--- ─── PROFILES ───────────────────────────
--- Cualquier usuario autenticado puede leer su propio perfil
-CREATE POLICY "read_own_profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = id);
-
--- Admins y empleados pueden leer todos los perfiles (necesario para escáner QR)
-CREATE POLICY "staff_read_all_profiles"
-  ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol IN ('admin', 'empleado')
-    )
-  );
-
--- Un usuario puede actualizar su propio perfil (username, etc.)
-CREATE POLICY "update_own_profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = id);
-
--- Usuarios autenticados pueden insertar su propio perfil (post-OTP)
-CREATE POLICY "insert_own_profile"
-  ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
-
--- ─── LEALTAD ────────────────────────────
--- Usuarios leen su propia lealtad
-CREATE POLICY "read_own_lealtad"
-  ON lealtad FOR SELECT
-  USING (auth.uid() = usuario_id);
-
--- Staff puede leer toda la lealtad (para escáner)
-CREATE POLICY "staff_read_all_lealtad"
-  ON lealtad FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol IN ('admin', 'empleado')
-    )
-  );
-
--- Staff puede actualizar la lealtad de cualquier usuario (registrar visita)
-CREATE POLICY "staff_update_lealtad"
-  ON lealtad FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol IN ('admin', 'empleado')
-    )
-  );
-
--- Usuarios pueden insertar su propia lealtad (post-OTP)
-CREATE POLICY "insert_own_lealtad"
-  ON lealtad FOR INSERT
-  WITH CHECK (auth.uid() = usuario_id);
-
--- Usuarios pueden actualizar su propia lealtad (canjear cupón)
-CREATE POLICY "update_own_lealtad"
-  ON lealtad FOR UPDATE
-  USING (auth.uid() = usuario_id);
-
-
--- ─── HISTORIAL_RETOS ────────────────────
--- Usuarios leen su propio historial
-CREATE POLICY "read_own_historial"
-  ON historial_retos FOR SELECT
-  USING (auth.uid() = usuario_id);
-
--- Staff puede leer todo el historial
-CREATE POLICY "staff_read_all_historial"
-  ON historial_retos FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol IN ('admin', 'empleado')
-    )
-  );
-
--- Staff puede insertar retos para cualquier usuario
-CREATE POLICY "staff_insert_historial"
-  ON historial_retos FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol IN ('admin', 'empleado')
-    )
-  );
-
--- Usuarios pueden insertar sus propios retos (auto-registro)
-CREATE POLICY "insert_own_historial"
-  ON historial_retos FOR INSERT
-  WITH CHECK (auth.uid() = usuario_id);
-
-
--- ─── PROMOCIONES ────────────────────────
--- Todos los usuarios autenticados pueden leer promos activas
-CREATE POLICY "read_active_promos"
-  ON promociones FOR SELECT
-  USING (activa = TRUE);
-
--- Admins pueden gestionar promociones (CRUD completo)
-CREATE POLICY "admin_manage_promos"
-  ON promociones FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+ALTER TABLE profiles        DISABLE ROW LEVEL SECURITY;
+ALTER TABLE lealtad         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE historial_retos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE promociones     DISABLE ROW LEVEL SECURITY;
 
 
 -- ═══════════════════════════════════════════
--- 3. FUNCIÓN RPC: Verificar si un teléfono ya existe
+-- 3. FUNCIÓN RPC: Registrar usuario con PIN
 -- ═══════════════════════════════════════════
--- Se usa antes de enviar OTP para saber si es registro nuevo o login
+-- Crea perfil + registro de lealtad en una sola operación.
+-- Retorna el perfil creado.
+
+CREATE OR REPLACE FUNCTION public.register_user(
+  p_username TEXT,
+  p_phone TEXT,
+  p_pin TEXT
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_perfil RECORD;
+BEGIN
+  -- Verificar que el teléfono no exista
+  IF EXISTS (SELECT 1 FROM public.profiles WHERE telefono = p_phone) THEN
+    RETURN '{"ok":false,"mensaje":"Ese teléfono ya está registrado. Inicia sesión con tu PIN."}'::JSON;
+  END IF;
+
+  -- Verificar que el username no exista
+  IF EXISTS (SELECT 1 FROM public.profiles WHERE username = p_username) THEN
+    RETURN '{"ok":false,"mensaje":"Ese nickname ya existe. Elige otro."}'::JSON;
+  END IF;
+
+  -- Crear perfil
+  INSERT INTO public.profiles (username, telefono, pin)
+  VALUES (p_username, p_phone, p_pin)
+  RETURNING * INTO v_perfil;
+
+  -- Crear lealtad
+  INSERT INTO public.lealtad (usuario_id)
+  VALUES (v_perfil.id);
+
+  -- Retornar perfil creado
+  RETURN json_build_object(
+    'ok', true,
+    'mensaje', '¡Cuenta creada! Bienvenido al Club.',
+    'id', v_perfil.id,
+    'username', v_perfil.username,
+    'telefono', v_perfil.telefono,
+    'rol', v_perfil.rol,
+    'creado_en', v_perfil.creado_en
+  );
+END;
+$$;
+
+
+-- ═══════════════════════════════════════════
+-- 4. FUNCIÓN RPC: Login con PIN
+-- ═══════════════════════════════════════════
+-- Verifica teléfono + PIN, retorna el perfil si coincide.
+
+CREATE OR REPLACE FUNCTION public.login_with_pin(
+  p_phone TEXT,
+  p_pin TEXT
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_perfil RECORD;
+BEGIN
+  SELECT * INTO v_perfil
+  FROM public.profiles
+  WHERE telefono = p_phone AND pin = p_pin;
+
+  IF NOT FOUND THEN
+    RETURN '{"ok":false,"mensaje":"Teléfono o PIN incorrectos."}'::JSON;
+  END IF;
+
+  RETURN json_build_object(
+    'ok', true,
+    'mensaje', '¡Sesión iniciada!',
+    'id', v_perfil.id,
+    'username', v_perfil.username,
+    'telefono', v_perfil.telefono,
+    'rol', v_perfil.rol,
+    'creado_en', v_perfil.creado_en
+  );
+END;
+$$;
+
+
+-- ═══════════════════════════════════════════
+-- 5. FUNCIÓN RPC: Verificar si teléfono existe
+-- ═══════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION public.check_phone_exists(phone_number TEXT)
 RETURNS BOOLEAN
@@ -209,10 +190,9 @@ $$;
 
 
 -- ═══════════════════════════════════════════
--- 4. FUNCIÓN RPC: Registrar visita (racha)
+-- 6. FUNCIÓN RPC: Registrar visita (racha)
 -- ═══════════════════════════════════════════
--- Lógica de negocio de racha de sábados ejecutada en el servidor
--- Retorna JSON con el resultado de la operación
+-- Lógica de negocio de racha de sábados ejecutada en el servidor.
 
 CREATE OR REPLACE FUNCTION public.registrar_visita(target_user_id UUID)
 RETURNS JSON
@@ -224,9 +204,7 @@ DECLARE
   v_hoy DATE := CURRENT_DATE;
   v_dias_diff INT;
   v_nueva_racha INT;
-  v_resultado JSON;
 BEGIN
-  -- Obtener datos de lealtad del usuario objetivo
   SELECT * INTO v_lealtad
   FROM public.lealtad
   WHERE usuario_id = target_user_id;
@@ -235,14 +213,13 @@ BEGIN
     RETURN '{"tipo":"error","mensaje":"Usuario no encontrado"}'::JSON;
   END IF;
 
-  -- Calcular diferencia de días desde la última visita
   IF v_lealtad.ultima_visita IS NULL THEN
-    v_dias_diff := 999; -- Primera visita
+    v_dias_diff := 999;
   ELSE
     v_dias_diff := v_hoy - v_lealtad.ultima_visita;
   END IF;
 
-  -- BLOQUEO: Si la diferencia es <= 1 día (mismo fin de semana)
+  -- BLOQUEO: mismo fin de semana
   IF v_dias_diff <= 1 AND v_lealtad.ultima_visita IS NOT NULL THEN
     RETURN json_build_object(
       'tipo', 'ya_registro_hoy',
@@ -252,28 +229,22 @@ BEGIN
     );
   END IF;
 
-  -- RACHA: calcular nueva racha
+  -- RACHA
   IF v_lealtad.ultima_visita IS NULL THEN
-    -- Primera visita
     v_nueva_racha := 1;
   ELSIF v_dias_diff >= 6 AND v_dias_diff <= 8 THEN
-    -- Asistió el sábado pasado → incrementar racha
     v_nueva_racha := LEAST(v_lealtad.racha_actual + 1, 5);
   ELSIF v_dias_diff > 8 THEN
-    -- Se saltó un sábado → reiniciar racha
     v_nueva_racha := 1;
   ELSE
-    -- Caso raro (< 6 días pero > 1 día)
     v_nueva_racha := v_lealtad.racha_actual;
   END IF;
 
-  -- Actualizar lealtad
   UPDATE public.lealtad
   SET racha_actual  = v_nueva_racha,
       ultima_visita = v_hoy
   WHERE usuario_id = target_user_id;
 
-  -- ¿Alcanzó la racha de 5?
   IF v_nueva_racha >= 5 THEN
     UPDATE public.lealtad
     SET chesko_gratis_activo = TRUE,
@@ -291,7 +262,6 @@ BEGIN
     );
   END IF;
 
-  -- Respuesta normal
   RETURN json_build_object(
     'tipo', 'visita_registrada',
     'mensaje', '¡Visita registrada! Racha de sábados: ' || v_nueva_racha || ' de 5.',

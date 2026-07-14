@@ -1,227 +1,236 @@
 /**
  * ═══════════════════════════════════════════
- * CHESKORETOS - MÓDULO DE AUTENTICACIÓN
+ * CHESKORETOS - MÓDULO DE AUTENTICACIÓN (PIN)
  * ═══════════════════════════════════════════
- * Autenticación real vía Supabase Phone OTP.
- * Gestiona roles: admin, empleado, usuario.
+ * Auth por PIN de 4 dígitos. Sin SMS, sin email,
+ * sin proveedores externos. Gratis y rápido.
  *
  * FLUJO:
- * 1. enviarOTP(telefono) → Supabase envía SMS con código
- * 2. verificarOTP(telefono, codigo) → sesión activa
- * 3. obtenerUsuarioActual() → { authUser, perfil, lealtad }
+ * 1. registrarUsuario(nick, tel, pin) → crea cuenta
+ * 2. loginConPin(tel, pin) → sesión activa
+ * 3. restaurarSesion() → recupera de localStorage
  */
 var Auth = (function() {
     'use strict';
 
-    /* ── Estado en memoria ── */
-    var _usuarioActual = null;   /* Cache del usuario completo */
-    var _perfil        = null;   /* Cache del perfil */
-    var _lealtad       = null;   /* Cache de lealtad */
-    var _otpPending    = false;  /* OTP enviado, esperando verificación */
-    var _telefonoOTP   = '';     /* Teléfono al que se envió el OTP */
-    var _usernameTemp  = '';     /* Nickname ingresado antes del OTP */
+    var STORAGE_KEY = 'chesko_session';
 
-    function sb() { return AppConfig.getClient(); }
+    /* ── Estado en memoria ── */
+    var _usuarioActual = null;   /* { id, username, telefono, rol, ... } */
+    var _perfil        = null;
+    var _lealtad       = null;
+
+    function db() { return AppConfig.getClient(); }
 
     /* ═══════════════════════════════════════════
-       1. ENVIAR OTP
+       1. REGISTRAR USUARIO
        ═══════════════════════════════════════════ */
 
     /**
-     * Envía un código OTP al teléfono indicado.
-     * @param {string} telefono - Teléfono con código de país (ej: +525512345678)
-     * @param {string} username - Nickname que se guardará después de verificar
-     * @returns {object} { ok: boolean, esNuevo: boolean, mensaje: string }
+     * Crear cuenta nueva con PIN.
+     * @param {string} username - Nickname (min 2 chars)
+     * @param {string} telefono - Teléfono (min 8 dígitos)
+     * @param {string} pin - PIN de 4 dígitos
+     * @returns {object} { ok, mensaje, usuario? }
      */
-    async function enviarOTP(telefono, username) {
-        telefono = (telefono || '').trim();
+    async function registrarUsuario(username, telefono, pin) {
         username = (username || '').trim().replace(/^@/, '');
+        telefono = (telefono || '').trim();
+        pin      = (pin || '').trim();
 
         if (username.length < 2) {
             return { ok: false, mensaje: 'El nickname debe tener al menos 2 caracteres.' };
         }
-        if (telefono.length < 10) {
-            return { ok: false, mensaje: 'El teléfono debe incluir código de país (mín. 10 dígitos).' };
+        if (telefono.length < 8) {
+            return { ok: false, mensaje: 'El teléfono debe tener al menos 8 dígitos.' };
+        }
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            return { ok: false, mensaje: 'El PIN debe ser exactamente 4 números.' };
         }
 
-        /* Asegurar formato E.164 (+ al inicio) */
-        if (!telefono.startsWith('+')) {
-            telefono = '+52' + telefono; /* México por defecto */
-        }
-
-        _usernameTemp = username;
-        _telefonoOTP  = telefono;
-
-        /* Enviar OTP vía Supabase */
-        var { data, error } = await sb().auth.signInWithOtp({ phone: telefono });
-
-        if (error) {
-            console.error('enviarOTP error:', error);
-            return { ok: false, mensaje: 'No se pudo enviar el SMS. Verifica tu número. ' + error.message };
-        }
-
-        _otpPending = true;
-        return { ok: true, esNuevo: true, mensaje: 'Código enviado a ' + telefono };
-    }
-
-    /* ═══════════════════════════════════════════
-       2. VERIFICAR OTP
-       ═══════════════════════════════════════════ */
-
-    /**
-     * Verifica el código OTP ingresado por el usuario.
-     * @param {string} codigo - Código de 6 dígitos
-     * @returns {object} { ok: boolean, usuario: object|null, mensaje: string }
-     */
-    async function verificarOTP(codigo) {
-        codigo = (codigo || '').trim();
-
-        if (!_otpPending || !_telefonoOTP) {
-            return { ok: false, mensaje: 'No hay un código pendiente. Solicita uno nuevo.' };
-        }
-        if (codigo.length !== 6) {
-            return { ok: false, mensaje: 'El código debe tener 6 dígitos.' };
-        }
-
-        var { data, error } = await sb().auth.verifyOtp({
-            phone: _telefonoOTP,
-            token: codigo,
-            type:  'sms'
+        var { data, error } = await db().rpc('register_user', {
+            p_username: username,
+            p_phone:    telefono,
+            p_pin:      pin
         });
 
         if (error) {
-            console.error('verificarOTP error:', error);
-            return { ok: false, mensaje: 'Código incorrecto o expirado. Intenta de nuevo.' };
+            console.error('register_user error:', error);
+            return { ok: false, mensaje: 'Error de conexión. Intenta de nuevo.' };
         }
 
-        _otpPending = false;
-        var authUser = data.user;
-
-        /* Buscar o crear perfil */
-        var perfil = await DataStore.obtenerPerfil(authUser.id);
-
-        if (!perfil) {
-            /* Perfil nuevo → crear */
-            perfil = await DataStore.crearPerfil(authUser.id, _usernameTemp, _telefonoOTP);
-        } else if (perfil.username === 'Sin Nombre' && _usernameTemp) {
-            /* Perfil creado por trigger con nombre default → actualizar */
-            perfil = await DataStore.actualizarPerfil(authUser.id, { username: _usernameTemp });
+        if (!data || !data.ok) {
+            return { ok: false, mensaje: data ? data.mensaje : 'Error desconocido.' };
         }
 
-        /* Buscar o crear lealtad */
-        var lealtad = await DataStore.obtenerLealtad(authUser.id);
-        if (!lealtad) {
-            lealtad = await DataStore.crearLealtad(authUser.id);
+        /* Guardar sesión en memoria y localStorage */
+        var usuario = {
+            id:       data.id,
+            username: data.username,
+            telefono: data.telefono,
+            rol:      data.rol
+        };
+        _usuarioActual = usuario;
+        _perfil = usuario;
+
+        /* Cargar lealtad */
+        _lealtad = await DataStore.obtenerLealtad(usuario.id);
+        if (!_lealtad) {
+            _lealtad = await DataStore.crearLealtad(usuario.id);
         }
 
-        /* Guardar en caché */
-        _usuarioActual = authUser;
-        _perfil        = perfil;
-        _lealtad       = lealtad;
+        guardarSesion(usuario);
 
-        return { ok: true, usuario: perfil, mensaje: '¡Sesión iniciada!' };
+        return { ok: true, usuario: usuario, mensaje: data.mensaje };
     }
 
     /* ═══════════════════════════════════════════
-       3. SESIÓN
+       2. LOGIN CON PIN
        ═══════════════════════════════════════════ */
 
     /**
-     * Verificar si hay sesión activa y cargar datos.
-     * Llamar al inicio de la app.
-     * @returns {boolean} true si hay sesión activa
+     * Iniciar sesión con teléfono + PIN.
+     * @param {string} telefono
+     * @param {string} pin
+     * @returns {object} { ok, mensaje, usuario? }
+     */
+    async function loginConPin(telefono, pin) {
+        telefono = (telefono || '').trim();
+        pin      = (pin || '').trim();
+
+        if (telefono.length < 8) {
+            return { ok: false, mensaje: 'El teléfono debe tener al menos 8 dígitos.' };
+        }
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            return { ok: false, mensaje: 'El PIN debe ser exactamente 4 números.' };
+        }
+
+        var { data, error } = await db().rpc('login_with_pin', {
+            p_phone: telefono,
+            p_pin:   pin
+        });
+
+        if (error) {
+            console.error('login_with_pin error:', error);
+            return { ok: false, mensaje: 'Error de conexión. Intenta de nuevo.' };
+        }
+
+        if (!data || !data.ok) {
+            return { ok: false, mensaje: data ? data.mensaje : 'Teléfono o PIN incorrectos.' };
+        }
+
+        var usuario = {
+            id:       data.id,
+            username: data.username,
+            telefono: data.telefono,
+            rol:      data.rol
+        };
+        _usuarioActual = usuario;
+        _perfil = usuario;
+
+        _lealtad = await DataStore.obtenerLealtad(usuario.id);
+        if (!_lealtad) {
+            _lealtad = await DataStore.crearLealtad(usuario.id);
+        }
+
+        guardarSesion(usuario);
+
+        return { ok: true, usuario: usuario, mensaje: data.mensaje };
+    }
+
+    /* ═══════════════════════════════════════════
+       3. SESIÓN (localStorage)
+       ═══════════════════════════════════════════ */
+
+    function guardarSesion(usuario) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(usuario));
+        } catch (e) { /* storage lleno, ignora */ }
+    }
+
+    function limpiarSesion() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) { /* ignora */ }
+    }
+
+    /**
+     * Restaurar sesión desde localStorage.
+     * @returns {boolean} true si hay sesión válida
      */
     async function restaurarSesion() {
-        var { data } = await sb().auth.getSession();
-        if (!data.session) return false;
+        try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
 
-        _usuarioActual = data.session.user;
+            var usuario = JSON.parse(raw);
+            if (!usuario || !usuario.id) return false;
 
-        /* Cargar perfil y lealtad */
-        _perfil  = await DataStore.obtenerPerfil(_usuarioActual.id);
-        _lealtad = await DataStore.obtenerLealtad(_usuarioActual.id);
+            /* Verificar que el usuario sigue existiendo en la DB */
+            var perfil = await DataStore.obtenerPerfil(usuario.id);
+            if (!perfil) {
+                limpiarSesion();
+                return false;
+            }
 
-        /* Si el perfil no existe (borrado manualmente), crearlo */
-        if (!_perfil) {
-            var phone = _usuarioActual.phone || '';
-            _perfil = await DataStore.crearPerfil(
-                _usuarioActual.id,
-                _usuarioActual.user_metadata?.username || 'Sin Nombre',
-                phone
-            );
+            _usuarioActual = perfil;
+            _perfil = perfil;
+            _lealtad = await DataStore.obtenerLealtad(perfil.id);
+
+            return true;
+        } catch (e) {
+            limpiarSesion();
+            return false;
         }
-        if (!_lealtad) {
-            _lealtad = await DataStore.crearLealtad(_usuarioActual.id);
-        }
-
-        return true;
     }
 
     /**
      * Cerrar sesión.
      */
-    async function logout() {
-        await sb().auth.signOut();
+    function logout() {
         _usuarioActual = null;
         _perfil        = null;
         _lealtad       = null;
-        _otpPending    = false;
-        _telefonoOTP   = '';
-        _usernameTemp  = '';
+        limpiarSesion();
     }
 
-    /**
-     * Obtener el usuario completo (perfil + lealtad).
-     * @returns {object|null} { authUser, perfil, lealtad }
-     */
+    /* ═══════════════════════════════════════════
+       4. GETTERS
+       ═══════════════════════════════════════════ */
+
     function obtenerUsuarioActual() {
-        if (!_usuarioActual || !_perfil) return null;
+        if (!_perfil) return null;
         return {
-            authUser: _usuarioActual,
+            authUser: { id: _perfil.id },
             perfil:   _perfil,
             lealtad:  _lealtad
         };
     }
 
-    /**
-     * Obtener solo el perfil.
-     * @returns {object|null}
-     */
     function obtenerPerfil() {
         return _perfil;
     }
 
-    /**
-     * Refrescar la caché de datos del usuario desde Supabase.
-     */
     async function refrescarDatos() {
-        if (!_usuarioActual) return;
-        _perfil  = await DataStore.obtenerPerfil(_usuarioActual.id);
-        _lealtad = await DataStore.obtenerLealtad(_usuarioActual.id);
+        if (!_perfil) return;
+        _perfil  = await DataStore.obtenerPerfil(_perfil.id);
+        _lealtad = await DataStore.obtenerLealtad(_perfil.id);
     }
 
     /* ═══════════════════════════════════════════
-       4. ROLES
+       5. ROLES
        ═══════════════════════════════════════════ */
 
-    function esAdmin()      { return _perfil && _perfil.rol === 'admin'; }
-    function esEmpleado()   { return _perfil && _perfil.rol === 'empleado'; }
-    function esStaff()      { return esAdmin() || esEmpleado(); }
-    function esUsuario()    { return _perfil && _perfil.rol === 'usuario'; }
-
-    function obtenerRol()   { return _perfil ? _perfil.rol : null; }
-
-    /**
-     * Verificar si hay OTP pendiente (para mostrar/ocultar input).
-     * @returns {boolean}
-     */
-    function hayOTPPendiente() { return _otpPending; }
-    function obtenerTelefonoPendiente() { return _telefonoOTP; }
+    function esAdmin()    { return _perfil && _perfil.rol === 'admin'; }
+    function esEmpleado() { return _perfil && _perfil.rol === 'empleado'; }
+    function esStaff()    { return esAdmin() || esEmpleado(); }
+    function esUsuario()  { return _perfil && _perfil.rol === 'usuario'; }
+    function obtenerRol() { return _perfil ? _perfil.rol : null; }
 
     /* ── API pública ── */
     return {
-        enviarOTP:              enviarOTP,
-        verificarOTP:           verificarOTP,
+        registrarUsuario:       registrarUsuario,
+        loginConPin:            loginConPin,
         restaurarSesion:        restaurarSesion,
         logout:                 logout,
         obtenerUsuarioActual:   obtenerUsuarioActual,
@@ -231,9 +240,7 @@ var Auth = (function() {
         esEmpleado:             esEmpleado,
         esStaff:                esStaff,
         esUsuario:              esUsuario,
-        obtenerRol:             obtenerRol,
-        hayOTPPendiente:        hayOTPPendiente,
-        obtenerTelefonoPendiente: obtenerTelefonoPendiente
+        obtenerRol:             obtenerRol
     };
 
 })();

@@ -49,12 +49,18 @@
             <div class="login-card" id="vistaLogin">
                 <span class="login-icono">🥤</span>
                 <h2 class="login-titulo">¡ÚNETE AL CLUB!</h2>
-                <p class="login-subtitulo">Regístrate en 2 segundos y empieza a coleccionar sellos</p>
+                <p class="login-subtitulo">Regístrate rápido y empieza a coleccionar sellos</p>
 
-                <!-- PASO 1: Nickname + Teléfono → Enviar OTP -->
-                <form id="formLogin" autocomplete="off">
+                <!-- Toggle Registro / Login -->
+                <div class="login-toggle">
+                    <button type="button" class="toggle-btn activo" id="btnModoRegistro">📝 Registro</button>
+                    <button type="button" class="toggle-btn" id="btnModoLogin">🔑 Ya tengo PIN</button>
+                </div>
+
+                <!-- FORMULARIO: REGISTRO (nickname + teléfono + PIN) -->
+                <form id="formRegistro" autocomplete="off">
                     <div class="login-campo">
-                        <label for="inputUsername">@ Tu Nickname Cómic</label>
+                        <label for="inputUsername">@ Tu Nickname</label>
                         <input
                             type="text"
                             id="inputUsername"
@@ -66,7 +72,7 @@
                         >
                     </div>
                     <div class="login-campo">
-                        <label for="inputTelefono">📱 Tu WhatsApp o Teléfono</label>
+                        <label for="inputTelefono">📱 Tu Teléfono (WhatsApp)</label>
                         <input
                             type="tel"
                             id="inputTelefono"
@@ -76,27 +82,51 @@
                             maxlength="15"
                         >
                     </div>
-                    <button type="submit" class="btn-login">💥 ¡Entrar al Club! 💥</button>
-                </form>
-
-                <!-- PASO 2: Código OTP (oculto inicialmente) -->
-                <form id="formOTP" autocomplete="one-time-code" style="display: none;">
-                    <p class="otp-info" id="otpInfo"></p>
                     <div class="login-campo">
-                        <label for="inputOTP">🔢 Código de Verificación</label>
+                        <label for="inputPIN">🔐 Crea tu PIN (4 números)</label>
                         <input
                             type="text"
                             inputmode="numeric"
                             pattern="[0-9]*"
-                            id="inputOTP"
-                            placeholder="Ej: 123456"
+                            id="inputPIN"
+                            placeholder="Ej: 1234"
                             required
                             minlength="4"
-                            maxlength="6"
-                            autocomplete="one-time-code"
+                            maxlength="4"
+                            autocomplete="new-password"
                         >
                     </div>
-                    <button type="submit" class="btn-login">✅ ¡Verificar Código!</button>
+                    <button type="submit" class="btn-login">💥 ¡Crear Cuenta! 💥</button>
+                </form>
+
+                <!-- FORMULARIO: LOGIN (teléfono + PIN) -->
+                <form id="formLogin" autocomplete="off" style="display: none;">
+                    <div class="login-campo">
+                        <label for="inputTelefonoLogin">📱 Tu Teléfono</label>
+                        <input
+                            type="tel"
+                            id="inputTelefonoLogin"
+                            placeholder="Ej: 5512345678"
+                            required
+                            minlength="8"
+                            maxlength="15"
+                        >
+                    </div>
+                    <div class="login-campo">
+                        <label for="inputPINLogin">🔐 Tu PIN (4 números)</label>
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            id="inputPINLogin"
+                            placeholder="Ej: 1234"
+                            required
+                            minlength="4"
+                            maxlength="4"
+                            autocomplete="current-password"
+                        >
+                    </div>
+                    <button type="submit" class="btn-login">🚀 ¡Entrar! 🚀</button>
                 </form>
 
                 <div class="login-error" id="loginError"></div>
@@ -139,12 +169,8 @@
                 <p class="sellos-subtitulo">Junta 5 sábados y el 6to Chesko es ¡GRATIS!</p>
             </div>
 
-            <!-- Tarjetas de sellos: 5 normales + 1 gratis -->
-            <div class="sellos-grid" id="sellosGrid">
-                <!-- Se llena dinámicamente con app.js -->
-            </div>
+            <div class="sellos-grid" id="sellosGrid"></div>
 
-            <!-- Botón para registrar visita / ganar sello -->
             <button
                 class="btn-registrar-visita"
                 id="btnRegistrarVisita"
@@ -152,7 +178,6 @@
                 ⚡ REGISTRAR MI VISITA HOY ⚡
             </button>
 
-            <!-- Cupón de Chesko Gratis (se activa al completar los 5 sellos) -->
             <div class="cupon-gratis" id="cuponGratis">
                 <span class="cupon-badge">🎉🥤🎉</span>
                 <h3 class="cupon-titulo">¡CHESCO GRATIS!</h3>
@@ -163,22 +188,18 @@
 
         <!-- ═══════════════════════════════════════════
              SECCIÓN 3: MI CÓDIGO QR
-             Para que admin/empleado lo escanee y registre visita.
              ═══════════════════════════════════════════ -->
         <section class="perfil-seccion" id="seccionQR" style="display: none;">
             <div class="qr-header">
                 <h2 class="qr-titulo">📱 MI CÓDIGO QR 📱</h2>
                 <p class="qr-subtitulo">Presenta este código al staff para registrar tu visita</p>
             </div>
-            <div class="qr-container" id="qrContainer">
-                <!-- Se genera dinámicamente con qrcode-generator -->
-            </div>
+            <div class="qr-container" id="qrContainer"></div>
             <p class="qr-url" id="qrUrl"></p>
         </section>
 
         <!-- ═══════════════════════════════════════════
              SECCIÓN 4: ÁLBUM DE RETOS (Cromos)
-             Se oculta si no hay sesión.
              ═══════════════════════════════════════════ -->
         <section class="perfil-seccion" id="seccionAlbum" style="display: none;">
             <div class="album-header">
@@ -187,9 +208,7 @@
                 <div class="album-contador" id="albumContador">0 / 0 retos</div>
             </div>
 
-            <div class="album-grid" id="albumGrid">
-                <!-- Se llena dinámicamente con retos-album.js -->
-            </div>
+            <div class="album-grid" id="albumGrid"></div>
         </section>
 
     </div>
@@ -208,8 +227,7 @@
     </div>
 
     <!-- ═══════════════════════════════════════════
-         MODAL DE ESCÁNER (Validar visita de otro usuario)
-         Solo lo ven admin/empleado al escanear QR.
+         MODAL DE ESCÁNER (validar visita)
          ═══════════════════════════════════════════ -->
     <div class="modal-chesco modal-scanner" id="modalScanner">
         <div class="modal-chesco-contenido">
@@ -268,20 +286,20 @@
     <!-- ═══════════════════════════════════════════
          SCRIPTS EXTERNOS (CDN)
          ═══════════════════════════════════════════ -->
-    <!-- Supabase JS SDK v2 (auth + DB) -->
+    <!-- Supabase JS SDK v2 (para data layer) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <!-- QR Code Generator (client-side) -->
+    <!-- QR Code Generator -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
     <!-- ═══════════════════════════════════════════
-         SCRIPTS INTERNOS — Orden de carga obligatorio:
+         SCRIPTS INTERNOS — Orden de carga:
          1) config.js       (cliente Supabase + constants)
          2) challenges.js   (lista global de retos)
-         3) data.js         (abstracción de datos Supabase)
-         4) auth.js         (Phone OTP + roles)
+         3) data.js         (abstracción de datos)
+         4) auth.js         (PIN-based auth)
          5) loyalty.js      (racha sábados 5+1)
-         6) retos-album.js  (renderizado de cromos async)
-         7) api.js          (endpoints para widgets TWA)
+         6) retos-album.js  (renderizado de cromos)
+         7) api.js          (endpoints widgets)
          8) app.js          (controlador principal)
          ═══════════════════════════════════════════ -->
     <script src="js/config.js"></script>

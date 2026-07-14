@@ -5,78 +5,78 @@
  * Orquesta: Config, DataStore, Auth, Loyalty, AlbumRetos.
  * Maneja DOM, QR, escáner y flujos admin/empleado.
  *
- * Todos los módulos son ASYNC. El init() espera a Supabase
- * antes de renderizar la interfaz.
+ * Auth: PIN de 4 dígitos (sin SMS, gratis).
  */
 (function() {
     'use strict';
 
+    var $ = function(id) { return document.getElementById(id); };
+
     /* ═══════════════════════════════════════════
        0. REFERENCIAS AL DOM
        ═══════════════════════════════════════════ */
-    var $ = function(id) { return document.getElementById(id); };
 
-    /* Login / OTP */
-    var vistaLogin          = $('vistaLogin');
-    var vistaPerfil         = $('vistaPerfil');
-    var seccionSellos       = $('seccionSellos');
-    var seccionAlbum        = $('seccionAlbum');
-    var seccionQR           = $('seccionQR');
-    var formLogin           = $('formLogin');
-    var formOTP             = $('formOTP');
-    var inputUsername        = $('inputUsername');
-    var inputTelefono        = $('inputTelefono');
-    var inputOTP             = $('inputOTP');
-    var loginError           = $('loginError');
-    var otpInfo              = $('otpInfo');
-    /* loginStep1 = formLogin (the form itself is step 1)
-       loginStep2 = formOTP  (the form itself is step 2) */
+    /* Login */
+    var vistaLogin       = $('vistaLogin');
+    var vistaPerfil      = $('vistaPerfil');
+    var seccionSellos    = $('seccionSellos');
+    var seccionAlbum     = $('seccionAlbum');
+    var seccionQR        = $('seccionQR');
+    var formRegistro     = $('formRegistro');
+    var formLogin        = $('formLogin');
+    var btnModoRegistro  = $('btnModoRegistro');
+    var btnModoLogin     = $('btnModoLogin');
+    var inputUsername     = $('inputUsername');
+    var inputTelefono     = $('inputTelefono');
+    var inputPIN          = $('inputPIN');
+    var inputTelefonoLogin = $('inputTelefonoLogin');
+    var inputPINLogin     = $('inputPINLogin');
+    var loginError        = $('loginError');
 
     /* Perfil */
-    var perfilNickname       = $('perfilNickname');
-    var perfilTelefono       = $('perfilTelefono');
-    var perfilRol            = $('perfilRol');
-    var statRacha            = $('statRacha');
-    var statRetos            = $('statRetos');
-    var statMedallas         = $('statMedallas');
-    var btnLogout            = $('btnLogout');
+    var perfilNickname    = $('perfilNickname');
+    var perfilTelefono    = $('perfilTelefono');
+    var perfilRol         = $('perfilRol');
+    var statRacha         = $('statRacha');
+    var statRetos         = $('statRetos');
+    var statMedallas      = $('statMedallas');
+    var btnLogout         = $('btnLogout');
 
-    /* Sellos / Lealtad */
-    var sellosGrid           = $('sellosGrid');
-    var btnRegistrarVisita   = $('btnRegistrarVisita');
-    var cuponGratis          = $('cuponGratis');
-    var btnCanjearGratis     = $('btnCanjearGratis');
+    /* Sellos */
+    var sellosGrid        = $('sellosGrid');
+    var btnRegistrarVisita = $('btnRegistrarVisita');
+    var cuponGratis       = $('cuponGratis');
+    var btnCanjearGratis  = $('btnCanjearGratis');
 
     /* QR */
-    var qrContainer          = $('qrContainer');
-    var qrUrl                = $('qrUrl');
+    var qrContainer       = $('qrContainer');
+    var qrUrl             = $('qrUrl');
 
     /* Álbum */
-    var albumGrid            = $('albumGrid');
-    var albumContador        = $('albumContador');
+    var albumGrid         = $('albumGrid');
+    var albumContador     = $('albumContador');
 
-    /* Modal de alerta */
-    var modalAlerta          = $('modalAlerta');
-    var modalIcono           = $('modalIcono');
-    var modalTitulo          = $('modalTitulo');
-    var modalSub             = $('modalSub');
-    var modalMensaje         = $('modalMensaje');
-    var btnCerrarModal       = $('btnCerrarModalAlerta');
+    /* Modal alerta */
+    var modalAlerta       = $('modalAlerta');
+    var modalIcono        = $('modalIcono');
+    var modalTitulo       = $('modalTitulo');
+    var modalSub          = $('modalSub');
+    var modalMensaje      = $('modalMensaje');
+    var btnCerrarModal    = $('btnCerrarModalAlerta');
 
-    /* Modal de escáner (validación de visita) */
-    var modalScanner         = $('modalScanner');
-    var scannerUsername       = $('scannerUsername');
-    var scannerRacha         = $('scannerRacha');
-    var scannerMedallas      = $('scannerMedallas');
-    var btnConfirmarVisita    = $('btnConfirmarVisita');
-    var btnCancelarVisita     = $('btnCancelarVisita');
+    /* Modal escáner */
+    var modalScanner      = $('modalScanner');
+    var scannerUsername    = $('scannerUsername');
+    var scannerRacha      = $('scannerRacha');
+    var scannerMedallas   = $('scannerMedallas');
+    var btnConfirmarVisita = $('btnConfirmarVisita');
+    var btnCancelarVisita  = $('btnCancelarVisita');
 
-    /* Modal de canje */
-    var modalCanje           = $('modalCanje');
-    var btnCerrarCanje       = $('btnCerrarCanje');
+    /* Modal canje */
+    var modalCanje        = $('modalCanje');
+    var btnCerrarCanje    = $('btnCerrarCanje');
 
-    /* Estado del escáner */
-    var _targetUserId = null; /* UUID del usuario escaneado */
+    var _targetUserId = null;
 
     /* ═══════════════════════════════════════════
        1. INICIALIZACIÓN
@@ -85,19 +85,15 @@
         crearLucesFeria();
         bindEventos();
 
-        /* Restaurar sesión existente (si hay token guardado) */
         var tieneSesion = await Auth.restaurarSesion();
 
-        /* Verificar si es un link de escáner */
         var params = new URLSearchParams(window.location.search);
         var validarId = params.get('validar_usuario_id');
 
         if (tieneSesion) {
             if (validarId) {
-                /* Modo escáner: el usuario escaneó un QR */
                 await manejarEscaneoQR(validarId);
             } else {
-                /* Modo perfil normal */
                 await actualizarVista();
             }
         } else {
@@ -109,34 +105,54 @@
     }
 
     /* ═══════════════════════════════════════════
-       2. EVENTOS (BINDING)
+       2. EVENTOS
        ═══════════════════════════════════════════ */
     function bindEventos() {
-        /* Login paso 1: enviar OTP */
-        if (formLogin) {
-            formLogin.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await manejarEnviarOTP();
+        /* Toggle Registro / Login */
+        if (btnModoRegistro) {
+            btnModoRegistro.addEventListener('click', function() {
+                formRegistro.style.display = 'block';
+                formLogin.style.display = 'none';
+                btnModoRegistro.classList.add('activo');
+                btnModoLogin.classList.remove('activo');
+                loginError.classList.remove('visible');
+            });
+        }
+        if (btnModoLogin) {
+            btnModoLogin.addEventListener('click', function() {
+                formRegistro.style.display = 'none';
+                formLogin.style.display = 'block';
+                btnModoLogin.classList.add('activo');
+                btnModoRegistro.classList.remove('activo');
+                loginError.classList.remove('visible');
             });
         }
 
-        /* Login paso 2: verificar OTP */
-        if (formOTP) {
-            formOTP.addEventListener('submit', async function(e) {
+        /* Formulario de registro */
+        if (formRegistro) {
+            formRegistro.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                await manejarVerificarOTP();
+                await manejarRegistro();
+            });
+        }
+
+        /* Formulario de login */
+        if (formLogin) {
+            formLogin.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await manejarLogin();
             });
         }
 
         /* Logout */
         if (btnLogout) {
-            btnLogout.addEventListener('click', async function() {
-                await Auth.logout();
+            btnLogout.addEventListener('click', function() {
+                Auth.logout();
                 mostrarVistaLogin();
             });
         }
 
-        /* Registrar visita (auto o escáner) */
+        /* Registrar visita */
         if (btnRegistrarVisita) {
             btnRegistrarVisita.addEventListener('click', async function() {
                 await manejarRegistroVisita();
@@ -168,7 +184,7 @@
             });
         }
 
-        /* Escáner: confirmar visita */
+        /* Escáner: confirmar */
         if (btnConfirmarVisita) {
             btnConfirmarVisita.addEventListener('click', async function() {
                 await confirmarVisitaEscaneada();
@@ -177,9 +193,7 @@
         if (btnCancelarVisita) {
             btnCancelarVisita.addEventListener('click', function() {
                 modalScanner.classList.remove('activo');
-                /* Limpiar parámetro de URL sin recargar */
                 window.history.replaceState({}, '', window.location.pathname);
-                /* Volver al perfil */
                 actualizarVista();
             });
         }
@@ -193,11 +207,12 @@
     }
 
     /* ═══════════════════════════════════════════
-       3. FLUJO OTP — PASO 1: ENVIAR CÓDIGO
+       3. REGISTRAR USUARIO
        ═══════════════════════════════════════════ */
-    async function manejarEnviarOTP() {
+    async function manejarRegistro() {
         var username = inputUsername.value.trim();
         var telefono = inputTelefono.value.trim();
+        var pin      = inputPIN.value.trim();
 
         if (username.length < 2) {
             mostrarErrorLogin('El nickname debe tener al menos 2 caracteres.');
@@ -207,42 +222,55 @@
             mostrarErrorLogin('El teléfono debe tener al menos 8 dígitos.');
             return;
         }
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            mostrarErrorLogin('El PIN debe ser exactamente 4 números.');
+            return;
+        }
 
-        var btn = formLogin.querySelector('button[type="submit"]');
+        var btn = formRegistro.querySelector('button[type="submit"]');
         btn.disabled = true;
-        btn.textContent = '📱 Enviando código...';
+        btn.textContent = '⏳ Creando cuenta...';
 
-        var resultado = await Auth.enviarOTP(telefono, username);
+        var resultado = await Auth.registrarUsuario(username, telefono, pin);
 
         btn.disabled = false;
-        btn.textContent = '💥 ¡Entrar al Club! 💥';
+        btn.textContent = '💥 ¡Crear Cuenta! 💥';
 
         if (!resultado.ok) {
             mostrarErrorLogin(resultado.mensaje);
             return;
         }
 
-        /* Avanzar al paso 2 */
-        formLogin.style.display = 'none';
-        formOTP.style.display = 'block';
-        otpInfo.textContent = '📱 Código enviado a ' + Auth.obtenerTelefonoPendiente();
-        inputOTP.focus();
+        loginError.classList.remove('visible');
+        formRegistro.reset();
+        await actualizarVista();
+        mostrarExplosion('¡BIENVENIDO!', '¡Ya eres parte del Club ChesKoretos, @' + resultado.usuario.username + '!', 'exito');
     }
 
     /* ═══════════════════════════════════════════
-       4. FLUJO OTP — PASO 2: VERIFICAR CÓDIGO
+       4. LOGIN CON PIN
        ═══════════════════════════════════════════ */
-    async function manejarVerificarOTP() {
-        var codigo = inputOTP.value.trim();
+    async function manejarLogin() {
+        var telefono = inputTelefonoLogin.value.trim();
+        var pin      = inputPINLogin.value.trim();
 
-        var btn = formOTP.querySelector('button[type="submit"]');
+        if (telefono.length < 8) {
+            mostrarErrorLogin('El teléfono debe tener al menos 8 dígitos.');
+            return;
+        }
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            mostrarErrorLogin('El PIN debe ser exactamente 4 números.');
+            return;
+        }
+
+        var btn = formLogin.querySelector('button[type="submit"]');
         btn.disabled = true;
-        btn.textContent = '⏳ Verificando...';
+        btn.textContent = '⏳ Entrando...';
 
-        var resultado = await Auth.verificarOTP(codigo);
+        var resultado = await Auth.loginConPin(telefono, pin);
 
         btn.disabled = false;
-        btn.textContent = '✅ ¡Verificar Código!';
+        btn.textContent = '🚀 ¡Entrar! 🚀';
 
         if (!resultado.ok) {
             mostrarErrorLogin(resultado.mensaje);
@@ -251,10 +279,8 @@
 
         loginError.classList.remove('visible');
         formLogin.reset();
-        inputOTP.value = '';
-
         await actualizarVista();
-        mostrarExplosion('¡BIENVENIDO!', '¡Ya eres parte del Club ChesKoretos, @' + resultado.usuario.username + '!', 'exito');
+        mostrarExplosion('¡HOLA DE NUEVO!', '¡Bienvenido @' + resultado.usuario.username + '!', 'exito');
     }
 
     function mostrarErrorLogin(msg) {
@@ -263,35 +289,28 @@
     }
 
     /* ═══════════════════════════════════════════
-       5. REGISTRAR VISITA (desde botón del perfil)
+       5. REGISTRAR VISITA
        ═══════════════════════════════════════════ */
     async function manejarRegistroVisita() {
         var resultado = await Loyalty.registrarMiVisita();
         await manejarResultadoVisita(resultado);
     }
 
-    /**
-     * Procesar el resultado de una visita (común para auto y escáner).
-     */
     async function manejarResultadoVisita(resultado) {
         switch (resultado.tipo) {
             case 'no_logueado':
                 mostrarAlerta('⚠️', '¡Sin sesión!', 'Debes iniciar sesión para ganar sábados.', 'error');
                 break;
-
             case 'ya_registro_hoy':
                 mostrarAlerta('🚫', resultado.titulo, resultado.mensaje, 'error');
                 break;
-
             case 'error':
                 mostrarAlerta('❌', 'Error', resultado.mensaje, 'error');
                 break;
-
             case 'visita_registrada':
                 await actualizarVista();
                 mostrarExplosion(resultado.titulo, resultado.mensaje, 'exito');
                 break;
-
             case 'chesko_gratis':
                 await actualizarVista();
                 mostrarCuponGratis();
@@ -301,15 +320,9 @@
     }
 
     /* ═══════════════════════════════════════════
-       6. FLUJO ESCÁNER QR
+       6. ESCÁNER QR
        ═══════════════════════════════════════════ */
-
-    /**
-     * Manejar el escaneo de un QR por un admin/empleado.
-     * @param {string} targetUserId - UUID del usuario escaneado
-     */
     async function manejarEscaneoQR(targetUserId) {
-        /* Verificar que quien escanea es admin o empleado */
         if (!Auth.esStaff()) {
             mostrarAlerta(
                 '🚫',
@@ -317,20 +330,16 @@
                 'Solo los admins y empleados pueden validar visitas. Tu rol: ' + (Auth.obtenerRol() || 'ninguno'),
                 'error'
             );
-            setTimeout(function() {
-                window.location.href = 'perfil.html';
-            }, 3000);
+            setTimeout(function() { window.location.href = 'perfil.html'; }, 3000);
             return;
         }
 
-        /* Obtener datos del usuario escaneado */
         var datos = await DataStore.obtenerUsuarioCompleto(targetUserId);
         if (!datos || !datos.perfil) {
             mostrarAlerta('❌', 'Usuario No Encontrado', 'El código QR no corresponde a un usuario válido.', 'error');
             return;
         }
 
-        /* Llenar el modal de escáner */
         _targetUserId = targetUserId;
         scannerUsername.textContent = '@' + datos.perfil.username;
         scannerRacha.textContent   = (datos.lealtad ? datos.lealtad.racha_actual : 0) + ' / ' + Loyalty.RACHA_MAX;
@@ -339,9 +348,6 @@
         modalScanner.classList.add('activo');
     }
 
-    /**
-     * Confirmar la visita desde el modal del escáner.
-     */
     async function confirmarVisitaEscaneada() {
         if (!_targetUserId) return;
 
@@ -356,7 +362,6 @@
         modalScanner.classList.remove('activo');
         _targetUserId = null;
 
-        /* Limpiar URL */
         window.history.replaceState({}, '', window.location.pathname);
 
         await manejarResultadoVisita(resultado);
@@ -364,12 +369,11 @@
     }
 
     /* ═══════════════════════════════════════════
-       7. ACTUALIZAR VISTA COMPLETA
+       7. ACTUALIZAR VISTA
        ═══════════════════════════════════════════ */
     async function actualizarVista() {
         var logueado = Auth.obtenerUsuarioActual() !== null;
 
-        /* Mostrar/ocultar secciones */
         vistaLogin.style.display    = logueado ? 'none' : 'block';
         vistaPerfil.style.display   = logueado ? 'block' : 'none';
         seccionSellos.style.display = logueado ? 'block' : 'none';
@@ -381,18 +385,12 @@
         var usuario = Auth.obtenerUsuarioActual();
         var lealtad = usuario.lealtad;
 
-        /* Perfil */
         renderizarPerfil(usuario.perfil);
-
-        /* Sellos / Racha */
         renderizarSellos(lealtad);
         actualizarBotonVisita(lealtad);
         renderizarCuponGratis(lealtad);
+        generarQR(usuario.perfil.id);
 
-        /* QR */
-        generarQR(usuario.authUser.id);
-
-        /* Álbum */
         await AlbumRetos.renderizarAlbumDeRetos('albumGrid');
         var totalRetos = await AlbumRetos.contarRetosCompletados();
         var totalChallenges = (window.CHALLENGES || []).length;
@@ -407,9 +405,10 @@
         seccionSellos.style.display = 'none';
         seccionAlbum.style.display  = 'none';
         if (seccionQR) seccionQR.style.display = 'none';
-        /* Resetear formularios */
-        if (formLogin) { formLogin.style.display = 'block'; formLogin.reset(); }
-        if (formOTP) { formOTP.style.display = 'none'; formOTP.reset(); }
+        if (formRegistro) { formRegistro.style.display = 'block'; formRegistro.reset(); }
+        if (formLogin) { formLogin.style.display = 'none'; formLogin.reset(); }
+        if (btnModoRegistro) btnModoRegistro.classList.add('activo');
+        if (btnModoLogin) btnModoLogin.classList.remove('activo');
     }
 
     /* ═══════════════════════════════════════════
@@ -424,7 +423,6 @@
             perfilRol.textContent = rolLabel[perfil.rol] || perfil.rol;
         }
 
-        /* Estadísticas */
         var estado = Loyalty.obtenerEstadoLealtad();
         if (estado) {
             if (statRacha)    statRacha.textContent = estado.rachaActual;
@@ -438,20 +436,18 @@
     }
 
     /* ═══════════════════════════════════════════
-       9. RENDERIZAR SELLOS / RACHA
+       9. RENDERIZAR SELLOS
        ═══════════════════════════════════════════ */
     function renderizarSellos(lealtad) {
         if (!sellosGrid || !lealtad) return;
 
-        var racha      = lealtad.racha_actual || 0;
-        var gratisAct  = lealtad.chesko_gratis_activo || false;
-        var max        = Loyalty.RACHA_MAX;
-        var html       = '';
+        var racha     = lealtad.racha_actual || 0;
+        var gratisAct = lealtad.chesko_gratis_activo || false;
+        var max       = Loyalty.RACHA_MAX;
+        var html      = '';
 
         for (var i = 1; i <= max; i++) {
-            if (i === max) {
-                html += '<div class="sello-separador">→</div>';
-            }
+            if (i === max) html += '<div class="sello-separador">→</div>';
 
             var ganado = i <= racha;
             var esGratis = (i === max);
@@ -461,9 +457,7 @@
                 clases += ' sello-gratis';
                 if (gratisAct) clases += ' activo';
             }
-            if (ganado && !esGratis) {
-                clases += ' ganado';
-            }
+            if (ganado && !esGratis) clases += ' ganado';
 
             var contenido = esGratis
                 ? '<span class="sello-numero">🥤<br>¡GRATIS!</span>'
@@ -476,7 +470,7 @@
     }
 
     /* ═══════════════════════════════════════════
-       10. BOTÓN DE REGISTRAR VISITA
+       10. BOTÓN REGISTRAR VISITA
        ═══════════════════════════════════════════ */
     function actualizarBotonVisita(lealtad) {
         if (!btnRegistrarVisita || !lealtad) return;
@@ -522,24 +516,21 @@
     }
 
     /* ═══════════════════════════════════════════
-       12. GENERAR CÓDIGO QR
+       12. GENERAR QR
        ═══════════════════════════════════════════ */
     function generarQR(userId) {
         if (!qrContainer) return;
 
         var url = AppConfig.URL_BASE + '/perfil.html?validar_usuario_id=' + userId;
 
-        /* Mostrar la URL */
         if (qrUrl) qrUrl.textContent = url;
 
-        /* Generar QR con la librería qrcode-generator */
         if (typeof qrcode !== 'undefined') {
             qrContainer.innerHTML = '';
             var qr = qrcode(0, 'M');
             qr.addData(url);
             qr.make();
 
-            /* Crear imagen */
             var img = document.createElement('img');
             img.src = qr.createDataURL(6, 8);
             img.alt = 'Código QR de validación';
@@ -549,7 +540,6 @@
             img.style.boxShadow = '5px 5px 0 #000';
             qrContainer.appendChild(img);
         } else {
-            /* Fallback: mostrar solo la URL */
             qrContainer.innerHTML = '<p style="font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">' + url + '</p>';
         }
     }
