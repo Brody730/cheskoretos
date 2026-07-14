@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - ChesKoretos</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Mi perfil de ChesKoretos: sellos de lealtad, cupón gratis y álbum de retos coleccionables.">
+    <meta name="author" content="ChesKoretos Team">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
+
+    <!-- Shared + Profile Styles -->
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+
+    <div class="lights" id="lights"></div>
+
+    <!-- ═══════════════════════════════════════════
+         BARRA DE NAVEGACIÓN
+         ═══════════════════════════════════════════ -->
+    <nav class="navbar-comic">
+        <a href="index.html" class="nav-brand-comic">
+            <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        </a>
+        <div class="nav-menu-comic">
+            <a href="index.html" class="nav-link-comic">🏠 Inicio</a>
+            <a href="menu.html" class="nav-link-comic">🥤 Menú</a>
+            <a href="ruleta.html" class="nav-link-comic btn-girar-ruleta nav-link-ruleta">🎡 Ruleta</a>
+            <a href="perfil.html" class="nav-link-comic" style="color: var(--amarillo);">👤 Perfil</a>
+        </div>
+    </nav>
+
+    <div class="container perfil-container">
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 1: TARJETA DE LOGIN / PERFIL
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionPerfil">
+
+            <!-- ─── TARJETA LOGIN (oculta si hay sesión) ─── -->
+            <div class="login-card" id="vistaLogin">
+                <span class="login-icono">🥤</span>
+                <h2 class="login-titulo">¡ÚNETE AL CLUB!</h2>
+                <p class="login-subtitulo">Regístrate en 2 segundos y empieza a coleccionar sellos</p>
+
+                <!-- PASO 1: Nickname + Teléfono → Enviar OTP -->
+                <form id="formLogin" autocomplete="off">
+                    <div class="login-campo">
+                        <label for="inputUsername">@ Tu Nickname Cómic</label>
+                        <input
+                            type="text"
+                            id="inputUsername"
+                            placeholder="Ej: KoretoMaster"
+                            required
+                            minlength="2"
+                            maxlength="20"
+                            autocapitalize="none"
+                        >
+                    </div>
+                    <div class="login-campo">
+                        <label for="inputTelefono">📱 Tu WhatsApp o Teléfono</label>
+                        <input
+                            type="tel"
+                            id="inputTelefono"
+                            placeholder="Ej: 5512345678"
+                            required
+                            minlength="8"
+                            maxlength="15"
+                        >
+                    </div>
+                    <button type="submit" class="btn-login">💥 ¡Entrar al Club! 💥</button>
+                </form>
+
+                <!-- PASO 2: Código OTP (oculto inicialmente) -->
+                <form id="formOTP" autocomplete="one-time-code" style="display: none;">
+                    <p class="otp-info" id="otpInfo"></p>
+                    <div class="login-campo">
+                        <label for="inputOTP">🔢 Código de Verificación</label>
+                        <input
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            id="inputOTP"
+                            placeholder="Ej: 123456"
+                            required
+                            minlength="4"
+                            maxlength="6"
+                            autocomplete="one-time-code"
+                        >
+                    </div>
+                    <button type="submit" class="btn-login">✅ ¡Verificar Código!</button>
+                </form>
+
+                <div class="login-error" id="loginError"></div>
+            </div>
+
+            <!-- ─── PERFIL DEL USUARIO (oculta si NO hay sesión) ─── -->
+            <div class="perfil-info" id="vistaPerfil" style="display: none;">
+                <div class="perfil-avatar">🥤</div>
+                <h2 class="perfil-nickname" id="perfilNickname"></h2>
+                <p class="perfil-telefono" id="perfilTelefono"></p>
+                <span class="perfil-rol-badge" id="perfilRol"></span>
+
+                <div class="perfil-stats">
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statRacha">0</div>
+                        <div class="perfil-stat-label">Racha Sábados</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statRetos">0</div>
+                        <div class="perfil-stat-label">Retos</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statMedallas">0</div>
+                        <div class="perfil-stat-label">Medallas</div>
+                    </div>
+                </div>
+
+                <button class="btn-logout" id="btnLogout">🚪 Cerrar Sesión</button>
+            </div>
+
+        </section>
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 2: PLANILLA DE SELLOS (LEALTAD)
+             Racha de sábados 5+1 gratis.
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionSellos" style="display: none;">
+            <div class="sellos-header">
+                <h2 class="sellos-titulo">🎯 MI PLANILLA DE SELLOS 🎯</h2>
+                <p class="sellos-subtitulo">Junta 5 sábados y el 6to Chesko es ¡GRATIS!</p>
+            </div>
+
+            <!-- Tarjetas de sellos: 5 normales + 1 gratis -->
+            <div class="sellos-grid" id="sellosGrid">
+                <!-- Se llena dinámicamente con app.js -->
+            </div>
+
+            <!-- Botón para registrar visita / ganar sello -->
+            <button
+                class="btn-registrar-visita"
+                id="btnRegistrarVisita"
+            >
+                ⚡ REGISTRAR MI VISITA HOY ⚡
+            </button>
+
+            <!-- Cupón de Chesko Gratis (se activa al completar los 5 sellos) -->
+            <div class="cupon-gratis" id="cuponGratis">
+                <span class="cupon-badge">🎉🥤🎉</span>
+                <h3 class="cupon-titulo">¡CHESCO GRATIS!</h3>
+                <p class="cupon-texto">Muestra este cupón en el puesto y llévate tu Chesko preparado sin costo. ¡Te lo mereces, crack!</p>
+                <button class="btn-canjejar" id="btnCanjearGratis">✅ YA LO CANJEÉ</button>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 3: MI CÓDIGO QR
+             Para que admin/empleado lo escanee y registre visita.
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionQR" style="display: none;">
+            <div class="qr-header">
+                <h2 class="qr-titulo">📱 MI CÓDIGO QR 📱</h2>
+                <p class="qr-subtitulo">Presenta este código al staff para registrar tu visita</p>
+            </div>
+            <div class="qr-container" id="qrContainer">
+                <!-- Se genera dinámicamente con qrcode-generator -->
+            </div>
+            <p class="qr-url" id="qrUrl"></p>
+        </section>
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 4: ÁLBUM DE RETOS (Cromos)
+             Se oculta si no hay sesión.
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionAlbum" style="display: none;">
+            <div class="album-header">
+                <h2 class="album-titulo">📸 MI ÁLBUM DE RETOS 📸</h2>
+                <p class="album-subtitulo">Cromos coleccionables — ¿Cuántos retos has completado?</p>
+                <div class="album-contador" id="albumContador">0 / 0 retos</div>
+            </div>
+
+            <div class="album-grid" id="albumGrid">
+                <!-- Se llena dinámicamente con retos-album.js -->
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL GENÉRICO DE ALERTA
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco" id="modalAlerta">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono" id="modalIcono">⚠️</span>
+            <h3 class="modal-chesco-titulo" id="modalTitulo">¡Aviso!</h3>
+            <p class="modal-chesco-sub" id="modalSub"></p>
+            <p class="modal-chesco-mensaje" id="modalMensaje"></p>
+            <button class="modal-chesco-btn" id="btnCerrarModalAlerta">¡ENTENDIDO!</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE ESCÁNER (Validar visita de otro usuario)
+         Solo lo ven admin/empleado al escanear QR.
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco modal-scanner" id="modalScanner">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono">📱</span>
+            <h3 class="modal-chesco-titulo">VALIDAR VISITA</h3>
+            <p class="modal-chesco-sub">¿Registrar visita para este usuario?</p>
+            <div class="scanner-datos">
+                <div class="scanner-campo">
+                    <span class="scanner-label">Usuario:</span>
+                    <span class="scanner-valor" id="scannerUsername"></span>
+                </div>
+                <div class="scanner-campo">
+                    <span class="scanner-label">Racha actual:</span>
+                    <span class="scanner-valor" id="scannerRacha"></span>
+                </div>
+                <div class="scanner-campo">
+                    <span class="scanner-label">Medallas:</span>
+                    <span class="scanner-valor" id="scannerMedallas"></span>
+                </div>
+            </div>
+            <div class="scanner-acciones">
+                <button class="btn-scanner-confirmar" id="btnConfirmarVisita">✅ Confirmar Visita</button>
+                <button class="btn-scanner-cancelar" id="btnCancelarVisita">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE CONFIRMACIÓN DE CANJE
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco modal-exito" id="modalCanje" style="display: none;">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono">🥤</span>
+            <h3 class="modal-chesco-titulo">¡CHESCO CANJEADO!</h3>
+            <p class="modal-chesco-mensaje">Presenta tu pantalla al de la caja y disfruta tu bebida gratis. ¡Vuelve pronto por más sellos!</p>
+            <button class="modal-chesco-btn" id="btnCerrarCanje">¡VALE, GRACIAS!</button>
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <div class="info-local">
+            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.<br>
+            ¡Búscanos por la ruleta gigante y disfruta el mejor sabor!
+        </div>
+        <div class="footer-actions">
+            <a href="index.html" class="btn-comic">🏠 Inicio</a>
+            <a href="menu.html" class="btn-comic btn-secondary">🥤 Ver Menú</a>
+            <a href="ruleta.html" class="btn-comic btn-girar-ruleta">🎡 Ruleta</a>
+        </div>
+        <p class="footer-credits">
+            © 2026 ChesKoretos. ¡El refresco que te reta! Todos los derechos reservados. ⚡
+        </p>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════
+         SCRIPTS EXTERNOS (CDN)
+         ═══════════════════════════════════════════ -->
+    <!-- Supabase JS SDK v2 (auth + DB) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- QR Code Generator (client-side) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
+    <!-- ═══════════════════════════════════════════
+         SCRIPTS INTERNOS — Orden de carga obligatorio:
+         1) config.js       (cliente Supabase + constants)
+         2) challenges.js   (lista global de retos)
+         3) data.js         (abstracción de datos Supabase)
+         4) auth.js         (Phone OTP + roles)
+         5) loyalty.js      (racha sábados 5+1)
+         6) retos-album.js  (renderizado de cromos async)
+         7) api.js          (endpoints para widgets TWA)
+         8) app.js          (controlador principal)
+         ═══════════════════════════════════════════ -->
+    <script src="js/config.js"></script>
+    <script src="js/challenges.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/loyalty.js"></script>
+    <script src="js/retos-album.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

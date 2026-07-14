@@ -1,0 +1,1093 @@
+/* ═══════════════════════════════════════════
+   CHESKORETOS - ESTILOS DE PERFIL Y LEALTAD
+   ═══════════════════════════════════════════
+   Estilos para la página de perfil del usuario,
+   formulario de login exprés, tarjeta de sellos
+   y álbum de retos coleccionables.
+   Estética Pop Art / Cómic extrema. */
+
+/* ═══════════════════════════════════════════
+   1. CONTENEDOR Y SECCIONES BASE
+   ═══════════════════════════════════════════ */
+.perfil-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+}
+
+.perfil-seccion {
+    background: rgba(0, 0, 0, 0.75);
+    border: var(--borde-comic);
+    border-radius: 20px;
+    padding: 35px 25px;
+    margin: 30px 0;
+    box-shadow:
+        0 0 0 4px var(--naranja),
+        8px 8px 0 var(--rojo),
+        16px 16px 0 #000;
+    position: relative;
+    overflow: hidden;
+}
+
+.perfil-seccion::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--rojo), var(--naranja), var(--amarillo), var(--naranja), var(--rojo));
+}
+
+/* ═══════════════════════════════════════════
+   2. TARJETA DE LOGIN / REGISTRO RÁPIDO
+   ═══════════════════════════════════════════ */
+.login-card {
+    text-align: center;
+}
+
+.login-card .login-icono {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: pulse-icon 2s infinite ease-in-out;
+}
+
+.login-card .login-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    color: var(--amarillo);
+    text-shadow:
+        3px 3px 0 var(--rojo),
+        6px 6px 0 #000,
+        0 0 15px rgba(255, 204, 0, 0.4);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    transform: rotate(-1deg);
+}
+
+.login-card .login-subtitulo {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.2rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 25px;
+    letter-spacing: 1px;
+}
+
+/* Campos del formulario */
+.login-campo {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.login-campo label {
+    display: block;
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--amarillo);
+    text-shadow: 1px 1px 0 #000;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+.login-campo input {
+    width: 100%;
+    padding: 14px 18px;
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.3rem;
+    color: #000;
+    background: #ffffff;
+    border: 4px solid #000;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0 #000;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+}
+
+.login-campo input::placeholder {
+    color: #999;
+}
+
+.login-campo input:focus {
+    outline: none;
+    border-color: var(--amarillo);
+    box-shadow: 6px 6px 0 var(--amarillo), 0 0 20px rgba(255, 204, 0, 0.4);
+    transform: translate(-2px, -2px);
+}
+
+/* Botón de registro/login */
+.btn-login {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: 1.6rem;
+    padding: 15px 50px;
+    background: linear-gradient(180deg, var(--naranja) 0%, var(--rojo) 100%);
+    color: var(--blanco);
+    border: 4px solid #000;
+    border-radius: 18px;
+    cursor: pointer;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    box-shadow:
+        0 6px 0 #000,
+        0 8px 25px rgba(255, 102, 0, 0.5);
+    text-shadow:
+        2px 2px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000;
+    transition: all 0.1s ease;
+    margin-top: 10px;
+}
+
+.btn-login:hover {
+    background: linear-gradient(180deg, #FF7700 0%, #FF4400 100%);
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 0 #000,
+        0 12px 30px rgba(255, 102, 0, 0.7);
+}
+
+.btn-login:active {
+    transform: translateY(6px);
+    box-shadow: 0 0 0 #000;
+}
+
+/* Mensaje de error en login */
+.login-error {
+    display: none;
+    background: var(--rojo);
+    color: var(--blanco);
+    border: 3px solid #000;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 0 #000;
+    margin-top: 15px;
+    box-shadow: 4px 4px 0 #000;
+    transform: rotate(-1deg);
+    animation: bounceIn 0.5s ease forwards;
+    letter-spacing: 1px;
+}
+
+.login-error.visible {
+    display: block;
+}
+
+/* ═══════════════════════════════════════════
+   3. TARJETA DE PERFIL (usuario logueado)
+   ═══════════════════════════════════════════ */
+.perfil-info {
+    text-align: center;
+}
+
+.perfil-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid var(--amarillo);
+    background: linear-gradient(135deg, var(--naranja), var(--rojo));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    box-shadow: 5px 5px 0 #000;
+    font-size: 3rem;
+}
+
+.perfil-nickname {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(2rem, 6vw, 2.8rem);
+    color: var(--amarillo);
+    text-shadow:
+        3px 3px 0 var(--rojo),
+        6px 6px 0 #000;
+    letter-spacing: 2px;
+    transform: rotate(-1deg);
+}
+
+.perfil-nickname::before {
+    content: '@';
+    color: var(--naranja);
+}
+
+.perfil-telefono {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.2rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    margin-top: 5px;
+    opacity: 0.9;
+}
+
+.perfil-telefono::before {
+    content: '📱 ';
+}
+
+/* Estadísticas del perfil */
+.perfil-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.perfil-stat {
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px dashed var(--amarillo);
+    border-radius: 15px;
+    padding: 12px 20px;
+    min-width: 120px;
+}
+
+.perfil-stat-numero {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 2rem;
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+}
+
+.perfil-stat-label {
+    font-family: 'Bangers', sans-serif;
+    font-size: 0.9rem;
+    color: var(--blanco);
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 1px;
+}
+
+/* Botón de logout */
+.btn-logout {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1rem;
+    padding: 10px 25px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FF5555;
+    border: 2px solid #FF5555;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+}
+
+.btn-logout:hover {
+    background: #FF3300;
+    color: #fff;
+    border-color: #fff;
+    transform: scale(1.05);
+}
+
+/* ═══════════════════════════════════════════
+   4. PLANILLA DE SELLOS (Loyalty Card)
+   ═══════════════════════════════════════════ */
+.sellos-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.sellos-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    color: var(--amarillo);
+    text-shadow:
+        3px 3px 0 var(--rojo),
+        6px 6px 0 #000;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.sellos-subtitulo {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* Cuadrícula de sellos (6 + 1 gratis) */
+.sellos-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 25px 0;
+}
+
+.sello-item {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 4px solid #555;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 3px 3px 0 #000;
+}
+
+.sello-item .sello-numero {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+/* Sello ganado / coloreado */
+.sello-item.ganado {
+    border-color: var(--amarillo);
+    background: radial-gradient(circle, var(--amarillo), var(--naranja));
+    animation: selloPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.sello-item.ganado .sello-numero {
+    color: #000;
+    text-shadow: none;
+    font-size: 1.5rem;
+}
+
+/* Separador visual antes del sello gratis */
+.sello-separador {
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.5rem;
+    color: var(--rojo);
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* Sello 7: el gratis */
+.sello-gratis {
+    width: 90px;
+    height: 90px;
+    border: 5px dashed var(--amarillo);
+    background: rgba(255, 215, 0, 0.1);
+    position: relative;
+}
+
+.sello-gratis .sello-numero {
+    font-size: 1rem;
+}
+
+/* Sello gratis activado (cupón listo) */
+.sello-gratis.activo {
+    border-style: solid;
+    border-color: #39FF14;
+    background: radial-gradient(circle, #39FF14, #00CC44);
+    animation: gratisGlow 1s ease infinite alternate;
+    box-shadow:
+        0 0 20px rgba(57, 255, 20, 0.6),
+        5px 5px 0 #000;
+}
+
+.sello-gratis.activo .sello-numero {
+    font-size: 1.4rem;
+    color: #000;
+}
+
+/* Animación de aparición del sello */
+@keyframes selloPop {
+    0%   { transform: scale(0.3) rotate(-30deg); opacity: 0; }
+    60%  { transform: scale(1.15) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Glow del cupón gratis activado */
+@keyframes gratisGlow {
+    0%   { box-shadow: 0 0 15px rgba(57, 255, 20, 0.4), 5px 5px 0 #000; }
+    100% { box-shadow: 0 0 40px rgba(57, 255, 20, 0.9), 5px 5px 0 #000; }
+}
+
+/* ═══════════════════════════════════════════
+   5. CUPÓN DE CHESCO GRATIS
+   ═══════════════════════════════════════════ */
+.cupon-gratis {
+    display: none;
+    background: linear-gradient(135deg, #000 0%, #111 100%);
+    border: 5px solid #39FF14;
+    border-radius: 20px;
+    padding: 30px 25px;
+    text-align: center;
+    margin-top: 25px;
+    position: relative;
+    box-shadow:
+        0 0 30px rgba(57, 255, 20, 0.4),
+        8px 8px 0 #000;
+    animation: bounceIn 0.6s ease forwards;
+    overflow: hidden;
+}
+
+.cupon-gratis.visible {
+    display: block;
+}
+
+/* Patrón de fondo del cupón */
+.cupon-gratis::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(57, 255, 20, 0.03) 10px,
+        rgba(57, 255, 20, 0.03) 20px
+    );
+    pointer-events: none;
+}
+
+.cupon-badge {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.cupon-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    color: #39FF14;
+    text-shadow:
+        3px 3px 0 #006600,
+        6px 6px 0 #000;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.cupon-texto {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.2rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.btn-canjejar {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.3rem;
+    padding: 12px 40px;
+    background: linear-gradient(180deg, #39FF14 0%, #00CC00 100%);
+    color: #000;
+    border: 4px solid #000;
+    border-radius: 15px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 0 5px 0 #000;
+    transition: all 0.1s ease;
+    position: relative;
+}
+
+.btn-canjejar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #000;
+}
+
+.btn-canjejar:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #000;
+}
+
+/* ═══════════════════════════════════════════
+   6. BOTÓN DE REGISTRAR VISITA
+   ═══════════════════════════════════════════ */
+.btn-registrar-visita {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: 1.4rem;
+    padding: 14px 40px;
+    background: linear-gradient(180deg, var(--amarillo) 0%, var(--naranja) 100%);
+    color: #000;
+    border: 4px solid #000;
+    border-radius: 18px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow:
+        0 5px 0 #000,
+        0 8px 20px rgba(255, 204, 0, 0.4);
+    transition: all 0.1s ease;
+    display: block;
+    margin: 20px auto 0;
+}
+
+.btn-registrar-visita:hover {
+    background: linear-gradient(180deg, #FFDD33 0%, #FF8800 100%);
+    transform: translateY(-2px);
+    box-shadow:
+        0 7px 0 #000,
+        0 12px 25px rgba(255, 204, 0, 0.6);
+}
+
+.btn-registrar-visita:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #000;
+}
+
+.btn-registrar-visita:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #000;
+    background: #555;
+    color: #999;
+    border-color: #444;
+}
+
+/* ═══════════════════════════════════════════
+   7. ÁLBUM DE RETOS (Cromos / Estampitas)
+   ═══════════════════════════════════════════ */
+.album-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.album-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    color: var(--naranja);
+    text-shadow:
+        3px 3px 0 #000,
+        0 0 15px rgba(255, 102, 0, 0.4);
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.album-subtitulo {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    opacity: 0.9;
+}
+
+.album-contador {
+    display: inline-block;
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1rem;
+    color: #000;
+    background: var(--amarillo);
+    border: 3px solid #000;
+    border-radius: 20px;
+    padding: 5px 18px;
+    margin-top: 10px;
+    box-shadow: 3px 3px 0 #000;
+    letter-spacing: 1px;
+}
+
+/* Cuadrícula del álbum (estilo cromos) */
+.album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Cromo individual */
+.album-cromo {
+    border: 4px solid #555;
+    border-radius: 15px;
+    padding: 18px 12px;
+    background: rgba(26, 26, 26, 0.9);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    box-shadow: 5px 5px 0 #000;
+    cursor: default;
+}
+
+/* Cromo completado a todo color */
+.album-cromo.completado {
+    transform: rotate(0deg);
+}
+
+.album-cromo.completado:hover {
+    transform: scale(1.06) rotate(-2deg);
+    box-shadow: 8px 8px 0 var(--amarillo);
+}
+
+/* Cromo pendiente: escala de grises + candado */
+.album-cromo.pendiente {
+    filter: grayscale(1);
+    opacity: 0.65;
+}
+
+.album-cromo.pendiente:hover {
+    filter: grayscale(0.8);
+    opacity: 0.8;
+    transform: scale(1.03);
+}
+
+/* Emoji del cromo */
+.cromo-emoji {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    filter: drop-shadow(2px 2px 0 #000);
+}
+
+.album-cromo.pendiente .cromo-emoji {
+    filter: grayscale(1) drop-shadow(2px 2px 0 #000);
+}
+
+/* Título del reto en el cromo */
+.cromo-titulo {
+    font-family: 'Bangers', sans-serif;
+    font-size: 0.85rem;
+    color: var(--blanco);
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+/* Descuento del cromo */
+.cromo-descuento {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 0.9rem;
+    color: var(--amarillo);
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* Badge de check o candado */
+.cromo-check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1.2rem;
+    background: rgba(57, 255, 20, 0.9);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #000;
+    font-size: 0.85rem;
+}
+
+.cromo-lock {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1rem;
+    background: rgba(100, 100, 100, 0.8);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #000;
+}
+
+/* Mensaje vacío del álbum */
+.album-empty-msg {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.2rem;
+    color: #888;
+    text-align: center;
+    padding: 30px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* ═══════════════════════════════════════════
+   8. MODAL GENÉRICO DE ALERTA (REUTILIZABLE)
+   ═══════════════════════════════════════════ */
+.modal-chesco {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.88);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-chesco.activo {
+    display: flex;
+}
+
+.modal-chesco-contenido {
+    background: #111;
+    border: 5px solid var(--amarillo);
+    border-radius: 20px;
+    max-width: 500px;
+    width: 100%;
+    padding: 35px 25px;
+    text-align: center;
+    box-shadow:
+        0 0 50px rgba(255, 204, 0, 0.5),
+        0 0 0 9999px rgba(0, 0, 0, 0.85);
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    position: relative;
+}
+
+.modal-chesco.activo .modal-chesco-contenido {
+    transform: scale(1);
+}
+
+.modal-chesco-icono {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.modal-chesco-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
+    color: var(--amarillo);
+    text-shadow:
+        3px 3px 0 var(--rojo),
+        5px 5px 0 #000;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.modal-chesco-sub {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 20px;
+}
+
+.modal-chesco-mensaje {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.15rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.modal-chesco-btn {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.3rem;
+    padding: 12px 40px;
+    background: linear-gradient(180deg, var(--naranja) 0%, var(--rojo) 100%);
+    color: var(--blanco);
+    border: 4px solid #000;
+    border-radius: 15px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 0 #000;
+    transition: all 0.1s ease;
+}
+
+.modal-chesco-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #000;
+}
+
+.modal-chesco-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #000;
+}
+
+/* Variantes de color del modal */
+.modal-chesco.modal-error {
+    border-color: var(--rojo);
+}
+
+.modal-chesco.modal-error .modal-chesco-titulo {
+    color: var(--rojo);
+}
+
+.modal-chesco.modal-error .modal-chesco-contenido {
+    border-color: var(--rojo);
+    box-shadow:
+        0 0 50px rgba(255, 51, 0, 0.5),
+        0 0 0 9999px rgba(0, 0, 0, 0.85);
+}
+
+.modal-chesco.modal-exito {
+    border-color: #39FF14;
+}
+
+.modal-chesco.modal-exito .modal-chesco-titulo {
+    color: #39FF14;
+}
+
+.modal-chesco.modal-exito .modal-chesco-contenido {
+    border-color: #39FF14;
+    box-shadow:
+        0 0 50px rgba(57, 255, 20, 0.5),
+        0 0 0 9999px rgba(0, 0, 0, 0.85);
+}
+
+/* ═══════════════════════════════════════════
+   9. LOGIN PASO 2 — OTP
+   ═══════════════════════════════════════════ */
+.otp-info {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 10px;
+    background: rgba(255, 204, 0, 0.1);
+    border: 2px dashed var(--amarillo);
+    border-radius: 10px;
+}
+
+/* ═══════════════════════════════════════════
+   10. BADGE DE ROL
+   ═══════════════════════════════════════════ */
+.perfil-rol-badge {
+    display: inline-block;
+    font-family: 'Bangers', sans-serif;
+    font-size: 0.9rem;
+    padding: 4px 14px;
+    border-radius: 20px;
+    border: 2px solid #000;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 #000;
+    margin-top: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--blanco);
+}
+
+/* ═══════════════════════════════════════════
+   11. SECCIÓN QR
+   ═══════════════════════════════════════════ */
+.qr-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.qr-titulo {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    color: var(--amarillo);
+    text-shadow:
+        3px 3px 0 var(--rojo),
+        6px 6px 0 #000;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.qr-subtitulo {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--blanco);
+    text-shadow: 2px 2px 0 #000;
+}
+
+.qr-container {
+    text-align: center;
+    padding: 20px;
+    background: #ffffff;
+    border: 4px solid #000;
+    border-radius: 15px;
+    box-shadow: 5px 5px 0 #000;
+    display: inline-block;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 260px;
+}
+
+.qr-container img {
+    max-width: 200px;
+    border-radius: 10px;
+    border: 3px solid #000;
+    box-shadow: 5px 5px 0 #000;
+}
+
+.qr-url {
+    font-family: monospace;
+    font-size: 0.65rem;
+    color: #aaa;
+    word-break: break-all;
+    text-align: center;
+    margin-top: 12px;
+    opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════
+   12. MODAL ESCÁNER (validar visita)
+   ═══════════════════════════════════════════ */
+.modal-scanner .modal-chesco-contenido {
+    border-color: #2196F3;
+}
+
+.modal-scanner .modal-chesco-titulo {
+    color: #2196F3;
+}
+
+.scanner-datos {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px dashed #2196F3;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin: 15px 0 20px;
+    text-align: left;
+}
+
+.scanner-campo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.scanner-campo:last-child {
+    border-bottom: none;
+}
+
+.scanner-label {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1rem;
+    color: #aaa;
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 1px;
+}
+
+.scanner-valor {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.2rem;
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+}
+
+.scanner-acciones {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-scanner-confirmar {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.2rem;
+    padding: 12px 30px;
+    background: linear-gradient(180deg, #4CAF50 0%, #388E3C 100%);
+    color: #fff;
+    border: 4px solid #000;
+    border-radius: 15px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 5px 0 #000;
+    transition: all 0.1s ease;
+}
+
+.btn-scanner-confirmar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #000;
+}
+
+.btn-scanner-confirmar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #000;
+}
+
+.btn-scanner-cancelar {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    padding: 12px 25px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FF5555;
+    border: 2px solid #FF5555;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+}
+
+.btn-scanner-cancelar:hover {
+    background: #FF3300;
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   13. RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 600px) {
+    .perfil-seccion {
+        padding: 25px 18px;
+    }
+
+    .sellos-grid {
+        gap: 8px;
+    }
+
+    .sello-item {
+        width: 55px;
+        height: 55px;
+        font-size: 1.5rem;
+    }
+
+    .sello-gratis {
+        width: 75px;
+        height: 75px;
+    }
+
+    .sello-separador {
+        width: 20px;
+        font-size: 1.2rem;
+    }
+
+    .album-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+    }
+
+    .album-cromo {
+        padding: 14px 8px;
+    }
+
+    .cromo-emoji {
+        font-size: 2rem;
+    }
+
+    .perfil-stats {
+        gap: 15px;
+    }
+
+    .scanner-acciones {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .scanner-acciones button {
+        width: 100%;
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 400px) {
+    .album-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sello-item {
+        width: 48px;
+        height: 48px;
+    }
+
+    .sello-gratis {
+        width: 65px;
+        height: 65px;
+    }
+}
