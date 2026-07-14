@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6600">
 
 </head>
 <body>
@@ -104,5 +106,12 @@
     <!-- Scripts de sincronización -->
     <script src="js/challenges.js"></script>
     <script src="js/landing.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+    </script>
 </body>
 </html>

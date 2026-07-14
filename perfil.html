@@ -14,6 +14,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6600">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ChesKoretos">
+
     <!-- Shared + Profile Styles -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
@@ -196,6 +203,12 @@
             </div>
             <div class="qr-container" id="qrContainer"></div>
             <p class="qr-url" id="qrUrl"></p>
+            <button id="btnEscanearQR" class="btn-escanear" style="display:none;">📷 Escanear QR de cliente</button>
+        </section>
+
+        <!-- Botón instalar PWA (solo si no está instalada) -->
+        <section class="perfil-seccion" id="seccionInstalarPWA" style="display:none;">
+            <button id="btnInstalarPWA" class="btn-escanear" style="background:linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);">📲 Instalar App en tu celular</button>
         </section>
 
         <!-- ═══════════════════════════════════════════
@@ -267,6 +280,21 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════
+         OVERLAY: ESCÁNER DE CÁMARA QR
+         ═══════════════════════════════════════════ -->
+    <div class="scanner-overlay" id="scannerOverlay" style="display: none;">
+        <div class="scanner-header">
+            <h3>📷 ESCANEAR QR</h3>
+            <button class="scanner-close" id="btnCerrarScanner">✕</button>
+        </div>
+        <div class="scanner-viewport">
+            <div id="qrReader"></div>
+            <div class="scanner-crosshair"></div>
+        </div>
+        <p class="scanner-hint">Apunta la cámara al código QR del cliente</p>
+    </div>
+
     <!-- PIE DE PÁGINA -->
     <footer>
         <div class="info-local">
@@ -290,6 +318,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <!-- QR Code Generator -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <!-- QR Code Scanner (cámara) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <!-- ═══════════════════════════════════════════
          SCRIPTS INTERNOS — Orden de carga:
@@ -310,5 +340,14 @@
     <script src="js/retos-album.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+    </script>
 </body>
 </html>

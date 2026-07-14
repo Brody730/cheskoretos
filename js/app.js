@@ -52,6 +52,17 @@
     var qrContainer       = $('qrContainer');
     var qrUrl             = $('qrUrl');
 
+    /* Escáner de cámara */
+    var btnEscanearQR     = $('btnEscanearQR');
+    var scannerOverlay    = $('scannerOverlay');
+    var btnCerrarScanner  = $('btnCerrarScanner');
+    var qrCameraScanner   = null; /* Instancia de Html5Qrcode */
+
+    /* PWA install */
+    var deferredPrompt    = null;
+    var btnInstalarPWA    = $('btnInstalarPWA');
+    var seccionInstalarPWA = $('seccionInstalarPWA');
+
     /* Álbum */
     var albumGrid         = $('albumGrid');
     var albumContador     = $('albumContador');
@@ -202,6 +213,39 @@
         if (btnCerrarCanje) {
             btnCerrarCanje.addEventListener('click', function() {
                 modalCanje.style.display = 'none';
+            });
+        }
+
+        /* Escáner de cámara */
+        if (btnEscanearQR) {
+            btnEscanearQR.addEventListener('click', function() {
+                abrirScannerCamara();
+            });
+        }
+        if (btnCerrarScanner) {
+            btnCerrarScanner.addEventListener('click', function() {
+                cerrarScannerCamara();
+            });
+        }
+
+        /* PWA install */
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (seccionInstalarPWA) seccionInstalarPWA.style.display = 'block';
+        });
+
+        if (btnInstalarPWA) {
+            btnInstalarPWA.addEventListener('click', function() {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choice) {
+                    if (choice.outcome === 'accepted') {
+                        mostrarAlerta('✅', '¡Instalada!', 'ChesKoretos se instaló en tu celular.', 'exito');
+                        if (seccionInstalarPWA) seccionInstalarPWA.style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                });
             });
         }
     }
@@ -405,6 +449,7 @@
         seccionSellos.style.display = 'none';
         seccionAlbum.style.display  = 'none';
         if (seccionQR) seccionQR.style.display = 'none';
+        if (seccionInstalarPWA) seccionInstalarPWA.style.display = 'none';
         if (formRegistro) { formRegistro.style.display = 'block'; formRegistro.reset(); }
         if (formLogin) { formLogin.style.display = 'none'; formLogin.reset(); }
         if (btnModoRegistro) btnModoRegistro.classList.add('activo');
@@ -421,6 +466,11 @@
         if (perfilRol) {
             var rolLabel = { admin: '🛡️ Admin', empleado: '👷 Empleado', usuario: '🥤 Koreto' };
             perfilRol.textContent = rolLabel[perfil.rol] || perfil.rol;
+        }
+
+        /* Mostrar botón escáner solo para admin/empleado */
+        if (btnEscanearQR) {
+            btnEscanearQR.style.display = (perfil.rol === 'admin' || perfil.rol === 'empleado') ? 'block' : 'none';
         }
 
         var estado = Loyalty.obtenerEstadoLealtad();
@@ -545,7 +595,55 @@
     }
 
     /* ═══════════════════════════════════════════
-       13. MODALES
+       13. ESCÁNER DE CÁMARA QR
+       ═══════════════════════════════════════════ */
+
+    function abrirScannerCamara() {
+        if (typeof Html5Qrcode === 'undefined') {
+            mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
+            return;
+        }
+
+        scannerOverlay.style.display = 'flex';
+
+        qrCameraScanner = new Html5Qrcode('qrReader');
+
+        qrCameraScanner.start(
+            { facingMode: 'environment' },
+            {
+                fps: 10,
+                qrbox: { width: 220, height: 220 },
+                aspectRatio: 1.0
+            },
+            function onScanSuccess(decodedText) {
+                /* Extraer UUID del URL */
+                var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
+                if (match && match[1]) {
+                    cerrarScannerCamara();
+                    manejarEscaneoQR(match[1]);
+                }
+            },
+            function onScanFailure(error) {
+                /* Silenciar errores de escaneo continuo */
+            }
+        ).catch(function(err) {
+            console.error('Error al iniciar cámara:', err);
+            cerrarScannerCamara();
+            mostrarAlerta('❌', 'Cámara No Disponible', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+        });
+    }
+
+    function cerrarScannerCamara() {
+        scannerOverlay.style.display = 'none';
+        if (qrCameraScanner) {
+            qrCameraScanner.stop().catch(function() {});
+            qrCameraScanner.clear().catch(function() {});
+            qrCameraScanner = null;
+        }
+    }
+
+    /* ═══════════════════════════════════════════
+       14. MODALES
        ═══════════════════════════════════════════ */
     function mostrarAlerta(icono, titulo, mensaje, tipo) {
         if (!modalAlerta) return;

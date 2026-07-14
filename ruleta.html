@@ -13,6 +13,8 @@
     <!-- Shared Styles -->
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/landing.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6600">
 
     <!-- html2canvas para capturar la tabla como imagen -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -108,5 +110,12 @@
 
     <!-- CARGA DE RETOS Y LÓGICA DE RULETA CENTRALIZADA -->
     <script src="js/challenges.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+    </script>
 </body>
 </html>

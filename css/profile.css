@@ -1043,7 +1043,160 @@
 }
 
 /* ═══════════════════════════════════════════
-   13. RESPONSIVE
+   13. BOTÓN ESCANEAR QR (admin/empleado)
+   ═══════════════════════════════════════════ */
+.btn-escanear {
+    font-family: 'Luckiest Guy', 'Bangers', sans-serif;
+    font-size: 1.3rem;
+    padding: 14px 35px;
+    background: linear-gradient(180deg, #2196F3 0%, #1565C0 100%);
+    color: #fff;
+    border: 4px solid #000;
+    border-radius: 18px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow:
+        0 5px 0 #000,
+        0 8px 20px rgba(33, 150, 243, 0.4);
+    transition: all 0.1s ease;
+    display: block;
+    margin: 20px auto 0;
+}
+
+.btn-escanear:hover {
+    background: linear-gradient(180deg, #42A5F5 0%, #1976D2 100%);
+    transform: translateY(-2px);
+    box-shadow:
+        0 7px 0 #000,
+        0 12px 25px rgba(33, 150, 243, 0.6);
+}
+
+.btn-escanear:active {
+    transform: translateY(5px);
+    box-shadow: 0 0 0 #000;
+}
+
+/* ═══════════════════════════════════════════
+   14. OVERLAY DE CÁMARA QR
+   ═══════════════════════════════════════════ */
+.scanner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scanner-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 3px solid var(--amarillo);
+    z-index: 2;
+}
+
+.scanner-header h3 {
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.3rem;
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1px;
+}
+
+.scanner-close {
+    font-size: 1.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.scanner-close:hover {
+    background: var(--rojo);
+    border-color: var(--rojo);
+}
+
+.scanner-viewport {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.scanner-viewport #qrReader {
+    width: 100%;
+    height: 100%;
+}
+
+.scanner-viewport video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    border: 3px solid var(--amarillo);
+    border-radius: 20px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.scanner-crosshair::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 3px solid var(--rojo);
+    border-radius: 22px;
+    animation: scannerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes scannerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.scanner-hint {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1.1rem;
+    color: var(--amarillo);
+    text-shadow: 2px 2px 0 #000;
+    text-align: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.9);
+    border-top: 3px solid var(--amarillo);
+    letter-spacing: 1px;
+    z-index: 2;
+    width: 100%;
+}
+
+/* ═══════════════════════════════════════════
+   15. RESPONSIVE
    ═══════════════════════════════════════════ */
 @media (max-width: 600px) {
     .perfil-seccion {
