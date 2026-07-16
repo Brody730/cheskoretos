@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Perfil - ChesKoretos</title>
 
     <!-- SEO -->
@@ -167,44 +167,126 @@
         </section>
 
         <!-- ═══════════════════════════════════════════
-             SECCIÓN 2: PLANILLA DE SELLOS (LEALTAD)
-             Racha de sábados 5+1 gratis.
+             SECCIÓN 2: CHESKOCARD DIGITAL
+             Tarjeta unificada: QR + Sellos de Lealtad
              ═══════════════════════════════════════════ -->
-        <section class="perfil-seccion" id="seccionSellos" style="display: none;">
-            <div class="sellos-header">
-                <h2 class="sellos-titulo">🎯 MI PLANILLA DE SELLOS 🎯</h2>
-                <p class="sellos-subtitulo">Junta 5 sábados y el 6to Chesko es ¡GRATIS!</p>
+        <section class="perfil-seccion" id="seccionCheskoCard" style="display: none;">
+
+            <!-- ─── GAFETE / CREDENCIAL CHESKOCARD ─── -->
+            <div class="chesko-card">
+
+                <!-- Ranura del lanyard -->
+                <div class="badge-lanyard-slot"></div>
+
+                <!-- ─── HEADER DE LA TARJETA ─── -->
+                <div class="cheskocard-header">
+                    <div class="cheskocard-brand">
+                        <span class="cheskocard-brand-c">C</span>hes<span class="cheskocard-brand-k">K</span>oretos
+                    </div>
+                    <div class="cheskocard-username" id="cardUsername">@username</div>
+                    <div class="cheskocard-ribbon">MEMBRESÍA EXCLUSIVA</div>
+                </div>
+
+                <div class="badge-divider"></div>
+
+                <!-- ─── QR CENTRAL ─── -->
+                <div class="cheskocard-qr-zone">
+                    <div class="cheskocard-qr-frame" id="qrContainer"></div>
+                    <div class="cheskocard-qr-label">VALIDACIÓN EXCLUSIVA DE STAFF</div>
+                </div>
+
+                <div class="badge-divider"></div>
+
+                <!-- ─── SELLOS: 5 VISITAS + 1 GRATIS ─── -->
+                <div class="cheskocard-stamps">
+                    <div class="cheskocard-stamps-title">MI RACHA DE SÁBADOS</div>
+                    <div class="cheskocard-stamps-subtitle">5 visitas y el 6to Chesko es ¡GRATIS!</div>
+                    <div class="sellos-grid" id="sellosGrid"></div>
+                </div>
+
             </div>
 
-            <div class="sellos-grid" id="sellosGrid"></div>
+            <!-- ─── BOTÓN VER EN PANTALLA COMPLETA ─── -->
+            <button class="btn-fullscreen" id="btnFullscreen">⚽ VER MI TARJETA</button>
 
-            <button
-                class="btn-registrar-visita"
-                id="btnRegistrarVisita"
-            >
-                ⚡ REGISTRAR MI VISITA HOY ⚡
+            <!-- ─── BOTÓN GOOGLE WALLET ─── -->
+            <button class="btn-wallet" id="btnGoogleWallet" style="display:none;">
+                <span class="wallet-badge-icon"></span>
+                AGREGAR A GOOGLE WALLET
             </button>
 
+            <!-- ─── BOTÓN ESCANEAR (solo admin/empleado) ─── -->
+            <button id="btnEscanearQR" class="btn-escanear" style="display:none;">📷 Escanear QR de cliente</button>
+
+            <!-- ─── CUPÓN GRATIS ─── -->
             <div class="cupon-gratis" id="cuponGratis">
                 <span class="cupon-badge">🎉🥤🎉</span>
                 <h3 class="cupon-titulo">¡CHESCO GRATIS!</h3>
                 <p class="cupon-texto">Muestra este cupón en el puesto y llévate tu Chesko preparado sin costo. ¡Te lo mereces, crack!</p>
                 <button class="btn-canjejar" id="btnCanjearGratis">✅ YA LO CANJEÉ</button>
             </div>
+
         </section>
 
         <!-- ═══════════════════════════════════════════
-             SECCIÓN 3: MI CÓDIGO QR
+             OVERLAY FULLSCREEN: CHESKOCARD PREMIUM
+             Vista exclusiva tipo Instagram Story
              ═══════════════════════════════════════════ -->
-        <section class="perfil-seccion" id="seccionQR" style="display: none;">
-            <div class="qr-header">
-                <h2 class="qr-titulo">📱 MI CÓDIGO QR 📱</h2>
-                <p class="qr-subtitulo">Presenta este código al staff para registrar tu visita</p>
+        <div class="fullscreen-overlay" id="fullscreenOverlay" style="display:none;">
+            <div class="fullscreen-bg"></div>
+            <button class="fullscreen-close" id="btnCloseFullscreen">✕</button>
+
+            <div class="fullscreen-card">
+
+                <!-- Ranura del lanyard -->
+                <div class="badge-lanyard-slot fc-lanyard-slot"></div>
+
+                <!-- Reflejo metálico superior -->
+                <div class="fc-metal-shine"></div>
+
+                <!-- Borde animado superior -->
+                <div class="fc-edge-top"></div>
+
+                <!-- HEADER -->
+                <div class="fc-header">
+                    <div class="fc-logo">🥤</div>
+                    <div class="fc-brand">
+                        <span class="fc-brand-c">C</span>hes<span class="fc-brand-k">K</span>oretos
+                    </div>
+                    <div class="fc-divider"></div>
+                    <div class="fc-username" id="fcUsername">@username</div>
+                    <div class="fc-ribbon">MEMBRESÍA EXCLUSIVA</div>
+                </div>
+
+                <div class="badge-divider"></div>
+
+                <!-- QR -->
+                <div class="fc-qr-zone">
+                    <div class="fc-qr-glow"></div>
+                    <div class="fc-qr-frame" id="fcQrContainer"></div>
+                    <div class="fc-qr-label">VALIDACIÓN EXCLUSIVA DE STAFF</div>
+                </div>
+
+                <div class="badge-divider"></div>
+
+                <!-- SELLOS -->
+                <div class="fc-stamps-zone">
+                    <div class="fc-stamps-title">MI RACHA DE SÁBADOS</div>
+                    <div class="fc-stamps-sub">5 visitas y el 6to Chesko es ¡GRATIS!</div>
+                    <div class="fc-stamps-grid" id="fcSellosGrid"></div>
+                </div>
+
+                <!-- FOOTER DE LA TARJETA -->
+                <div class="fc-footer">
+                    <div class="fc-footer-line"></div>
+                    <div class="fc-footer-text">cheskoretos.vercel.app</div>
+                    <div class="fc-chip">⚡ VIP</div>
+                </div>
+
+                <!-- Borde animado inferior -->
+                <div class="fc-edge-bottom"></div>
             </div>
-            <div class="qr-container" id="qrContainer"></div>
-            <p class="qr-url" id="qrUrl"></p>
-            <button id="btnEscanearQR" class="btn-escanear" style="display:none;">📷 Escanear QR de cliente</button>
-        </section>
+        </div>
 
         <!-- Botón instalar PWA (solo si no está instalada) -->
         <section class="perfil-seccion" id="seccionInstalarPWA" style="display:none;">

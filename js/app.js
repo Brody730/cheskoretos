@@ -19,9 +19,8 @@
     /* Login */
     var vistaLogin       = $('vistaLogin');
     var vistaPerfil      = $('vistaPerfil');
-    var seccionSellos    = $('seccionSellos');
+    var seccionCheskoCard = $('seccionCheskoCard');
     var seccionAlbum     = $('seccionAlbum');
-    var seccionQR        = $('seccionQR');
     var formRegistro     = $('formRegistro');
     var formLogin        = $('formLogin');
     var btnModoRegistro  = $('btnModoRegistro');
@@ -42,15 +41,23 @@
     var statMedallas      = $('statMedallas');
     var btnLogout         = $('btnLogout');
 
-    /* Sellos */
+    /* CheskoCard */
+    var cardUsername      = $('cardUsername');
     var sellosGrid        = $('sellosGrid');
-    var btnRegistrarVisita = $('btnRegistrarVisita');
     var cuponGratis       = $('cuponGratis');
     var btnCanjearGratis  = $('btnCanjearGratis');
+    var btnFullscreen     = $('btnFullscreen');
+    var btnGoogleWallet   = $('btnGoogleWallet');
 
     /* QR */
     var qrContainer       = $('qrContainer');
-    var qrUrl             = $('qrUrl');
+
+    /* Fullscreen overlay */
+    var fullscreenOverlay = $('fullscreenOverlay');
+    var btnCloseFullscreen = $('btnCloseFullscreen');
+    var fcUsername        = $('fcUsername');
+    var fcQrContainer     = $('fcQrContainer');
+    var fcSellosGrid      = $('fcSellosGrid');
 
     /* Escáner de cámara */
     var btnEscanearQR     = $('btnEscanearQR');
@@ -163,13 +170,6 @@
             });
         }
 
-        /* Registrar visita */
-        if (btnRegistrarVisita) {
-            btnRegistrarVisita.addEventListener('click', async function() {
-                await manejarRegistroVisita();
-            });
-        }
-
         /* Canjear gratis */
         if (btnCanjearGratis) {
             btnCanjearGratis.addEventListener('click', async function() {
@@ -213,6 +213,34 @@
         if (btnCerrarCanje) {
             btnCerrarCanje.addEventListener('click', function() {
                 modalCanje.style.display = 'none';
+            });
+        }
+
+        /* Fullscreen: abrir */
+        if (btnFullscreen) {
+            btnFullscreen.addEventListener('click', function() {
+                abrirFullscreen();
+            });
+        }
+
+        /* Google Wallet: agregar tarjeta */
+        if (btnGoogleWallet) {
+            btnGoogleWallet.addEventListener('click', function() {
+                agregarAGoogleWallet();
+            });
+        }
+
+        /* Fullscreen: cerrar */
+        if (btnCloseFullscreen) {
+            btnCloseFullscreen.addEventListener('click', function() {
+                cerrarFullscreen();
+            });
+        }
+        if (fullscreenOverlay) {
+            fullscreenOverlay.addEventListener('click', function(e) {
+                if (e.target === fullscreenOverlay || e.target.classList.contains('fullscreen-bg')) {
+                    cerrarFullscreen();
+                }
             });
         }
 
@@ -333,13 +361,8 @@
     }
 
     /* ═══════════════════════════════════════════
-       5. REGISTRAR VISITA
+       5. PROCESAR RESULTADO DE VISITA
        ═══════════════════════════════════════════ */
-    async function manejarRegistroVisita() {
-        var resultado = await Loyalty.registrarMiVisita();
-        await manejarResultadoVisita(resultado);
-    }
-
     async function manejarResultadoVisita(resultado) {
         switch (resultado.tipo) {
             case 'no_logueado':
@@ -395,6 +418,33 @@
     async function confirmarVisitaEscaneada() {
         if (!_targetUserId) return;
 
+        /* ── VALIDACIÓN A: Solo Sábados ── */
+        var diaActual = new Date().getDay();
+        if (diaActual !== 6) {
+            mostrarAlerta(
+                '🚫',
+                '¡Solo Sábados!',
+                '¡Los sellos solo se acumulan en Sábados de Mitote! Vuelve el sábado.',
+                'error'
+            );
+            return;
+        }
+
+        /* ── VALIDACIÓN B: Ya registró hoy (frecuencia 1/día) ── */
+        var datosTarget = await DataStore.obtenerUsuarioCompleto(_targetUserId);
+        if (datosTarget && datosTarget.lealtad && datosTarget.lealtad.ultima_visita) {
+            var hoy = new Date().toISOString().slice(0, 10);
+            if (datosTarget.lealtad.ultima_visita === hoy) {
+                mostrarAlerta(
+                    '🚫',
+                    '¡Ya registrado hoy!',
+                    'Este usuario ya acumuló su sello hoy. No se permite doble registro.',
+                    'error'
+                );
+                return;
+            }
+        }
+
         btnConfirmarVisita.disabled = true;
         btnConfirmarVisita.textContent = '⏳ Registrando...';
 
@@ -418,11 +468,10 @@
     async function actualizarVista() {
         var logueado = Auth.obtenerUsuarioActual() !== null;
 
-        vistaLogin.style.display    = logueado ? 'none' : 'block';
-        vistaPerfil.style.display   = logueado ? 'block' : 'none';
-        seccionSellos.style.display = logueado ? 'block' : 'none';
-        seccionAlbum.style.display  = logueado ? 'block' : 'none';
-        if (seccionQR) seccionQR.style.display = logueado ? 'block' : 'none';
+        vistaLogin.style.display     = logueado ? 'none' : 'block';
+        vistaPerfil.style.display    = logueado ? 'block' : 'none';
+        if (seccionCheskoCard) seccionCheskoCard.style.display = logueado ? 'block' : 'none';
+        seccionAlbum.style.display   = logueado ? 'block' : 'none';
 
         if (!logueado) return;
 
@@ -431,7 +480,6 @@
 
         renderizarPerfil(usuario.perfil);
         renderizarSellos(lealtad);
-        actualizarBotonVisita(lealtad);
         renderizarCuponGratis(lealtad);
         generarQR(usuario.perfil.id);
 
@@ -444,11 +492,11 @@
     }
 
     function mostrarVistaLogin() {
-        vistaLogin.style.display    = 'block';
-        vistaPerfil.style.display   = 'none';
-        seccionSellos.style.display = 'none';
-        seccionAlbum.style.display  = 'none';
-        if (seccionQR) seccionQR.style.display = 'none';
+        vistaLogin.style.display     = 'block';
+        vistaPerfil.style.display    = 'none';
+        if (seccionCheskoCard) seccionCheskoCard.style.display = 'none';
+        if (btnGoogleWallet) btnGoogleWallet.style.display = 'none';
+        seccionAlbum.style.display   = 'none';
         if (seccionInstalarPWA) seccionInstalarPWA.style.display = 'none';
         if (formRegistro) { formRegistro.style.display = 'block'; formRegistro.reset(); }
         if (formLogin) { formLogin.style.display = 'none'; formLogin.reset(); }
@@ -463,6 +511,7 @@
         if (!perfil) return;
         if (perfilNickname) perfilNickname.textContent = perfil.username;
         if (perfilTelefono) perfilTelefono.textContent = perfil.telefono;
+        if (cardUsername) cardUsername.textContent = '@' + perfil.username;
         if (perfilRol) {
             var rolLabel = { admin: '🛡️ Admin', empleado: '👷 Empleado', usuario: '🥤 Koreto' };
             perfilRol.textContent = rolLabel[perfil.rol] || perfil.rol;
@@ -471,6 +520,11 @@
         /* Mostrar botón escáner solo para admin/empleado */
         if (btnEscanearQR) {
             btnEscanearQR.style.display = (perfil.rol === 'admin' || perfil.rol === 'empleado') ? 'block' : 'none';
+        }
+
+        /* Mostrar botón Google Wallet siempre que haya sesión */
+        if (btnGoogleWallet) {
+            btnGoogleWallet.style.display = 'block';
         }
 
         var estado = Loyalty.obtenerEstadoLealtad();
@@ -494,13 +548,14 @@
         var racha     = lealtad.racha_actual || 0;
         var gratisAct = lealtad.chesko_gratis_activo || false;
         var max       = Loyalty.RACHA_MAX;
+        var totalItems = max + 1; /* 5 sellos regulares + 1 gratis */
         var html      = '';
 
-        for (var i = 1; i <= max; i++) {
-            if (i === max) html += '<div class="sello-separador">→</div>';
+        for (var i = 1; i <= totalItems; i++) {
+            if (i === totalItems) html += '<div class="sello-separador">→</div>';
 
             var ganado = i <= racha;
-            var esGratis = (i === max);
+            var esGratis = (i === totalItems);
             var clases = 'sello-item';
 
             if (esGratis) {
@@ -517,33 +572,9 @@
         }
 
         sellosGrid.innerHTML = html;
-    }
 
-    /* ═══════════════════════════════════════════
-       10. BOTÓN REGISTRAR VISITA
-       ═══════════════════════════════════════════ */
-    function actualizarBotonVisita(lealtad) {
-        if (!btnRegistrarVisita || !lealtad) return;
-
-        if (!lealtad.chesko_gratis_activo && lealtad.ultima_visita) {
-            var ultima = new Date(lealtad.ultima_visita);
-            var hoy    = new Date();
-            var diff   = Math.floor((hoy - ultima) / (1000 * 60 * 60 * 24));
-
-            if (diff <= 1) {
-                btnRegistrarVisita.disabled = true;
-                btnRegistrarVisita.textContent = '🚫 YA REGISTRASTE ESTE FIN DE SEMANA';
-                return;
-            }
-        }
-
-        if (lealtad.chesko_gratis_activo) {
-            btnRegistrarVisita.disabled = true;
-            btnRegistrarVisita.textContent = '🥤 ¡YA GANASTE TU CHESCO GRATIS!';
-        } else {
-            btnRegistrarVisita.disabled = false;
-            btnRegistrarVisita.textContent = '⚡ REGISTRAR MI VISITA HOY ⚡';
-        }
+        /* Sincronizar al grid del fullscreen overlay */
+        if (fcSellosGrid) fcSellosGrid.innerHTML = html;
     }
 
     /* ═══════════════════════════════════════════
@@ -573,8 +604,6 @@
 
         var url = AppConfig.URL_BASE + '/perfil.html?validar_usuario_id=' + userId;
 
-        if (qrUrl) qrUrl.textContent = url;
-
         if (typeof qrcode !== 'undefined') {
             qrContainer.innerHTML = '';
             var qr = qrcode(0, 'M');
@@ -584,13 +613,25 @@
             var img = document.createElement('img');
             img.src = qr.createDataURL(6, 8);
             img.alt = 'Código QR de validación';
-            img.style.maxWidth = '200px';
-            img.style.borderRadius = '10px';
-            img.style.border = '3px solid #000';
-            img.style.boxShadow = '5px 5px 0 #000';
+            img.style.maxWidth = '170px';
+            img.style.borderRadius = '6px';
             qrContainer.appendChild(img);
+
+            /* Clonar QR al overlay fullscreen */
+            if (fcQrContainer) {
+                fcQrContainer.innerHTML = '';
+                var qr2 = qrcode(0, 'M');
+                qr2.addData(url);
+                qr2.make();
+                var img2 = document.createElement('img');
+                img2.src = qr2.createDataURL(6, 8);
+                img2.alt = 'Código QR de validación';
+                img2.style.maxWidth = '180px';
+                img2.style.borderRadius = '6px';
+                fcQrContainer.appendChild(img2);
+            }
         } else {
-            qrContainer.innerHTML = '<p style="font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">' + url + '</p>';
+            qrContainer.innerHTML = '<p style="font-family: monospace; font-size: 0.7rem; color: #aaa;">QR no disponible</p>';
         }
     }
 
@@ -643,7 +684,81 @@
     }
 
     /* ═══════════════════════════════════════════
-       14. MODALES
+       14. FULLSCREEN — TARJETA PREMIUM
+       ═══════════════════════════════════════════ */
+    function abrirFullscreen() {
+        if (!fullscreenOverlay) return;
+
+        /* Sincronizar datos al overlay */
+        var usuario = Auth.obtenerUsuarioActual();
+        if (usuario && usuario.perfil) {
+            if (fcUsername) fcUsername.textContent = '@' + usuario.perfil.username;
+        }
+
+        fullscreenOverlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarFullscreen() {
+        if (!fullscreenOverlay) return;
+        fullscreenOverlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    /* ═══════════════════════════════════════════
+       12B. GOOGLE WALLET — AGREGAR TARJETA
+       ═══════════════════════════════════════════ */
+    function agregarAGoogleWallet() {
+        var usuario = Auth.obtenerUsuarioActual();
+        if (!usuario || !usuario.perfil) {
+            mostrarAlerta('⚠️', 'Inicia sesión', 'Necesitas iniciar sesión para agregar la tarjeta a Google Wallet.', 'error');
+            return;
+        }
+
+        if (!btnGoogleWallet) return;
+
+        btnGoogleWallet.classList.add('wallet-loading');
+        btnGoogleWallet.disabled = true;
+        btnGoogleWallet.textContent = '⏳ CREANDO TARJETA...';
+
+        var perfil  = usuario.perfil;
+        var lealtad = usuario.lealtad || {};
+        var stamps  = lealtad.racha_actual || 0;
+
+        fetch(AppConfig.URL_BASE + '/api/create-wallet-pass', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id:    perfil.id,
+                username:   perfil.username,
+                stamps:     stamps,
+                max_stamps: AppConfig.RACHA_MAX
+            })
+        })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            btnGoogleWallet.classList.remove('wallet-loading');
+            btnGoogleWallet.disabled = false;
+            btnGoogleWallet.textContent = 'AGREGAR A GOOGLE WALLET';
+
+            if (data.success && data.walletUrl) {
+                window.open(data.walletUrl, '_blank');
+            } else {
+                var msg = data.details || data.error || 'Error desconocido';
+                mostrarAlerta('⚠️', 'No se pudo crear', msg, 'error');
+            }
+        })
+        .catch(function(err) {
+            btnGoogleWallet.classList.remove('wallet-loading');
+            btnGoogleWallet.disabled = false;
+            btnGoogleWallet.textContent = 'AGREGAR A GOOGLE WALLET';
+            console.error('Wallet error:', err);
+            mostrarAlerta('⚠️', 'Error de conexión', 'No se pudo contactar al servidor. Intenta de nuevo.', 'error');
+        });
+    }
+
+    /* ═══════════════════════════════════════════
+       15. MODALES
        ═══════════════════════════════════════════ */
     function mostrarAlerta(icono, titulo, mensaje, tipo) {
         if (!modalAlerta) return;

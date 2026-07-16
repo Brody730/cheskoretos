@@ -1344,6 +1344,27 @@ footer {
     .sugerencias-form button {
         width: 100%;
     }
+
+    /* Navbar mobile — compact layout */
+    .navbar-comic {
+        padding: 8px 10px;
+        flex-wrap: nowrap;
+    }
+
+    .nav-brand-comic {
+        font-size: clamp(1.1rem, 3.5vw, 1.5rem);
+        letter-spacing: 0;
+    }
+
+    .nav-menu-comic {
+        gap: 4px;
+    }
+
+    .nav-link-comic {
+        font-size: 1rem;
+        padding: 5px 8px;
+        letter-spacing: 0;
+    }
 }
 
 @media (max-width: 480px) {
