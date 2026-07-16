@@ -21,6 +21,19 @@
 </head>
 <body class="ruleta-body">
 
+    <nav class="navbar-comic">
+        <a href="index.html" class="nav-brand-comic">
+            <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        </a>
+        <div class="nav-menu-comic">
+            <a href="index.html" class="nav-link-comic">🏠 Inicio</a>
+            <a href="menu.html" class="nav-link-comic">🥤 Menú</a>
+            <a href="retos.html" class="nav-link-comic">🎲 Retos</a>
+            <a href="ruleta.html" class="nav-link-comic" style="color: var(--amarillo);">🎡 Ruleta</a>
+            <a href="perfil.html" class="nav-link-comic">👤 Perfil</a>
+        </div>
+    </nav>
+
     <div class="lights" id="lights"></div>
     <div class="flash-overlay" id="flashOverlay"></div>
     <button class="sound-toggle" id="soundToggle" type="button" title="Activar/desactivar sonido">🔊 SONIDO</button>
@@ -108,7 +121,11 @@
         </div>
     </div>
 
+    <!-- Supabase JS SDK v2 (para guardar retos en historial) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <!-- CARGA DE RETOS Y LÓGICA DE RULETA CENTRALIZADA -->
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
     <script src="js/challenges.js"></script>
     <script>
     if ('serviceWorker' in navigator) {

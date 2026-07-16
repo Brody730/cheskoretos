@@ -522,6 +522,27 @@ document.addEventListener("DOMContentLoaded", function() {
         .col-user { font-family: 'Luckiest Guy', sans-serif; color: #FFCC00; }
         .col-reto { }
         .col-check { width: 50px; text-align: center; font-size: 1.2rem; }
+        .sb-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-family: 'Luckiest Guy', sans-serif;
+            font-size: 0.62rem;
+            color: #fff;
+            border: 2px solid rgba(0,0,0,0.6);
+            vertical-align: middle;
+            margin-right: 4px;
+            flex-shrink: 0;
+        }
+        .sb-avatar-photo {
+            display: inline-block;
+            object-fit: cover;
+            border: 2px solid #FFCC00;
+            background: #333;
+        }
 
         .scoreboard-form {
             display: flex;
@@ -668,12 +689,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 spinBtn.disabled = false; // Desbloquear botón
                 spinBtn.style.opacity = "1";
             }
-            
+
             var textActual = modalTitle.textContent || "";
             if (textActual.includes("INVENTOR")) {
                 if (inventorContainer) inventorContainer.classList.add('visible');
                 if (inventorInput) setTimeout(() => inventorInput.focus(), 400);
             }
+
+            autoRegistrarParticipante();
         });
 
         var STORAGE_KEY = 'cheskoretos_inventor_retos';
@@ -1203,6 +1226,59 @@ document.addEventListener("DOMContentLoaded", function() {
         // ═══ SCOREBOARD - PARTICIPANTES DEL DÍA ═══
         var SCOREBOARD_KEY = 'cheskoretos_scoreboard_' + new Date().toLocaleDateString('es-MX');
 
+        function getUserColor(username) {
+            var colors = ['#FF6600', '#2196F3', '#E91E63', '#4CAF50', '#9C27B0', '#FF9800', '#00BCD4', '#F44336'];
+            var hash = 0;
+            for (var i = 0; i < (username || '').length; i++) {
+                hash = username.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function getAvatarInitials(username) {
+            return (username || '').replace(/^@/, '').substring(0, 2).toUpperCase();
+        }
+
+        function autoRegistrarParticipante() {
+            if (lastWinnerIndex < 0 || lastWinnerIndex >= CHALLENGES.length) return;
+            try {
+                var sesion = localStorage.getItem('chesko_session');
+                if (!sesion) return;
+                var usuario = JSON.parse(sesion);
+                if (!usuario || !usuario.username) return;
+
+                var winner = CHALLENGES[lastWinnerIndex];
+                var color = getUserColor(usuario.username);
+                var avatarUrl = usuario.id ? (localStorage.getItem('chesko_avatar_' + usuario.id) || null) : null;
+                var participants = getScoreboard();
+                participants.push({
+                    user: usuario.username,
+                    reto: winner.title,
+                    retoNum: lastWinnerIndex + 1,
+                    cumplio: true,
+                    avatarColor: color,
+                    avatarUrl: avatarUrl,
+                    timestamp: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                });
+                saveScoreboard(participants);
+                renderScoreboard();
+                SoundFX.playSave();
+
+                if (typeof DataStore !== 'undefined' && usuario.id) {
+                    DataStore.registrarReto(usuario.id, winner.id, true).catch(function() {});
+                }
+
+                var input = document.getElementById('participantInput');
+                if (input) {
+                    input.value = '';
+                    input.placeholder = '✅ @' + usuario.username + ' registrado';
+                    setTimeout(function() { input.placeholder = 'usuario'; }, 3000);
+                }
+            } catch (e) {
+                console.warn('autoRegistrarParticipante:', e);
+            }
+        }
+
         function getScoreboard() {
             try { return JSON.parse(localStorage.getItem(SCOREBOARD_KEY) || '[]'); } catch (e) { return []; }
         }
@@ -1222,9 +1298,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
             tbody.innerHTML = participants.map(function(p, i) {
+                var color = p.avatarColor || getUserColor(p.user);
+                var initials = getAvatarInitials(p.user);
+                var avatar = p.avatarUrl
+                    ? '<img class="sb-avatar sb-avatar-photo" src="' + p.avatarUrl + '" alt="">'
+                    : '<span class="sb-avatar" style="background:' + color + ';">' + escapeHtml(initials) + '</span>';
                 return '<tr>' +
                     '<td class="col-num">' + (i + 1) + '</td>' +
-                    '<td class="col-user">@' + escapeHtml(p.user) + '</td>' +
+                    '<td class="col-user">' + avatar + '@' + escapeHtml(p.user) + '</td>' +
                     '<td class="col-reto">' + escapeHtml(p.reto) + '</td>' +
                     '<td class="col-check">' + (p.cumplio ? '✅' : '❌') + '</td>' +
                     '</tr>';

@@ -537,6 +537,7 @@
                 statRetos.textContent = n;
             });
         }
+        if (typeof window.mostrarAvatarPerfil === 'function') window.mostrarAvatarPerfil(perfil);
     }
 
     /* ═══════════════════════════════════════════

@@ -168,6 +168,25 @@ var DataStore = (function() {
     }
 
     /**
+     * Obtener cuántas veces completó cada reto (para sistema de medallas).
+     * @param {string} userId
+     * @returns {{ [retoId: string]: number }}
+     */
+    async function obtenerConteoPorReto(userId) {
+        var { data, error } = await db()
+            .from('historial_retos')
+            .select('reto_id')
+            .eq('usuario_id', userId)
+            .eq('cumplio', true);
+        if (error) { console.error('obtenerConteoPorReto:', error); return {}; }
+        var conteo = {};
+        (data || []).forEach(function(r) {
+            conteo[r.reto_id] = (conteo[r.reto_id] || 0) + 1;
+        });
+        return conteo;
+    }
+
+    /**
      * Verificar si un usuario ya completó un reto específico.
      * @param {string} userId
      * @param {string} retoId
@@ -327,6 +346,7 @@ var DataStore = (function() {
         /* Historial retos */
         registrarReto:          registrarReto,
         obtenerRetosCompletados: obtenerRetosCompletados,
+        obtenerConteoPorReto:   obtenerConteoPorReto,
         retoYaCompletado:       retoYaCompletado,
         /* Verificaciones RPC */
         telefonoExiste:         telefonoExiste,

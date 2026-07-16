@@ -72,18 +72,25 @@ var AlbumRetos = (function() {
     }
 
     /**
-     * Contar retos completados del usuario actual.
+     * Contar retos ÚNICOS completados del usuario actual (sin duplicados).
      * @returns {Promise<number>}
      */
     async function contarRetosCompletados() {
-        var retos = await obtenerRetosCompletados();
-        return retos.length;
+        var actual = Auth.obtenerUsuarioActual();
+        if (!actual) return 0;
+        var conteo = await DataStore.obtenerConteoPorReto(actual.authUser.id);
+        return Object.keys(conteo).length;
+    }
+
+    function getMedallaNivel(veces) {
+        if (veces >= 15) return { clase: 'medalla-oro',   emoji: '🥇', label: 'ORO' };
+        if (veces >= 5)  return { clase: 'medalla-plata', emoji: '🥈', label: 'PLATA' };
+        return             { clase: 'medalla-bronce',     emoji: '🥉', label: 'BRONCE' };
     }
 
     /**
-     * Renderizar el álbum de retos completo en un contenedor del DOM.
+     * Renderizar el álbum de retos con sistema de medallas.
      * ASYNC: debe ser llamada con await.
-     *
      * @param {string} contenedorId
      */
     async function renderizarAlbumDeRetos(contenedorId) {
@@ -96,7 +103,7 @@ var AlbumRetos = (function() {
             return;
         }
 
-        var completados = await DataStore.obtenerRetosCompletados(actual.authUser.id);
+        var conteo = await DataStore.obtenerConteoPorReto(actual.authUser.id);
         var retos = window.CHALLENGES || [];
 
         if (retos.length === 0) {
@@ -105,24 +112,33 @@ var AlbumRetos = (function() {
         }
 
         var html = retos.map(function(reto) {
-            var completado = completados.indexOf(reto.id) !== -1;
-            var emoji      = RETO_EMOJIS[reto.id] || '🎯';
-            var color      = (typeof CHALLENGE_COLORS !== 'undefined' && CHALLENGE_COLORS[reto.id])
-                             ? CHALLENGE_COLORS[reto.id] : '#888888';
+            var veces  = conteo[reto.id] || 0;
+            var emoji  = RETO_EMOJIS[reto.id] || '🎯';
+            var color  = (typeof CHALLENGE_COLORS !== 'undefined' && CHALLENGE_COLORS[reto.id])
+                         ? CHALLENGE_COLORS[reto.id] : '#888888';
 
-            var clases = 'album-cromo' + (completado ? ' completado' : ' pendiente');
-            var selloOverlay = completado
-                ? '<div class="cromo-check">✅</div>'
-                : '<div class="cromo-lock">🔒</div>';
+            var overlay;
+            var clases = 'album-cromo';
+
+            if (veces === 0) {
+                clases += ' pendiente';
+                overlay = '<div class="cromo-lock">🔒</div>';
+            } else {
+                var medalla = getMedallaNivel(veces);
+                clases += ' completado ' + medalla.clase;
+                overlay =
+                    '<div class="cromo-medalla">' + medalla.emoji + '</div>' +
+                    '<div class="cromo-veces">' + veces + 'x</div>';
+            }
 
             return '' +
                 '<div class="' + clases + '" ' +
-                     'style="border-color:' + color + '; box-shadow: 5px 5px 0 ' + color + '80, 5px 5px 0 #000;" ' +
+                     'style="border-color:' + color + ';" ' +
                      'data-reto-id="' + reto.id + '">' +
                     '<div class="cromo-emoji">' + emoji + '</div>' +
                     '<div class="cromo-titulo">' + reto.title + '</div>' +
                     '<div class="cromo-descuento">' + reto.discount + '</div>' +
-                    selloOverlay +
+                    overlay +
                 '</div>';
         }).join('');
 

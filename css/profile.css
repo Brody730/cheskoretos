@@ -1319,6 +1319,62 @@
     border: 2px solid #000;
 }
 
+/* Medalla (top-right badge) */
+.cromo-medalla {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    font-size: 1.3rem;
+    line-height: 1;
+    filter: drop-shadow(1px 1px 0 #000);
+}
+
+/* Contador de veces (bottom-right) */
+.cromo-veces {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 0.6rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 6px;
+    padding: 2px 5px;
+    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 0.5px;
+}
+
+/* Bronce */
+.album-cromo.medalla-bronce {
+    box-shadow: 5px 5px 0 #CD7F32, 5px 5px 0 #000 !important;
+}
+.album-cromo.medalla-bronce:hover {
+    box-shadow: 8px 8px 0 #CD7F32 !important;
+    transform: scale(1.06) rotate(-2deg);
+}
+
+/* Plata */
+.album-cromo.medalla-plata {
+    box-shadow: 5px 5px 0 #A8A8A8, 5px 5px 0 #000 !important;
+}
+.album-cromo.medalla-plata:hover {
+    box-shadow: 8px 8px 0 #C0C0C0 !important;
+    transform: scale(1.06) rotate(-2deg);
+}
+
+/* Oro */
+.album-cromo.medalla-oro {
+    box-shadow: 5px 5px 0 #FFD700, 5px 5px 0 #000 !important;
+    animation: medallaOroGlow 2.5s ease-in-out infinite;
+}
+.album-cromo.medalla-oro:hover {
+    transform: scale(1.08) rotate(-2deg);
+}
+@keyframes medallaOroGlow {
+    0%, 100% { box-shadow: 5px 5px 0 #FFD700, 0 0 8px rgba(255,215,0,0.3); }
+    50%       { box-shadow: 5px 5px 0 #FFD700, 0 0 22px rgba(255,215,0,0.7); }
+}
+
 /* Mensaje vacío del álbum */
 .album-empty-msg {
     font-family: 'Bangers', sans-serif;
