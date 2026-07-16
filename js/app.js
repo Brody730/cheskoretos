@@ -97,6 +97,7 @@
     var btnCerrarCanje    = $('btnCerrarCanje');
 
     var _targetUserId = null;
+    var _escaneoEnCurso = false;
 
     /* ═══════════════════════════════════════════
        1. INICIALIZACIÓN
@@ -371,6 +372,10 @@
        5. PROCESAR RESULTADO DE VISITA
        ═══════════════════════════════════════════ */
     async function manejarResultadoVisita(resultado) {
+        if (!resultado) {
+            mostrarAlerta('❌', 'Error', 'No se recibió respuesta al registrar la visita. Verifica tu conexión.', 'error');
+            return;
+        }
         switch (resultado.tipo) {
             case 'no_logueado':
                 mostrarAlerta('⚠️', '¡Sin sesión!', 'Debes iniciar sesión para ganar sábados.', 'error');
@@ -390,6 +395,8 @@
                 mostrarCuponGratis();
                 mostrarExplosion('¡BOOM! ¡CHESCO GRATIS!', resultado.mensaje, 'exito');
                 break;
+            default:
+                mostrarAlerta('❌', 'Error', resultado.mensaje || 'Ocurrió un error inesperado al registrar la visita.', 'error');
         }
     }
 
@@ -397,29 +404,39 @@
        6. ESCÁNER QR
        ═══════════════════════════════════════════ */
     async function manejarEscaneoQR(targetUserId) {
-        if (!Auth.esStaff()) {
-            mostrarAlerta(
-                '🚫',
-                'Acceso Denegado',
-                'Solo los admins y empleados pueden validar visitas. Tu rol: ' + (Auth.obtenerRol() || 'ninguno'),
-                'error'
-            );
-            setTimeout(function() { window.location.href = 'perfil.html'; }, 3000);
-            return;
+        if (_escaneoEnCurso) return;
+        _escaneoEnCurso = true;
+
+        try {
+            if (!Auth.esStaff()) {
+                mostrarAlerta(
+                    '🚫',
+                    'Acceso Denegado',
+                    'Solo los admins y empleados pueden validar visitas. Tu rol: ' + (Auth.obtenerRol() || 'ninguno'),
+                    'error'
+                );
+                setTimeout(function() { window.location.href = 'perfil.html'; }, 3000);
+                return;
+            }
+
+            var datos = await DataStore.obtenerUsuarioCompleto(targetUserId);
+            if (!datos || !datos.perfil) {
+                mostrarAlerta('❌', 'Usuario No Encontrado', 'El código QR no corresponde a un usuario válido. Verifica tu conexión e intenta de nuevo.', 'error');
+                return;
+            }
+
+            _targetUserId = targetUserId;
+            scannerUsername.textContent = '@' + datos.perfil.username;
+            scannerRacha.textContent   = (datos.lealtad ? datos.lealtad.racha_actual : 0) + ' / ' + Loyalty.RACHA_MAX;
+            scannerMedallas.textContent = datos.lealtad ? datos.lealtad.medallas_ganadas : 0;
+
+            modalScanner.classList.add('activo');
+        } catch (err) {
+            console.error('manejarEscaneoQR:', err);
+            mostrarAlerta('❌', 'Error Inesperado', 'No se pudo procesar el código QR: ' + (err && err.message ? err.message : 'error desconocido') + '. Intenta de nuevo.', 'error');
+        } finally {
+            _escaneoEnCurso = false;
         }
-
-        var datos = await DataStore.obtenerUsuarioCompleto(targetUserId);
-        if (!datos || !datos.perfil) {
-            mostrarAlerta('❌', 'Usuario No Encontrado', 'El código QR no corresponde a un usuario válido.', 'error');
-            return;
-        }
-
-        _targetUserId = targetUserId;
-        scannerUsername.textContent = '@' + datos.perfil.username;
-        scannerRacha.textContent   = (datos.lealtad ? datos.lealtad.racha_actual : 0) + ' / ' + Loyalty.RACHA_MAX;
-        scannerMedallas.textContent = datos.lealtad ? datos.lealtad.medallas_ganadas : 0;
-
-        modalScanner.classList.add('activo');
     }
 
     async function confirmarVisitaEscaneada() {
@@ -459,7 +476,13 @@
         btnConfirmarVisita.disabled = true;
         btnConfirmarVisita.textContent = '⏳ Registrando...';
 
-        var resultado = await Loyalty.registrarVisita(_targetUserId);
+        var resultado;
+        try {
+            resultado = await Loyalty.registrarVisita(_targetUserId);
+        } catch (err) {
+            console.error('confirmarVisitaEscaneada:', err);
+            resultado = { tipo: 'error', mensaje: 'No se pudo registrar la visita: ' + (err && err.message ? err.message : 'error desconocido') };
+        }
 
         btnConfirmarVisita.disabled = false;
         btnConfirmarVisita.textContent = '✅ Confirmar Visita';
