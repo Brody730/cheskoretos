@@ -201,7 +201,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
   v_lealtad RECORD;
-  v_hoy DATE := CURRENT_DATE;
+  v_hoy DATE := (now() AT TIME ZONE 'America/Mexico_City')::DATE;
   v_dias_diff INT;
   v_nueva_racha INT;
 BEGIN
@@ -211,6 +211,16 @@ BEGIN
 
   IF NOT FOUND THEN
     RETURN '{"tipo":"error","mensaje":"Usuario no encontrado"}'::JSON;
+  END IF;
+
+  -- BLOQUEO: solo se puede registrar visita en sábado
+  IF EXTRACT(DOW FROM v_hoy) != 6 THEN
+    RETURN json_build_object(
+      'tipo', 'error',
+      'mensaje', 'Solo se puede registrar la visita de lealtad los sábados.',
+      'titulo', 'No es sábado',
+      'subtitulo', 'Vuelve el sábado para registrar tu racha'
+    );
   END IF;
 
   IF v_lealtad.ultima_visita IS NULL THEN

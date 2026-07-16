@@ -98,7 +98,7 @@ var Loyalty = (function() {
         if (!actual || !actual.lealtad) return null;
 
         var l = actual.lealtad;
-        var hoy = new Date().toISOString().slice(0, 10);
+        var hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
         var yaRegistro = l.ultima_visita === hoy;
 
         /* Calcular si puede registrar hoy (diferencia > 1 día) */

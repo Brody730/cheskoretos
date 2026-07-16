@@ -419,8 +419,8 @@
         if (!_targetUserId) return;
 
         /* ── VALIDACIÓN A: Solo Sábados ── */
-        var diaActual = new Date().getDay();
-        if (diaActual !== 6) {
+        var diaActual = new Date().toLocaleDateString('en-US', { timeZone: 'America/Mexico_City', weekday: 'short' });
+        if (diaActual !== 'Sat') {
             mostrarAlerta(
                 '🚫',
                 '¡Solo Sábados!',
@@ -433,7 +433,7 @@
         /* ── VALIDACIÓN B: Ya registró hoy (frecuencia 1/día) ── */
         var datosTarget = await DataStore.obtenerUsuarioCompleto(_targetUserId);
         if (datosTarget && datosTarget.lealtad && datosTarget.lealtad.ultima_visita) {
-            var hoy = new Date().toISOString().slice(0, 10);
+            var hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
             if (datosTarget.lealtad.ultima_visita === hoy) {
                 mostrarAlerta(
                     '🚫',
