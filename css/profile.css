@@ -1813,6 +1813,35 @@
     50% { opacity: 0.3; }
 }
 
+.scanner-camara-selector {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2;
+}
+
+.scanner-camara-selector label {
+    font-family: 'Bangers', sans-serif;
+    font-size: 1rem;
+    color: var(--amarillo);
+    letter-spacing: 1px;
+}
+
+.scanner-camara-selector select {
+    flex: 1;
+    max-width: 260px;
+    padding: 8px 10px;
+    background: #111;
+    color: #fff;
+    border: 2px solid var(--amarillo);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
 .scanner-hint {
     font-family: 'Bangers', sans-serif;
     font-size: 1.1rem;

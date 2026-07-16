@@ -60,10 +60,12 @@
     var fcSellosGrid      = $('fcSellosGrid');
 
     /* Escáner de cámara */
-    var btnEscanearQR     = $('btnEscanearQR');
-    var scannerOverlay    = $('scannerOverlay');
-    var btnCerrarScanner  = $('btnCerrarScanner');
-    var qrCameraScanner   = null; /* Instancia de Html5Qrcode */
+    var btnEscanearQR       = $('btnEscanearQR');
+    var scannerOverlay      = $('scannerOverlay');
+    var btnCerrarScanner    = $('btnCerrarScanner');
+    var scannerCameraSelect = $('scannerCameraSelect');
+    var qrCameraScanner     = null; /* Instancia de Html5Qrcode */
+    var CAMARA_STORAGE_KEY  = 'chesko_camara_preferida';
 
     /* PWA install */
     var deferredPrompt    = null;
@@ -253,6 +255,11 @@
         if (btnCerrarScanner) {
             btnCerrarScanner.addEventListener('click', function() {
                 cerrarScannerCamara();
+            });
+        }
+        if (scannerCameraSelect) {
+            scannerCameraSelect.addEventListener('change', function() {
+                cambiarCamara();
             });
         }
 
@@ -640,39 +647,111 @@
        13. ESCÁNER DE CÁMARA QR
        ═══════════════════════════════════════════ */
 
-    function abrirScannerCamara() {
+    async function abrirScannerCamara() {
         if (typeof Html5Qrcode === 'undefined') {
             mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
             return;
         }
 
         scannerOverlay.style.display = 'flex';
-
         qrCameraScanner = new Html5Qrcode('qrReader');
 
-        qrCameraScanner.start(
-            { facingMode: 'environment' },
-            {
-                fps: 10,
-                qrbox: { width: 220, height: 220 },
-                aspectRatio: 1.0
-            },
-            function onScanSuccess(decodedText) {
-                /* Extraer UUID del URL */
-                var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
-                if (match && match[1]) {
-                    cerrarScannerCamara();
-                    manejarEscaneoQR(match[1]);
+        var camaras = [];
+        try {
+            camaras = await Html5Qrcode.getCameras();
+        } catch (err) {
+            console.error('No se pudieron listar cámaras:', err);
+        }
+
+        poblarSelectorCamaras(camaras);
+        await iniciarCamara(obtenerCamaraPreferida(camaras));
+    }
+
+    function poblarSelectorCamaras(camaras) {
+        if (!scannerCameraSelect) return;
+
+        scannerCameraSelect.innerHTML = '';
+
+        if (!camaras || camaras.length === 0) {
+            scannerCameraSelect.parentElement.style.display = 'none';
+            return;
+        }
+
+        scannerCameraSelect.parentElement.style.display = camaras.length > 1 ? 'flex' : 'none';
+
+        camaras.forEach(function(cam, i) {
+            var opt = document.createElement('option');
+            opt.value = cam.id;
+            opt.textContent = cam.label || ('Cámara ' + (i + 1));
+            scannerCameraSelect.appendChild(opt);
+        });
+
+        var preferida = localStorage.getItem(CAMARA_STORAGE_KEY);
+        if (preferida && camaras.some(function(c) { return c.id === preferida; })) {
+            scannerCameraSelect.value = preferida;
+        }
+    }
+
+    function obtenerCamaraPreferida(camaras) {
+        if (!camaras || camaras.length === 0) return null; /* fallback a facingMode */
+
+        var preferida = localStorage.getItem(CAMARA_STORAGE_KEY);
+        if (preferida && camaras.some(function(c) { return c.id === preferida; })) {
+            return preferida;
+        }
+
+        var trasera = camaras.filter(function(c) {
+            return /back|trasera|rear|environment/i.test(c.label || '');
+        })[0];
+
+        return (trasera || camaras[0]).id;
+    }
+
+    async function iniciarCamara(camaraId) {
+        var config = {
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1.0
+        };
+        var fuente = camaraId ? { deviceId: { exact: camaraId } } : { facingMode: 'environment' };
+
+        try {
+            await qrCameraScanner.start(
+                fuente,
+                config,
+                function onScanSuccess(decodedText) {
+                    /* Extraer UUID del URL */
+                    var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
+                    if (match && match[1]) {
+                        cerrarScannerCamara();
+                        manejarEscaneoQR(match[1]);
+                    }
+                },
+                function onScanFailure(error) {
+                    /* Silenciar errores de escaneo continuo */
                 }
-            },
-            function onScanFailure(error) {
-                /* Silenciar errores de escaneo continuo */
-            }
-        ).catch(function(err) {
+            );
+        } catch (err) {
             console.error('Error al iniciar cámara:', err);
             cerrarScannerCamara();
             mostrarAlerta('❌', 'Cámara No Disponible', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
-        });
+        }
+    }
+
+    async function cambiarCamara() {
+        if (!scannerCameraSelect || !qrCameraScanner) return;
+
+        var nuevaId = scannerCameraSelect.value;
+        if (!nuevaId) return;
+
+        localStorage.setItem(CAMARA_STORAGE_KEY, nuevaId);
+
+        try {
+            await qrCameraScanner.stop();
+            await qrCameraScanner.clear();
+        } catch (err) { /* puede no estar corriendo aún */ }
+
+        await iniciarCamara(nuevaId);
     }
 
     function cerrarScannerCamara() {

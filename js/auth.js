@@ -168,8 +168,15 @@ var Auth = (function() {
 
             /* Verificar que el usuario sigue existiendo en la DB */
             var perfil = await DataStore.obtenerPerfil(usuario.id);
-            if (!perfil) {
+
+            if (perfil === null) {
+                /* Confirmado: el usuario ya no existe en la DB */
                 limpiarSesion();
+                return false;
+            }
+            if (!perfil) {
+                /* Error transitorio (red, servidor). No borrar la sesión:
+                   puede recuperarse en el próximo intento. */
                 return false;
             }
 
@@ -179,7 +186,8 @@ var Auth = (function() {
 
             return true;
         } catch (e) {
-            limpiarSesion();
+            /* Error inesperado (SDK sin cargar, etc.). No borrar la sesión. */
+            console.error('restaurarSesion:', e);
             return false;
         }
     }

@@ -21,13 +21,21 @@ var DataStore = (function() {
      * @param {string} userId
      * @returns {object|null} perfil o null
      */
+    /**
+     * @returns {object|null|undefined} perfil si existe; null si el usuario
+     * confirmadamente no existe (0 filas); undefined si la consulta falló
+     * por un error transitorio (red, servidor) y no se pudo confirmar nada.
+     */
     async function obtenerPerfil(userId) {
         var { data, error } = await db()
             .from('profiles')
             .select('*')
             .eq('id', userId)
             .single();
-        if (error) { console.error('obtenerPerfil:', error); return null; }
+        if (error) {
+            console.error('obtenerPerfil:', error);
+            return error.code === 'PGRST116' ? null : undefined;
+        }
         return data;
     }
 
