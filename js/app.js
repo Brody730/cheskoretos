@@ -428,6 +428,8 @@
         /* ── VALIDACIÓN A: Solo Sábados ── */
         var diaActual = new Date().toLocaleDateString('en-US', { timeZone: 'America/Mexico_City', weekday: 'short' });
         if (diaActual !== 'Sat') {
+            modalScanner.classList.remove('activo');
+            _targetUserId = null;
             mostrarAlerta(
                 '🚫',
                 '¡Solo Sábados!',
@@ -442,6 +444,8 @@
         if (datosTarget && datosTarget.lealtad && datosTarget.lealtad.ultima_visita) {
             var hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
             if (datosTarget.lealtad.ultima_visita === hoy) {
+                modalScanner.classList.remove('activo');
+                _targetUserId = null;
                 mostrarAlerta(
                     '🚫',
                     '¡Ya registrado hoy!',
