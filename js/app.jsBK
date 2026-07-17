@@ -431,9 +431,7 @@
             if (datos === undefined) {
                 /* Error transitorio (red, servidor): no es que el usuario
                    no exista, simplemente no se pudo verificar ahorita. */
-                var _e = DataStore.obtenerUltimoErrorPerfil ? DataStore.obtenerUltimoErrorPerfil() : null;   /* [DIAG] */
-                var _diag = _e ? (' [code=' + (_e.code || '?') + ' status=' + (_e.status || '?') + ' msg=' + (_e.message || _e.hint || '?') + ']') : '';
-                mostrarAlerta('❌', 'Error de Conexión', 'No se pudo verificar el código QR.' + _diag + ' id=' + targetUserId, 'error');
+                mostrarAlerta('❌', 'Error de Conexión', 'No se pudo verificar el código QR por un problema de red. Intenta de nuevo.', 'error');
                 return;
             }
             if (!datos || !datos.perfil) {
@@ -798,11 +796,6 @@
                     if (match && match[1]) {
                         cerrarScannerCamara();
                         manejarEscaneoQR(match[1]);
-                    } else {
-                        /* [DIAG] Antes: silencio total si el QR no traía el parámetro.
-                           Ahora avisamos qué se leyó realmente. */
-                        cerrarScannerCamara();
-                        mostrarAlerta('⚠️', 'QR no reconocido', 'El código no contiene validar_usuario_id. Se leyó: ' + String(decodedText).slice(0, 140), 'error');
                     }
                 },
                 function onScanFailure(error) {
