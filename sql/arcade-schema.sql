@@ -159,18 +159,21 @@ LANGUAGE sql
 SECURITY DEFINER
 AS $$
   SELECT COALESCE(json_agg(t), '[]'::JSON) FROM (
-    SELECT DISTINCT ON (ap.usuario_id)
-      ap.usuario_id,
-      pr.username,
-      ap.puntaje,
-      ap.jugado_en
-    FROM public.arcade_partidas ap
-    JOIN public.profiles pr ON pr.id = ap.usuario_id
-    WHERE ap.juego = p_juego
-    ORDER BY ap.usuario_id, ap.puntaje DESC, ap.jugado_en ASC
-  ) t
-  ORDER BY t.puntaje DESC
-  LIMIT p_limite;
+    SELECT mejor.usuario_id, mejor.username, mejor.puntaje, mejor.jugado_en
+    FROM (
+      SELECT DISTINCT ON (ap.usuario_id)
+        ap.usuario_id,
+        pr.username,
+        ap.puntaje,
+        ap.jugado_en
+      FROM public.arcade_partidas ap
+      JOIN public.profiles pr ON pr.id = ap.usuario_id
+      WHERE ap.juego = p_juego
+      ORDER BY ap.usuario_id, ap.puntaje DESC, ap.jugado_en ASC
+    ) mejor
+    ORDER BY mejor.puntaje DESC
+    LIMIT p_limite
+  ) t;
 $$;
 
 
