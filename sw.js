@@ -5,7 +5,7 @@
    sin conexión (en el parque sin datos).
    ═══════════════════════════════════════════ */
 
-var CACHE_NAME = 'cheskoretos-v2';
+var CACHE_NAME = 'cheskoretos-v3';
 var URLS_TO_CACHE = [
   '/',
   '/index.html',

@@ -786,34 +786,18 @@
     }
 
     async function iniciarCamara(camaraId) {
-        /* Sin qrbox: escanea TODO el cuadro de video, no solo un recuadro
-           central de 220px. Esto es clave al escanear pantallas o QR grandes,
-           donde el código no cabía dentro del recuadro fijo y nunca decodificaba. */
         var config = {
-            fps: 10
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1.0
         };
         var fuente = camaraId ? { deviceId: { exact: camaraId } } : { facingMode: 'environment' };
-
-        /* [DIAG] Indicador en pantalla: nos dice si el bucle de escaneo corre
-           (intentos suben) y si alguna vez decodifica algo (último). */
-        var _diagBox = document.getElementById('_diagScanner');
-        if (!_diagBox) {
-            _diagBox = document.createElement('div');
-            _diagBox.id = '_diagScanner';
-            _diagBox.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:100000;background:rgba(0,0,0,.85);color:#0f0;font:12px monospace;padding:6px 8px;border-radius:6px;white-space:pre-wrap;';
-            document.body.appendChild(_diagBox);
-        }
-        _diagBox.textContent = 'diag: iniciando cámara…';
-        var _intentos = 0;
-        var _ultimoUpd = 0;
 
         try {
             await qrCameraScanner.start(
                 fuente,
                 config,
                 function onScanSuccess(decodedText) {
-                    /* [DIAG] Si esto se ve, la cámara SÍ decodifica. */
-                    if (_diagBox) _diagBox.textContent = 'diag: DECODIFICÓ → ' + String(decodedText).slice(0, 120);
                     /* Extraer UUID del URL */
                     var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
                     if (match && match[1]) {
@@ -827,15 +811,7 @@
                     }
                 },
                 function onScanFailure(error) {
-                    /* [DIAG] Contar intentos (throttle a ~4/seg) para ver si el
-                       bucle corre. Si "intentos" sube pero nunca decodifica,
-                       es problema de enfoque/calidad del QR, no del código. */
-                    _intentos++;
-                    var ahora = Date.now();
-                    if (_diagBox && ahora - _ultimoUpd > 250) {
-                        _ultimoUpd = ahora;
-                        _diagBox.textContent = 'diag: escaneando… intentos=' + _intentos + ' (aún no decodifica)';
-                    }
+                    /* Silenciar errores de escaneo continuo */
                 }
             );
         } catch (err) {
@@ -872,8 +848,6 @@
 
     function cerrarScannerCamara() {
         scannerOverlay.style.display = 'none';
-        var _diagBox = document.getElementById('_diagScanner');   /* [DIAG] */
-        if (_diagBox) _diagBox.remove();
         if (qrCameraScanner) {
             qrCameraScanner.stop().catch(function() {});
             qrCameraScanner.clear().catch(function() {});
