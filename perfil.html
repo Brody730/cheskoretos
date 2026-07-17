@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- ═══════════════════════════════════════════
+         [DIAG TEMPORAL] Consola visual, cargada PRIMERO
+         para capturar TODO desde el inicio (incluidos los
+         console.log de app.js al parsear). Botón flotante
+         abre consola/errores/network. QUITAR cuando ya no
+         se necesite depurar el escáner. -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Perfil - ChesKoretos</title>
@@ -904,14 +913,6 @@
         });
     }
     </script>
-
-    <!-- ═══════════════════════════════════════════
-         [DIAG TEMPORAL] Consola visual para depurar
-         desde el celular sin cable. Botón flotante
-         abre consola/errores/network. QUITAR cuando
-         ya no se necesite depurar el escáner. -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
 
 </body>
 </html>
