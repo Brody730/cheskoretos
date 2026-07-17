@@ -113,7 +113,15 @@
 
         if (tieneSesion) {
             if (validarId) {
+                /* Mostrar primero la vista de perfil (el usuario SIGUE logueado
+                   aunque el escaneo falle); el modal de validación, si aplica,
+                   se dibuja encima. Antes esta rama nunca llamaba a
+                   actualizarVista(), así que la pantalla se quedaba con el
+                   estado por defecto del HTML (login visible) y parecía que
+                   la sesión se había cerrado. */
+                await actualizarVista();
                 await manejarEscaneoQR(validarId);
+                window.history.replaceState({}, '', window.location.pathname);
             } else {
                 await actualizarVista();
             }
@@ -420,8 +428,14 @@
             }
 
             var datos = await DataStore.obtenerUsuarioCompleto(targetUserId);
+            if (datos === undefined) {
+                /* Error transitorio (red, servidor): no es que el usuario
+                   no exista, simplemente no se pudo verificar ahorita. */
+                mostrarAlerta('❌', 'Error de Conexión', 'No se pudo verificar el código QR por un problema de red. Intenta de nuevo.', 'error');
+                return;
+            }
             if (!datos || !datos.perfil) {
-                mostrarAlerta('❌', 'Usuario No Encontrado', 'El código QR no corresponde a un usuario válido. Verifica tu conexión e intenta de nuevo.', 'error');
+                mostrarAlerta('❌', 'Usuario No Encontrado', 'El código QR no corresponde a un usuario válido.', 'error');
                 return;
             }
 

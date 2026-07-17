@@ -333,9 +333,15 @@ var DataStore = (function() {
      * @param {string} userId
      * @returns {object|null} { perfil, lealtad }
      */
+    /**
+     * @returns {object|null|undefined} { perfil, lealtad } si existe;
+     * null si el usuario confirmadamente no existe; undefined si la
+     * consulta falló por un error transitorio (red, servidor).
+     */
     async function obtenerUsuarioCompleto(userId) {
         var perfil = await obtenerPerfil(userId);
-        if (!perfil) return null;
+        if (perfil === null) return null;
+        if (!perfil) return undefined;
         var lealtad = await obtenerLealtad(userId);
         return { perfil: perfil, lealtad: lealtad };
     }
