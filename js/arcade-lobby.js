@@ -3,14 +3,19 @@
  * CHESKORETOS - LOBBY DEL ARCADE (sala top-down)
  * ═══════════════════════════════════════════
  * Un pasillo de arcade visto desde arriba (estilo Pac-Man) con una
- * cámara que sigue al avatar: los gabinetes están alineados en una
- * sola fila contra la pared de arriba, uno por juego, y el jugador
- * camina por el piso de abajo para acercarse al que quiera jugar.
+ * cámara que sigue al avatar: los gabinetes están agrupados en
+ * secciones de ~4 contra la pared de arriba, separadas por zonas de
+ * ambientación (mesas con sillas, estación de pizza, rincón de
+ * curiosidades) para que el pasillo se sienta como un arcade real y
+ * no un corredor vacío. El jugador camina por el piso de abajo para
+ * acercarse al gabinete que quiera jugar.
  *
  * Al acercarse a un gabinete "disponible" y presionar ENTER/A, se
  * oculta el lobby y se muestra la pantalla del juego correspondiente
  * (ver window.ArcadeGames en js/arcade.js). Los gabinetes marcados
- * `disponible:false` solo muestran un aviso de "próximamente".
+ * `disponible:false` solo muestran un aviso de "próximamente". Las
+ * piezas de ambientación no son interactuables, solo estorban el paso
+ * (hay que rodearlas) para que la sala se sienta viva.
  *
  * Este archivo es dueño de la transición entre las dos pantallas de
  * arcade.html (#arcadeLobbyScreen / #arcadeGameScreen); js/arcade.js
@@ -72,8 +77,36 @@
         var canvas = document.getElementById('lobbyCanvas');
         if (!canvas) return;
         var ctx = canvas.getContext('2d');
-        var VIEW_W = canvas.width;   /* 176 — ventana visible (viewport) */
-        var H = canvas.height;       /* 220 — el pasillo no hace scroll vertical */
+
+        /* Coordenadas "de diseño" — TODA la lógica del juego (posición,
+           colisiones, cámara) vive en este sistema fijo, sin importar
+           la resolución real del canvas. ajustarResolucionCanvas()
+           mapea este espacio a la resolución real de pantalla. */
+        var VIEW_W = 176, H = 220;
+
+        /* ═══════════════════════════════════════════
+           RESOLUCIÓN REAL DEL CANVAS (evita el texto
+           borroso: en vez de dibujar a 176x220 y estirar
+           con CSS, el backing store del canvas se ajusta
+           al tamaño real en pantalla × devicePixelRatio,
+           y se usa setTransform para poder seguir
+           programando todo en coordenadas 176x220).
+           ═══════════════════════════════════════════ */
+        function ajustarResolucionCanvas() {
+            var rect = canvas.getBoundingClientRect();
+            var dpr = Math.min(window.devicePixelRatio || 1, 3);
+            var anchoReal = Math.max(1, Math.round((rect.width || VIEW_W) * dpr));
+            var altoReal = Math.max(1, Math.round((rect.height || H) * dpr));
+            if (canvas.width !== anchoReal) canvas.width = anchoReal;
+            if (canvas.height !== altoReal) canvas.height = altoReal;
+            var escala = canvas.width / VIEW_W;
+            ctx.setTransform(escala, 0, 0, escala, 0, 0);
+        }
+        var resizeTimeoutId = null;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeoutId);
+            resizeTimeoutId = setTimeout(ajustarResolucionCanvas, 150);
+        });
 
         var lobbyScreen = document.getElementById('arcadeLobbyScreen');
         var gameScreen  = document.getElementById('arcadeGameScreen');
@@ -81,27 +114,91 @@
         var btnA        = document.getElementById('btnArcadeA');
 
         /* ═══════════════════════════════════════════
-           LAYOUT: pasillo ancho con una sola fila de
-           gabinetes contra la pared de arriba; la cámara
-           sigue al avatar en X (el mundo es más ancho que
-           el canvas visible).
+           LAYOUT: secciones de ~4 gabinetes separadas por
+           zonas de ambientación (mesas, pizza, curiosidades)
+           para que el pasillo se sienta lleno de vida. La
+           cámara sigue al avatar en X.
            ═══════════════════════════════════════════ */
         var MURO = 10;
-        var CAB_W = 34, CAB_H = 26, GAP = 18;
+        var CAB_W = 34, CAB_H = 26;
+        var GAP_CLUSTER = 10;    /* separación entre gabinetes de la misma sección */
+        var DECOR_GAP_W = 92;    /* ancho de cada zona de ambientación entre secciones */
+        var END_GAP_W = 74;      /* ancho del rincón de curiosidades al final */
         var MARGEN_MUNDO = 24;
+        var SECCION_TAMANO = 4;
+        var FURN_Y = 132; /* línea base donde se paran los muebles/decoración en el piso */
 
-        var WORLD_W = MARGEN_MUNDO * 2 + ARCADE_MACHINES.length * CAB_W + (ARCADE_MACHINES.length - 1) * GAP;
+        var gabinetes = [];
+        var decoraciones = [];
+        var cursorX = MARGEN_MUNDO;
+        var TIPOS_DECOR_CICLO = ['pizza', 'lounge'];
+        var decorIdx = 0;
 
-        var gabinetes = ARCADE_MACHINES.map(function(maquina, i) {
-            var x = MARGEN_MUNDO + i * (CAB_W + GAP);
-            var y = MURO + 8;
+        function construirDecoracion(tipo, xIzquierda, anchoZona) {
+            var coreW = tipo === 'lounge' ? 50 : 44;
+            var coreH = tipo === 'curiosidades' ? 34 : 28;
+            var x = xIzquierda + (anchoZona - coreW) / 2;
             return {
-                def: maquina,
-                x: x, y: y, w: CAB_W, h: CAB_H,
-                /* zona de interacción: franja de piso justo debajo del gabinete */
-                zonaX: x - 5, zonaY: y + CAB_H, zonaW: CAB_W + 10, zonaH: 22
+                tipo: tipo,
+                x: x, y: FURN_Y, w: coreW, h: coreH,
+                wallCX: xIzquierda + anchoZona / 2
             };
+        }
+
+        ARCADE_MACHINES.forEach(function(maquina, i) {
+            var y = MURO + 8;
+            gabinetes.push({
+                def: maquina, x: cursorX, y: y, w: CAB_W, h: CAB_H,
+                zonaX: cursorX - 5, zonaY: y + CAB_H, zonaW: CAB_W + 10, zonaH: 22,
+                seccion: Math.floor(i / SECCION_TAMANO)
+            });
+            cursorX += CAB_W;
+
+            var esUltimo = i === ARCADE_MACHINES.length - 1;
+            var finDeSeccion = (i + 1) % SECCION_TAMANO === 0;
+
+            if (!esUltimo) {
+                if (finDeSeccion) {
+                    var tipo = TIPOS_DECOR_CICLO[decorIdx % TIPOS_DECOR_CICLO.length];
+                    decorIdx++;
+                    decoraciones.push(construirDecoracion(tipo, cursorX, DECOR_GAP_W));
+                    cursorX += DECOR_GAP_W;
+                } else {
+                    cursorX += GAP_CLUSTER;
+                }
+            }
         });
+
+        /* Rincón de curiosidades: cierre del pasillo con máquina de
+           peluches + repisa de trofeos + planta. */
+        decoraciones.push(construirDecoracion('curiosidades', cursorX + 12, END_GAP_W));
+        cursorX += END_GAP_W + 24;
+        var WORLD_W = cursorX;
+        var TOTAL_SECCIONES = Math.ceil(ARCADE_MACHINES.length / SECCION_TAMANO);
+
+        var sSecciones = gabinetes.reduce(function(rangos, g) {
+            var r = rangos[g.seccion] || { min: Infinity, max: -Infinity };
+            r.min = Math.min(r.min, g.x);
+            r.max = Math.max(r.max, g.x + g.w);
+            rangos[g.seccion] = r;
+            return rangos;
+        }, {});
+        var PALETAS_SECCION = [
+            { a: '#1d1d1d', b: '#181818', muro: '#3a1a00' }, /* naranja tenue */
+            { a: '#181d1d', b: '#141818', muro: '#001a1a' }, /* cian tenue */
+            { a: '#1d181d', b: '#181418', muro: '#2a0a2a' }  /* morado tenue */
+        ];
+        function paletaEnX(x) {
+            for (var s = 0; s < TOTAL_SECCIONES; s++) {
+                var r = sSecciones[s];
+                if (r && x >= r.min - DECOR_GAP_W / 2 && x <= r.max + DECOR_GAP_W / 2) {
+                    return PALETAS_SECCION[s % PALETAS_SECCION.length];
+                }
+            }
+            return PALETAS_SECCION[0];
+        }
+
+        var solidos = gabinetes.concat(decoraciones);
 
         /* ═══════════════════════════════════════════
            AVATAR (arranca justo bajo Flappy Chesko, el
@@ -194,16 +291,17 @@
         }
 
         function moverConColision(dx, dy) {
-            /* Resolución de colisión separada por eje: intenta mover en X,
-               si choca con un gabinete o pared revierte solo ese eje. */
+            /* Resolución de colisión separada por eje contra gabinetes
+               Y decoración (mesas, puestos, curiosidades) — todo lo
+               sólido vive en `solidos`. */
             var nx = avatar.x + dx;
             if (nx - avatar.r >= MURO && nx + avatar.r <= WORLD_W - MURO &&
-                !gabinetes.some(function(g) { return rectVsCirculo(g, nx, avatar.y, avatar.r); })) {
+                !solidos.some(function(s) { return rectVsCirculo(s, nx, avatar.y, avatar.r); })) {
                 avatar.x = nx;
             }
             var ny = avatar.y + dy;
             if (ny - avatar.r >= MURO && ny + avatar.r <= H - MURO &&
-                !gabinetes.some(function(g) { return rectVsCirculo(g, avatar.x, ny, avatar.r); })) {
+                !solidos.some(function(s) { return rectVsCirculo(s, avatar.x, ny, avatar.r); })) {
                 avatar.y = ny;
             }
         }
@@ -225,14 +323,15 @@
            DIBUJO (todo se traduce por -camaraX para el efecto cámara)
            ═══════════════════════════════════════════ */
         function dibujarPiso() {
-            ctx.fillStyle = '#161616';
+            ctx.fillStyle = '#141414';
             ctx.fillRect(camaraX, 0, VIEW_W, H);
             var tile = 11;
             var xInicio = Math.floor(camaraX / tile) * tile;
             for (var y = MURO; y < H - MURO; y += tile) {
                 for (var x = xInicio; x < camaraX + VIEW_W; x += tile) {
+                    var pal = paletaEnX(x);
                     var par = (Math.floor(x / tile) + Math.floor(y / tile)) % 2 === 0;
-                    ctx.fillStyle = par ? '#1d1d1d' : '#181818';
+                    ctx.fillStyle = par ? pal.a : pal.b;
                     ctx.fillRect(x, y, tile, tile);
                 }
             }
@@ -262,19 +361,19 @@
             if (d.disponible) {
                 ctx.fillStyle = esCercano ? ('rgba(0,255,180,' + (0.55 + 0.35 * pulso) + ')') : '#00d68f';
                 ctx.fillRect(pantX, pantY, pantW, pantH);
-                ctx.font = '10px monospace';
+                ctx.font = '11px monospace';
                 ctx.fillStyle = '#00120a';
                 ctx.fillText(d.emoji, g.x + g.w / 2, pantY + pantH - 3);
             } else {
                 ctx.fillStyle = '#0a0a0a';
                 ctx.fillRect(pantX, pantY, pantW, pantH);
-                ctx.font = '8px monospace';
+                ctx.font = '9px monospace';
                 ctx.fillStyle = '#444';
                 ctx.fillText('🔒', g.x + g.w / 2, pantY + pantH - 3);
             }
 
-            ctx.font = '5px monospace';
-            ctx.fillStyle = d.disponible ? '#FFCC00' : '#777';
+            ctx.font = 'bold 6px monospace';
+            ctx.fillStyle = d.disponible ? '#FFCC00' : '#888';
             var nombreCorto = d.nombre.length > 13 ? d.nombre.slice(0, 12) + '…' : d.nombre;
             ctx.fillText(nombreCorto, g.x + g.w / 2, g.y + g.h - 3);
 
@@ -285,34 +384,133 @@
                 ctx.fillStyle = 'rgba(255,204,0,0.85)';
                 ctx.fillRect(-g.w / 2 - 3, -3, g.w + 6, 7);
                 ctx.fillStyle = '#111';
-                ctx.font = 'bold 5px monospace';
+                ctx.font = 'bold 6px monospace';
                 ctx.fillText('PRONTO', 0, 2);
                 ctx.restore();
             }
+        }
+
+        /* ── Ambientación: mesas/sillas, estación de pizza, curiosidades ── */
+        function dibujarPoster(cx, y) {
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(cx - 9, y, 18, 13);
+            ctx.strokeStyle = '#555';
+            ctx.strokeRect(cx - 9 + 0.5, y + 0.5, 17, 12);
+            ctx.fillStyle = ['#FF6600', '#00CCFF', '#FF44CC'][Math.floor(cx) % 3];
+            ctx.fillRect(cx - 6, y + 3, 12, 7);
+        }
+
+        function dibujarLounge(d) {
+            dibujarPoster(d.wallCX, MURO + 4);
+            /* mesa */
+            ctx.fillStyle = '#5a3a1a';
+            ctx.fillRect(d.x + 8, d.y + 6, d.w - 16, d.h - 12);
+            ctx.strokeStyle = '#3a2410';
+            ctx.strokeRect(d.x + 8.5, d.y + 6.5, d.w - 17, d.h - 13);
+            /* sillas alrededor */
+            ctx.fillStyle = '#7a4a1a';
+            var sillas = [
+                [d.x - 2, d.y + d.h / 2 - 4],
+                [d.x + d.w - 6, d.y + d.h / 2 - 4],
+                [d.x + d.w / 2 - 4, d.y - 4],
+                [d.x + d.w / 2 - 4, d.y + d.h + 2]
+            ];
+            sillas.forEach(function(s) { ctx.fillRect(s[0], s[1], 8, 8); });
+        }
+
+        function dibujarPizza(d) {
+            dibujarPoster(d.wallCX, MURO + 4);
+            /* mostrador */
+            ctx.fillStyle = '#b02020';
+            ctx.fillRect(d.x, d.y + d.h - 10, d.w, 10);
+            ctx.fillStyle = '#fff';
+            for (var i = 0; i < d.w; i += 8) { ctx.fillRect(d.x + i, d.y + d.h - 10, 4, 10); }
+            /* pizza redonda encima */
+            var pcx = d.x + d.w / 2, pcy = d.y + d.h - 16;
+            ctx.fillStyle = '#e8b84b';
+            ctx.beginPath(); ctx.arc(pcx, pcy, 9, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#c0392b';
+            for (var a = 0; a < 6; a++) {
+                var ang = (a / 6) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.arc(pcx + Math.cos(ang) * 4, pcy + Math.sin(ang) * 4, 1.4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.strokeStyle = '#8a5a10';
+            ctx.lineWidth = 0.6;
+            for (var s = 0; s < 6; s++) {
+                var ang2 = (s / 6) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(pcx, pcy);
+                ctx.lineTo(pcx + Math.cos(ang2) * 9, pcy + Math.sin(ang2) * 9);
+                ctx.stroke();
+            }
+        }
+
+        function dibujarCuriosidades(d) {
+            dibujarPoster(d.wallCX, MURO + 4);
+            /* máquina de peluches (garra) */
+            var gx = d.x, gy = d.y - 4, gw = d.w * 0.55, gh = d.h + 6;
+            ctx.fillStyle = '#7a1fa0';
+            ctx.fillRect(gx, gy, gw, gh);
+            ctx.fillStyle = 'rgba(150,220,255,0.35)';
+            ctx.fillRect(gx + 3, gy + 3, gw - 6, gh * 0.55);
+            ctx.fillStyle = '#FFCC00';
+            [0.3, 0.6].forEach(function(f, i) {
+                ctx.beginPath();
+                ctx.arc(gx + gw * f, gy + gh * 0.42, 2.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.fillStyle = '#333';
+            ctx.fillRect(gx + gw / 2 - 1, gy - 3, 2, 6);
+
+            /* repisa de trofeos */
+            var rx = d.x + gw + 6, ry = d.y + d.h - 6;
+            ctx.fillStyle = '#4a3220';
+            ctx.fillRect(rx, ry, d.w - gw - 6, 3);
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏆', rx + 6, ry - 1);
+            ctx.fillText('🏆', rx + 15, ry - 1);
+
+            /* planta */
+            ctx.fillStyle = '#7a4a1a';
+            ctx.fillRect(d.x + d.w + 4, d.y + d.h - 6, 8, 6);
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.arc(d.x + d.w + 8, d.y + d.h - 10, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function dibujarDecoracion(d) {
+            if (d.tipo === 'lounge') return dibujarLounge(d);
+            if (d.tipo === 'pizza') return dibujarPizza(d);
+            if (d.tipo === 'curiosidades') return dibujarCuriosidades(d);
         }
 
         function dibujarPrompt(g) {
             var texto = g.def.disponible ? ('▲ ' + g.def.nombre) : '🔒 PRÓXIMAMENTE';
             var sub = g.def.disponible ? 'ENTER / A' : '';
             var cx = g.x + g.w / 2;
-            var y = g.zonaY + g.zonaH + 10;
+            var y = g.zonaY + g.zonaH + 11;
 
-            ctx.font = '6px monospace';
-            var anchoTexto = Math.max(ctx.measureText(texto).width, sub ? ctx.measureText(sub).width : 0) + 10;
+            ctx.font = 'bold 7px monospace';
+            var anchoTexto = Math.max(ctx.measureText(texto).width, sub ? ctx.measureText(sub).width : 0) + 12;
             var boxX = Math.min(Math.max(cx - anchoTexto / 2, camaraX + MURO + 2), camaraX + VIEW_W - MURO - anchoTexto - 2);
 
             var alpha = 0.55 + 0.35 * Math.sin(tiempoGlobal * 5);
-            ctx.fillStyle = 'rgba(0,0,0,0.75)';
-            ctx.fillRect(boxX, y - 9, anchoTexto, sub ? 20 : 12);
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(boxX, y - 10, anchoTexto, sub ? 22 : 14);
             ctx.strokeStyle = g.def.disponible ? ('rgba(255,204,0,' + alpha + ')') : 'rgba(150,150,150,0.7)';
-            ctx.strokeRect(boxX, y - 9, anchoTexto, sub ? 20 : 12);
+            ctx.strokeRect(boxX, y - 10, anchoTexto, sub ? 22 : 14);
 
             ctx.textAlign = 'center';
-            ctx.fillStyle = g.def.disponible ? '#FFCC00' : '#aaa';
+            ctx.fillStyle = g.def.disponible ? '#FFCC00' : '#bbb';
             ctx.fillText(texto, boxX + anchoTexto / 2, y);
             if (sub) {
+                ctx.font = '6px monospace';
                 ctx.fillStyle = '#fff';
-                ctx.fillText(sub, boxX + anchoTexto / 2, y + 9);
+                ctx.fillText(sub, boxX + anchoTexto / 2, y + 10);
             }
         }
 
@@ -339,30 +537,35 @@
             ctx.restore();
         }
 
-        /* pistas visuales de "hay más máquinas" en los bordes del viewport */
-        /* Se dibuja DESPUÉS de ctx.restore(), o sea en espacio de
-           pantalla normal (sin la traslación de cámara) — por eso usa
+        /* pistas visuales de "hay más máquinas" en los bordes del viewport.
+           Se dibuja DESPUÉS de ctx.restore() del mundo, o sea en espacio
+           de pantalla normal (sin la traslación de cámara) — por eso usa
            coordenadas fijas del viewport (0..VIEW_W), no de mundo. */
         function dibujarIndicadoresScroll() {
             if (camaraX > 2) {
                 ctx.fillStyle = 'rgba(255,204,0,0.65)';
-                ctx.font = '10px monospace';
+                ctx.font = '11px monospace';
                 ctx.textAlign = 'left';
                 ctx.fillText('◀', 2, H / 2);
             }
             if (camaraX + VIEW_W < WORLD_W - 2) {
                 ctx.fillStyle = 'rgba(255,204,0,0.65)';
-                ctx.font = '10px monospace';
+                ctx.font = '11px monospace';
                 ctx.textAlign = 'right';
                 ctx.fillText('▶', VIEW_W - 2, H / 2);
             }
         }
 
         function dibujarLobby() {
-            ctx.clearRect(0, 0, VIEW_W, H);
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+
             ctx.save();
             ctx.translate(-camaraX, 0);
             dibujarPiso();
+            decoraciones.forEach(dibujarDecoracion);
             var cercano = gabineteCercano();
             gabinetes.forEach(function(g) { dibujarGabinete(g, g === cercano); });
             dibujarAvatar();
@@ -407,6 +610,7 @@
             });
             if (gameScreen) gameScreen.style.display = 'none';
             if (lobbyScreen) lobbyScreen.style.display = 'flex';
+            ajustarResolucionCanvas();
         }
         if (btnVolver) btnVolver.addEventListener('click', volverAlLobby);
 
@@ -442,6 +646,7 @@
             requestAnimationFrame(loop);
         }
 
+        ajustarResolucionCanvas();
         actualizarCamara();
         dibujarLobby();
         requestAnimationFrame(function(t) { lastTime = t; requestAnimationFrame(loop); });

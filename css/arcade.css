@@ -139,8 +139,10 @@ body.arcade-body {
     width: 100%;
     height: 100%;
     display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+    /* Sin image-rendering:pixelated aquí a propósito: js/arcade-lobby.js
+       ajusta la resolución real del canvas (backing store) al tamaño en
+       pantalla × devicePixelRatio, así que el texto se dibuja nítido de
+       origen en vez de estirarse borroso desde una resolución chica. */
     touch-action: none;
 }
 
