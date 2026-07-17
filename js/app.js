@@ -674,24 +674,54 @@
        13. ESCÁNER DE CÁMARA QR
        ═══════════════════════════════════════════ */
 
+    async function verificarPermisoCamara() {
+        try {
+            if (!navigator.permissions || !navigator.permissions.query) return 'unknown';
+            var status = await navigator.permissions.query({ name: 'camera' });
+            return status.state; /* 'granted' | 'denied' | 'prompt' */
+        } catch (e) {
+            return 'unknown';
+        }
+    }
+
     async function abrirScannerCamara() {
         if (typeof Html5Qrcode === 'undefined') {
             mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
             return;
         }
 
-        scannerOverlay.style.display = 'flex';
-        qrCameraScanner = new Html5Qrcode('qrReader');
-
-        var camaras = [];
         try {
-            camaras = await Html5Qrcode.getCameras();
-        } catch (err) {
-            console.error('No se pudieron listar cámaras:', err);
-        }
+            /* Si el navegador ya tiene la cámara bloqueada para este sitio,
+               getUserMedia rechaza al instante sin mostrar ningún diálogo:
+               eso es lo que se percibe como "abre y cierra sin avisar". */
+            var permiso = await verificarPermisoCamara();
+            if (permiso === 'denied') {
+                mostrarAlerta(
+                    '🚫',
+                    'Cámara Bloqueada',
+                    'Tu navegador tiene la cámara bloqueada para este sitio. Toca el ícono 🔒 junto a la URL → Permisos del sitio → Cámara → Permitir, y vuelve a intentar.',
+                    'error'
+                );
+                return;
+            }
 
-        poblarSelectorCamaras(camaras);
-        await iniciarCamara(obtenerCamaraPreferida(camaras));
+            scannerOverlay.style.display = 'flex';
+            qrCameraScanner = new Html5Qrcode('qrReader');
+
+            var camaras = [];
+            try {
+                camaras = await Html5Qrcode.getCameras();
+            } catch (err) {
+                console.error('No se pudieron listar cámaras:', err);
+            }
+
+            poblarSelectorCamaras(camaras);
+            await iniciarCamara(obtenerCamaraPreferida(camaras));
+        } catch (err) {
+            console.error('abrirScannerCamara:', err);
+            cerrarScannerCamara();
+            mostrarAlerta('❌', 'Error al Abrir Cámara', 'No se pudo iniciar el escáner: ' + (err && err.message ? err.message : 'error desconocido') + '.', 'error');
+        }
     }
 
     function poblarSelectorCamaras(camaras) {
@@ -761,7 +791,16 @@
         } catch (err) {
             console.error('Error al iniciar cámara:', err);
             cerrarScannerCamara();
-            mostrarAlerta('❌', 'Cámara No Disponible', 'No se pudo acceder a la cámara. Verifica los permisos.', 'error');
+
+            var mensaje = 'No se pudo acceder a la cámara. Verifica los permisos.';
+            if (err && err.name === 'NotAllowedError') {
+                mensaje = 'Permiso de cámara denegado. Toca el ícono 🔒 junto a la URL → Permisos del sitio → Cámara → Permitir, y vuelve a intentar.';
+            } else if (err && err.name === 'NotFoundError') {
+                mensaje = 'No se detectó ninguna cámara en este dispositivo.';
+            } else if (err && err.name === 'NotReadableError') {
+                mensaje = 'La cámara está siendo usada por otra app. Ciérrala e intenta de nuevo.';
+            }
+            mostrarAlerta('❌', 'Cámara No Disponible', mensaje, 'error');
         }
     }
 
