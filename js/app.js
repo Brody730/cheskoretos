@@ -722,7 +722,12 @@
             }
 
             scannerOverlay.style.display = 'flex';
-            qrCameraScanner = new Html5Qrcode('qrReader');
+            /* useBarCodeDetectorIfSupported: usa el decodificador nativo del
+               navegador (mucho mejor en Android/Brave, incluso desde pantallas). */
+            qrCameraScanner = new Html5Qrcode('qrReader', {
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                verbose: false
+            });
 
             var camaras = [];
             try {

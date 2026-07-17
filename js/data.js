@@ -344,11 +344,18 @@ var DataStore = (function() {
      * consulta falló por un error transitorio (red, servidor).
      */
     async function obtenerUsuarioCompleto(userId) {
-        var perfil = await obtenerPerfil(userId);
-        if (perfil === null) return null;
-        if (!perfil) return undefined;
-        var lealtad = await obtenerLealtad(userId);
-        return { perfil: perfil, lealtad: lealtad };
+        /* Usa una RPC SECURITY DEFINER en el servidor: no expone el teléfono
+           y lee lealtad aunque RLS bloquee la lectura directa.
+           Devuelve: null si no existe; undefined si hubo error de red/servidor;
+           { perfil, lealtad } si existe. */
+        var { data, error } = await db().rpc('obtener_usuario_para_escaner', { target_user_id: userId });
+        if (error) {
+            console.error('obtenerUsuarioCompleto(rpc):', error);
+            _ultimoErrorPerfil = error;   /* [DIAG] */
+            return undefined;
+        }
+        _ultimoErrorPerfil = null;
+        return data; /* la RPC devuelve null o { perfil:{...}, lealtad:{...} } */
     }
 
     /* ── API pública ── */

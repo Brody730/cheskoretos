@@ -12,6 +12,9 @@ var DataStore = (function() {
 
     function db() { return AppConfig.getClient(); }
 
+    /* [DIAG] Guarda el último error crudo de obtenerPerfil para poder verlo en pantalla */
+    var _ultimoErrorPerfil = null;
+
     /* ═══════════════════════════════════════════
        PROFILES
        ═══════════════════════════════════════════ */
@@ -34,8 +37,10 @@ var DataStore = (function() {
             .single();
         if (error) {
             console.error('obtenerPerfil:', error);
+            _ultimoErrorPerfil = error;   /* [DIAG] */
             return error.code === 'PGRST116' ? null : undefined;
         }
+        _ultimoErrorPerfil = null;        /* [DIAG] consulta OK */
         return data;
     }
 
@@ -371,7 +376,9 @@ var DataStore = (function() {
         /* Widgets */
         obtenerRankingUsuarios: obtenerRankingUsuarios,
         obtenerCromosUsuario:   obtenerCromosUsuario,
-        obtenerUsuarioCompleto: obtenerUsuarioCompleto
+        obtenerUsuarioCompleto: obtenerUsuarioCompleto,
+        /* [DIAG] */
+        obtenerUltimoErrorPerfil: function() { return _ultimoErrorPerfil; }
     };
 
 })();
