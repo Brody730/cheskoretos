@@ -10,12 +10,6 @@
 (function() {
     'use strict';
 
-    /* [DIAG] Se ve apenas carga la página, ANTES de tocar nada.
-       Si esto no aparece en la consola, el navegador no está
-       cargando este archivo (caché/SW/deploy), no es problema
-       del escáner. */
-    console.log('%c[APP.JS DIAG] versión cargada: ' + new Date().toISOString(), 'background:#0f0;color:#000;font-weight:bold;padding:2px 6px;');
-
     var $ = function(id) { return document.getElementById(id); };
 
     /* ═══════════════════════════════════════════
@@ -54,6 +48,7 @@
     var btnCanjearGratis  = $('btnCanjearGratis');
     var btnFullscreen     = $('btnFullscreen');
     var btnGoogleWallet   = $('btnGoogleWallet');
+    var btnActivarNotis   = $('btnActivarNotis');
 
     /* QR */
     var qrContainer       = $('qrContainer');
@@ -247,6 +242,13 @@
             });
         }
 
+        /* Activar notificaciones push */
+        if (btnActivarNotis) {
+            btnActivarNotis.addEventListener('click', function() {
+                activarNotificacionesPush();
+            });
+        }
+
         /* Fullscreen: cerrar */
         if (btnCloseFullscreen) {
             btnCloseFullscreen.addEventListener('click', function() {
@@ -264,7 +266,6 @@
         /* Escáner de cámara */
         if (btnEscanearQR) {
             btnEscanearQR.addEventListener('click', function() {
-                console.log('[APP.JS DIAG] click en btnEscanearQR detectado');   /* [DIAG] */
                 abrirScannerCamara();
             });
         }
@@ -464,6 +465,7 @@
 
     async function confirmarVisitaEscaneada() {
         if (!_targetUserId) return;
+        var _clienteId = _targetUserId;   /* copia: se necesita después de limpiar _targetUserId */
 
         /* ── VALIDACIÓN A: Solo Sábados ── */
         var diaActual = new Date().toLocaleDateString('en-US', { timeZone: 'America/Mexico_City', weekday: 'short' });
@@ -475,6 +477,9 @@
                 '¡Solo Sábados!',
                 '¡Los sellos solo se acumulan en Sábados de Mitote! Vuelve el sábado.',
                 'error'
+            );
+            DataStore.crearNotificacion(_clienteId, 'solo_sabados', '🚫', '¡Solo Sábados!',
+                'Alguien intentó registrar tu visita, pero los sellos solo se acumulan los Sábados de Mitote. ¡Vuelve el sábado! 🎡'
             );
             return;
         }
@@ -491,6 +496,9 @@
                     '¡Ya registrado hoy!',
                     'Este usuario ya acumuló su sello hoy. No se permite doble registro.',
                     'error'
+                );
+                DataStore.crearNotificacion(_clienteId, 'ya_registro_hoy', '🚫', '¡Ya tienes tu sello de hoy!',
+                    'Tranquilo, tu sello de hoy ya está contado. No hace falta escanear de nuevo. ¡Nos vemos el próximo sábado! 😉'
                 );
                 return;
             }
@@ -516,12 +524,50 @@
         window.history.replaceState({}, '', window.location.pathname);
 
         await manejarResultadoVisita(resultado);
+        notificarResultadoAlCliente(_clienteId, resultado);
         await actualizarVista();
+    }
+
+    /**
+     * Crea la notificación que verá el CLIENTE (no el staff) según el
+     * resultado de registrar_visita.
+     */
+    function notificarResultadoAlCliente(clienteId, resultado) {
+        if (!resultado) return;
+        switch (resultado.tipo) {
+            case 'visita_registrada':
+                DataStore.crearNotificacion(clienteId, 'visita_registrada', '✅',
+                    resultado.titulo || '¡Sello agregado!',
+                    resultado.mensaje || '¡Se agregó un sello a tu tarjeta! Sigue viniendo los sábados.'
+                );
+                break;
+            case 'chesko_gratis':
+                DataStore.crearNotificacion(clienteId, 'chesko_gratis', '🎉',
+                    '¡BOOM! ¡CHESCO GRATIS!',
+                    resultado.mensaje || '¡Completaste tu racha! Tu Chesko gratis ya está disponible para canjear.'
+                );
+                break;
+            case 'ya_registro_hoy':
+                DataStore.crearNotificacion(clienteId, 'ya_registro_hoy', '🚫',
+                    resultado.titulo || '¡Ya tienes tu sello de hoy!',
+                    resultado.mensaje || 'Tu sello de hoy ya está contado.'
+                );
+                break;
+            case 'error':
+                DataStore.crearNotificacion(clienteId, 'error', '❌',
+                    'No se pudo registrar tu visita',
+                    resultado.mensaje || 'Hubo un problema al registrar tu sello. Pídele al staff que lo intente de nuevo.'
+                );
+                break;
+        }
     }
 
     /* ═══════════════════════════════════════════
        7. ACTUALIZAR VISTA
        ═══════════════════════════════════════════ */
+    var _canalNotificaciones = null;
+    var _usuarioSuscrito     = null;
+
     async function actualizarVista() {
         var logueado = Auth.obtenerUsuarioActual() !== null;
 
@@ -530,7 +576,10 @@
         if (seccionCheskoCard) seccionCheskoCard.style.display = logueado ? 'block' : 'none';
         seccionAlbum.style.display   = logueado ? 'block' : 'none';
 
-        if (!logueado) return;
+        if (!logueado) {
+            desuscribirNotificaciones();
+            return;
+        }
 
         var usuario = Auth.obtenerUsuarioActual();
         var lealtad = usuario.lealtad;
@@ -545,6 +594,145 @@
         var totalChallenges = (window.CHALLENGES || []).length;
         if (albumContador) {
             albumContador.textContent = totalRetos + ' / ' + totalChallenges + ' retos completados';
+        }
+
+        suscribirNotificacionesSiHaceFalta(usuario.perfil.id);
+    }
+
+    /**
+     * Suscribe (una sola vez por sesión) a las notificaciones en vivo del
+     * usuario logueado: si le llega una nueva fila mientras tiene la app
+     * abierta, se la mostramos al instante (toast + Notification nativa si
+     * hay permiso). No requiere configuración extra (Supabase Realtime).
+     */
+    function suscribirNotificacionesSiHaceFalta(usuarioId) {
+        if (_usuarioSuscrito === usuarioId && _canalNotificaciones) return;
+        desuscribirNotificaciones();
+
+        _canalNotificaciones = DataStore.suscribirNotificaciones(usuarioId, function(notif) {
+            mostrarToastNotificacion(notif);
+            mostrarNotificacionNativa(notif);
+        });
+        _usuarioSuscrito = usuarioId;
+    }
+
+    function desuscribirNotificaciones() {
+        if (_canalNotificaciones) {
+            DataStore.cancelarSuscripcion(_canalNotificaciones);
+            _canalNotificaciones = null;
+            _usuarioSuscrito = null;
+        }
+    }
+
+    /** Toast dentro de la página (mientras la pestaña está abierta) */
+    function mostrarToastNotificacion(notif) {
+        var toast = document.createElement('div');
+        toast.className = 'chesko-toast';
+        toast.innerHTML =
+            '<span class="chesko-toast-icono">' + (notif.icono || '🔔') + '</span>' +
+            '<div class="chesko-toast-texto">' +
+                '<strong>' + escapeHtml(notif.titulo || '') + '</strong>' +
+                '<span>' + escapeHtml(notif.mensaje || '') + '</span>' +
+            '</div>';
+        toast.style.cssText =
+            'position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-20px);' +
+            'max-width:92vw;width:380px;background:#111;border:3px solid var(--amarillo, #FFCC00);' +
+            'border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;' +
+            'box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:100000;opacity:0;' +
+            'transition:opacity .3s ease, transform .3s ease;';
+        document.body.appendChild(toast);
+
+        requestAnimationFrame(function() {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(-20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 5000);
+    }
+
+    /** Notificación nativa del sistema (aparece aunque la pestaña esté al fondo, con permiso ya otorgado) */
+    function mostrarNotificacionNativa(notif) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        if (!navigator.serviceWorker) return;
+        navigator.serviceWorker.getRegistration().then(function(reg) {
+            if (!reg) return;
+            reg.showNotification(notif.titulo || 'ChesKoretos', {
+                body: notif.mensaje || '',
+                icon: '/assets/cheskin_no_bg.png',
+                badge: '/assets/cheskin_no_bg.png',
+                tag: 'chesko-notif-' + notif.id
+            });
+        }).catch(function() {});
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    /* ═══════════════════════════════════════════
+       12C. ACTIVAR NOTIFICACIONES PUSH
+       ═══════════════════════════════════════════
+       Pide permiso y crea una suscripción Push real: estas SÍ llegan
+       aunque el navegador esté cerrado o el celular bloqueado, porque
+       las entrega el sistema operativo, no la pestaña. Requiere que el
+       usuario toque un botón (los navegadores no dejan pedir permiso
+       de notificaciones sin una acción explícita). */
+    var VAPID_PUBLIC_KEY = 'BP7K4YwWN8Rwz0dcett-ZS3A8BVW_47Xylk8T5of8MGA_2fSW6RjCo_eZSVkew4eRHoWD3agddqWYNEZEsmVkqo'; /* [PENDIENTE] pegar aquí la VAPID public key, ver instrucciones */
+
+    function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var rawData = window.atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    async function activarNotificacionesPush() {
+        var usuario = Auth.obtenerUsuarioActual();
+        if (!usuario) {
+            mostrarAlerta('⚠️', 'Inicia sesión', 'Necesitas iniciar sesión para activar notificaciones.', 'error');
+            return;
+        }
+        if (!VAPID_PUBLIC_KEY) {
+            mostrarAlerta('⚠️', 'Falta configurar', 'Las notificaciones push todavía no están configuradas del lado del servidor (falta la VAPID key).', 'error');
+            return;
+        }
+        if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+            mostrarAlerta('⚠️', 'No disponible', 'Tu navegador no soporta notificaciones push.', 'error');
+            return;
+        }
+
+        try {
+            var permiso = await Notification.requestPermission();
+            if (permiso !== 'granted') {
+                mostrarAlerta('🔕', 'Permiso no otorgado', 'No podremos avisarte por notificación, pero seguirás viendo los avisos dentro de la app.', 'error');
+                return;
+            }
+
+            var reg = await navigator.serviceWorker.ready;
+            var subscription = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+
+            var ok = await DataStore.guardarPushSubscription(usuario.authUser.id, subscription);
+            if (ok) {
+                mostrarAlerta('🔔', '¡Notificaciones activadas!', 'Te avisaremos aunque tengas la app cerrada.', 'exito');
+            } else {
+                mostrarAlerta('⚠️', 'Error', 'No se pudo guardar la suscripción. Intenta de nuevo.', 'error');
+            }
+        } catch (err) {
+            console.error('activarNotificacionesPush:', err);
+            mostrarAlerta('❌', 'Error', 'No se pudo activar las notificaciones: ' + (err && err.message ? err.message : 'error desconocido'), 'error');
         }
     }
 
@@ -582,6 +770,17 @@
         /* Mostrar botón Google Wallet siempre que haya sesión */
         if (btnGoogleWallet) {
             btnGoogleWallet.style.display = 'block';
+        }
+
+        /* Mostrar botón de activar notificaciones solo si el navegador
+           las soporta y el usuario aún no dio permiso */
+        if (btnActivarNotis) {
+            var soportaPush = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
+            if (soportaPush && Notification.permission === 'default') {
+                btnActivarNotis.style.display = 'block';
+            } else {
+                btnActivarNotis.style.display = 'none';
+            }
         }
 
         var estado = Loyalty.obtenerEstadoLealtad();
@@ -707,37 +906,18 @@
         }
     }
 
-    /* [NUEVO] Estado del escáner nativo */
+    /* Estado del escáner nativo */
     var _videoEl        = null;
     var _mediaStream     = null;
     var _barcodeDetector = null;
     var _rafId           = null;
     var _escaneando      = false;
-    var _diagBox         = null;
-
-    function _diagLog(msg) {
-        console.log('[APP.JS DIAG] ' + msg);
-        if (_diagBox) _diagBox.textContent = 'diag: ' + msg;
-    }
 
     async function abrirScannerCamara() {
-        console.log('[APP.JS DIAG] abrirScannerCamara() inició');   /* [DIAG] */
-
         scannerOverlay.style.display = 'flex';
-
-        /* [DIAG] Indicador visible en pantalla */
-        _diagBox = document.getElementById('_diagScanner');
-        if (!_diagBox) {
-            _diagBox = document.createElement('div');
-            _diagBox.id = '_diagScanner';
-            _diagBox.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:100000;background:rgba(0,0,0,.85);color:#0f0;font:12px monospace;padding:6px 8px;border-radius:6px;white-space:pre-wrap;';
-            document.body.appendChild(_diagBox);
-        }
-        _diagLog('abriendo cámara…');
 
         try {
             var permiso = await verificarPermisoCamara();
-            console.log('[APP.JS DIAG] permiso de cámara:', permiso);   /* [DIAG] */
             if (permiso === 'denied') {
                 mostrarAlerta(
                     '🚫',
@@ -760,11 +940,9 @@
                 console.error('No se pudieron listar cámaras:', err);
             }
             poblarSelectorCamaras(camaras);
-            console.log('[APP.JS DIAG] cámaras encontradas:', camaras.length, camaras.map(function(c){return c.label;}));   /* [DIAG] */
 
             await iniciarCamara(obtenerCamaraPreferida(camaras));
         } catch (err) {
-            console.log('[APP.JS DIAG] abrirScannerCamara CATCH:', err);   /* [DIAG] */
             console.error('abrirScannerCamara:', err);
             cerrarScannerCamara();
             mostrarAlerta('❌', 'Error al Abrir Cámara', 'No se pudo iniciar el escáner: ' + (err && err.message ? err.message : 'error desconocido') + '.', 'error');
@@ -823,10 +1001,7 @@
        soporta, cae de regreso a html5-qrcode. */
     async function iniciarCamara(camaraId) {
         var qrReaderEl = document.getElementById('qrReader');
-        if (!qrReaderEl) {
-            _diagLog('ERROR: no existe #qrReader en el DOM');
-            return;
-        }
+        if (!qrReaderEl) return;
 
         try {
             /* Crear <video> propio dentro del contenedor */
@@ -850,24 +1025,16 @@
             _mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
             _videoEl.srcObject = _mediaStream;
             await _videoEl.play();
-            _diagLog('cámara abierta, resolución: ' + _videoEl.videoWidth + 'x' + _videoEl.videoHeight);
 
             if ('BarcodeDetector' in window) {
-                var formatosSoportados = [];
-                try { formatosSoportados = await window.BarcodeDetector.getSupportedFormats(); } catch (e) {}
-                console.log('[APP.JS DIAG] BarcodeDetector formatos soportados:', formatosSoportados);   /* [DIAG] */
                 _barcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
-                _diagLog('usando BarcodeDetector NATIVO');
                 _escaneando = true;
                 loopDeteccionNativa();
             } else {
-                _diagLog('BarcodeDetector NO soportado, usando fallback html5-qrcode');
-                console.log('[APP.JS DIAG] window.BarcodeDetector no existe en este navegador');   /* [DIAG] */
                 await iniciarCamaraFallback(camaraId);
             }
         } catch (err) {
             console.error('Error al iniciar cámara:', err);
-            console.log('[APP.JS DIAG] iniciarCamara CATCH:', err);   /* [DIAG] */
             cerrarScannerCamara();
 
             var mensaje = 'No se pudo acceder a la cámara. Verifica los permisos.';
@@ -882,9 +1049,6 @@
         }
     }
 
-    var _intentosNativos = 0;
-    var _ultimoLogNativo = 0;
-
     async function loopDeteccionNativa() {
         if (!_escaneando || !_barcodeDetector || !_videoEl) return;
 
@@ -892,9 +1056,6 @@
             var codigos = await _barcodeDetector.detect(_videoEl);
             if (codigos && codigos.length > 0) {
                 var texto = codigos[0].rawValue || '';
-                _diagLog('DECODIFICÓ → ' + texto.slice(0, 120));
-                console.log('[APP.JS DIAG] DECODIFICÓ (nativo) → ' + texto);   /* [DIAG] */
-
                 var match = texto.match(/validar_usuario_id=([a-f0-9-]+)/i);
                 cerrarScannerCamara();
                 if (match && match[1]) {
@@ -903,16 +1064,9 @@
                     mostrarAlerta('⚠️', 'QR no reconocido', 'El código no contiene validar_usuario_id. Se leyó: ' + texto.slice(0, 140), 'error');
                 }
                 return; /* detener el bucle, ya se resolvió */
-            } else {
-                _intentosNativos++;
-                var ahora = Date.now();
-                if (ahora - _ultimoLogNativo > 1000) {
-                    _ultimoLogNativo = ahora;
-                    _diagLog('(nativo) buscando… intentos=' + _intentosNativos);
-                }
             }
         } catch (err) {
-            console.log('[APP.JS DIAG] error en detect():', err);   /* [DIAG] */
+            console.error('loopDeteccionNativa:', err);
         }
 
         _rafId = requestAnimationFrame(loopDeteccionNativa);
@@ -938,7 +1092,6 @@
             fuente,
             config,
             function onScanSuccess(decodedText) {
-                _diagLog('DECODIFICÓ (fallback) → ' + decodedText.slice(0, 120));
                 var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
                 cerrarScannerCamara();
                 if (match && match[1]) {
@@ -998,8 +1151,6 @@
             qrCameraScanner.clear().catch(function() {});
             qrCameraScanner = null;
         }
-
-        if (_diagBox) { _diagBox.remove(); _diagBox = null; }
     }
 
     /* ═══════════════════════════════════════════

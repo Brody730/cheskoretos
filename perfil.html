@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- ═══════════════════════════════════════════
-         [DIAG TEMPORAL] Consola visual, cargada PRIMERO
-         para capturar TODO desde el inicio (incluidos los
-         console.log de app.js al parsear). Botón flotante
-         abre consola/errores/network. QUITAR cuando ya no
-         se necesite depurar el escáner. -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Perfil - ChesKoretos</title>
@@ -528,6 +519,11 @@
             <button class="btn-wallet" id="btnGoogleWallet" style="display:none;">
                 <span class="wallet-badge-icon"></span>
                 AGREGAR A GOOGLE WALLET
+            </button>
+
+            <!-- ─── BOTÓN ACTIVAR NOTIFICACIONES ─── -->
+            <button class="btn-wallet" id="btnActivarNotis" style="display:none; background:#333; margin-top:8px;">
+                🔔 ACTIVAR NOTIFICACIONES
             </button>
 
             <!-- ─── BOTÓN ESCANEAR (solo admin/empleado) ─── -->

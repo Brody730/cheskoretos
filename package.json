@@ -5,6 +5,7 @@
   "dependencies": {
     "google-auth-library": "^9.6.0",
     "googleapis": "^131.0.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "web-push": "^3.6.7"
   }
 }

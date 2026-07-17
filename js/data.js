@@ -284,6 +284,110 @@ var DataStore = (function() {
     }
 
     /* ═══════════════════════════════════════════
+       NOTIFICACIONES
+       ═══════════════════════════════════════════ */
+
+    /**
+     * Crear una notificación para un usuario (llamado por el staff al escanear).
+     * @param {string} usuarioId
+     * @param {string} tipo
+     * @param {string} icono
+     * @param {string} titulo
+     * @param {string} mensaje
+     * @returns {object|null}
+     */
+    async function crearNotificacion(usuarioId, tipo, icono, titulo, mensaje) {
+        var { data, error } = await db().rpc('crear_notificacion', {
+            p_usuario_id: usuarioId,
+            p_tipo:       tipo,
+            p_icono:      icono,
+            p_titulo:     titulo,
+            p_mensaje:    mensaje
+        });
+        if (error) { console.error('crearNotificacion:', error); return null; }
+        return data;
+    }
+
+    /**
+     * Obtener las notificaciones recientes de un usuario.
+     * @param {string} usuarioId
+     * @param {number} [limite=20]
+     * @returns {object[]}
+     */
+    async function obtenerNotificaciones(usuarioId, limite) {
+        var { data, error } = await db()
+            .from('notificaciones')
+            .select('*')
+            .eq('usuario_id', usuarioId)
+            .order('creado_en', { ascending: false })
+            .limit(limite || 20);
+        if (error) { console.error('obtenerNotificaciones:', error); return []; }
+        return data || [];
+    }
+
+    /**
+     * Marcar una notificación como leída.
+     * @param {number} notificacionId
+     */
+    async function marcarNotificacionLeida(notificacionId) {
+        var { error } = await db()
+            .from('notificaciones')
+            .update({ leida: true })
+            .eq('id', notificacionId);
+        if (error) console.error('marcarNotificacionLeida:', error);
+    }
+
+    /**
+     * Suscribirse en tiempo real a nuevas notificaciones de un usuario.
+     * @param {string} usuarioId
+     * @param {function(object)} callback - recibe la notificación nueva
+     * @returns {object} canal de Supabase Realtime (para poder cerrarlo después)
+     */
+    function suscribirNotificaciones(usuarioId, callback) {
+        var canal = db()
+            .channel('notificaciones-' + usuarioId)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notificaciones',
+                filter: 'usuario_id=eq.' + usuarioId
+            }, function(payload) {
+                callback(payload.new);
+            })
+            .subscribe();
+        return canal;
+    }
+
+    /**
+     * Cancelar una suscripción de Realtime.
+     * @param {object} canal
+     */
+    function cancelarSuscripcion(canal) {
+        if (canal) db().removeChannel(canal);
+    }
+
+    /* ═══════════════════════════════════════════
+       PUSH SUBSCRIPTIONS (NOTIFICACIONES REALES)
+       ═══════════════════════════════════════════ */
+
+    /**
+     * Guardar la suscripción push del navegador para un usuario.
+     * @param {string} usuarioId
+     * @param {PushSubscription} subscription - objeto nativo del navegador
+     */
+    async function guardarPushSubscription(usuarioId, subscription) {
+        var json = subscription.toJSON();
+        var { error } = await db().rpc('guardar_push_subscription', {
+            p_usuario_id: usuarioId,
+            p_endpoint:   json.endpoint,
+            p_p256dh:     json.keys.p256dh,
+            p_auth_key:   json.keys.auth
+        });
+        if (error) { console.error('guardarPushSubscription:', error); return false; }
+        return true;
+    }
+
+    /* ═══════════════════════════════════════════
        RANKING / WIDGETS
        ═══════════════════════════════════════════ */
 
@@ -384,6 +488,14 @@ var DataStore = (function() {
         obtenerRankingUsuarios: obtenerRankingUsuarios,
         obtenerCromosUsuario:   obtenerCromosUsuario,
         obtenerUsuarioCompleto: obtenerUsuarioCompleto,
+        /* Notificaciones */
+        crearNotificacion:      crearNotificacion,
+        obtenerNotificaciones:  obtenerNotificaciones,
+        marcarNotificacionLeida: marcarNotificacionLeida,
+        suscribirNotificaciones: suscribirNotificaciones,
+        cancelarSuscripcion:    cancelarSuscripcion,
+        /* Push */
+        guardarPushSubscription: guardarPushSubscription,
         /* [DIAG] */
         obtenerUltimoErrorPerfil: function() { return _ultimoErrorPerfil; }
     };
