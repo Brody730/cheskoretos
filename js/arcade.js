@@ -324,9 +324,19 @@
         /* ═══════════════════════════════════════════
            CONTROLES
            ═══════════════════════════════════════════ */
+        var gameScreenEl = document.getElementById('arcadeGameScreen');
+        function estaVisibleEstaPantalla() {
+            /* En arcade.html este juego vive dentro de #arcadeGameScreen,
+               que el lobby oculta/muestra. Si no existe ese contenedor
+               (ej. si algún día se usa este canvas suelto en otra
+               página) se asume visible. Evita que la tecla ESPACIO del
+               lobby dispare este juego mientras está escondido detrás. */
+            return !gameScreenEl || gameScreenEl.style.display !== 'none';
+        }
+
         canvas.addEventListener('pointerdown', function(e) { e.preventDefault(); aletear(); });
         window.addEventListener('keydown', function(e) {
-            if (e.code === 'Space') { e.preventDefault(); aletear(); }
+            if (e.code === 'Space' && estaVisibleEstaPantalla()) { e.preventDefault(); aletear(); }
         });
 
         if (btnReintentar) {
@@ -489,6 +499,29 @@
                 canjeModal.classList.remove('open');
             });
         }
+
+        /* ═══════════════════════════════════════════
+           PUENTE CON EL LOBBY (js/arcade-lobby.js)
+           ═══════════════════════════════════════════
+           El lobby controla cuál de las dos pantallas (sala o juego)
+           está visible; solo necesita poder decirle a este juego
+           "te toca, arranca en cero" y "ya no eres visible, párate". */
+        window.ArcadeGames = window.ArcadeGames || {};
+        window.ArcadeGames.flappy_chesko = {
+            mostrar: function() {
+                if (rafId) cancelAnimationFrame(rafId);
+                estado = ESTADO.LISTO;
+                reiniciarJuego();
+                dibujar();
+                if (startOverlay) startOverlay.style.display = 'flex';
+                if (gameOverPanel) gameOverPanel.style.display = 'none';
+            },
+            ocultar: function() {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = null;
+                estado = ESTADO.LISTO;
+            }
+        };
 
         /* ═══════════════════════════════════════════
            ARRANQUE

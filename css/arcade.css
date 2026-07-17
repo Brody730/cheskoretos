@@ -54,6 +54,32 @@ body.arcade-body {
 }
 .arcade-login-banner a { color: #fff; text-decoration: underline; }
 
+/* ── HUD persistente (arriba de todo, visible en lobby y en juego) ── */
+.arcade-hud-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111;
+    border: 2px solid var(--amarillo, #FFCC00);
+    border-radius: 10px;
+    padding: 6px 16px;
+}
+.arcade-hud-top .arcade-hud-label {
+    font-family: 'Press Start 2P', sans-serif;
+    font-size: 0.55rem;
+    color: #888;
+    letter-spacing: 1px;
+}
+.arcade-hud-top .arcade-hud-valor {
+    font-family: 'Press Start 2P', sans-serif;
+    font-size: 1rem;
+    color: var(--amarillo, #FFCC00);
+    text-shadow: 2px 2px 0 #000;
+}
+
+#arcadePlayArea { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#arcadeLobbyScreen, #arcadeGameScreen { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
 /* ── HUD ── */
 .arcade-hud {
     width: 100%;
@@ -95,7 +121,125 @@ body.arcade-body {
 }
 .arcade-sound-btn:active { transform: scale(0.94); }
 
-/* ── Juego ── */
+/* ═══════════════════════════════════════════
+   LOBBY: sala top-down + D-pad
+   ═══════════════════════════════════════════ */
+.arcade-lobby-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 176 / 220;
+    border: 4px solid #FFCC00;
+    border-radius: 14px;
+    box-shadow: 0 0 0 4px #000, 0 12px 30px rgba(0,0,0,0.6);
+    overflow: hidden;
+    background: #000;
+}
+#lobbyCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    touch-action: none;
+}
+
+.arcade-controls {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.arcade-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+    gap: 3px;
+}
+.dpad-btn {
+    background: #111;
+    border: 2px solid #FF6600;
+    border-radius: 8px;
+    color: var(--amarillo, #FFCC00);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.dpad-btn:active { background: #FF6600; color: #111; }
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+.arcade-btn-a {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #FF5533, #CC2200 70%);
+    border: 3px solid #000;
+    color: #fff;
+    font-family: 'Press Start 2P', sans-serif;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 0 #7a1400, 0 6px 14px rgba(0,0,0,0.5);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.arcade-btn-a:active {
+    box-shadow: 0 1px 0 #7a1400;
+    transform: translateY(3px);
+}
+
+.arcade-btn-volver {
+    align-self: flex-start;
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 2px solid #666;
+    background: #1a1a1a;
+    color: #ccc;
+    cursor: pointer;
+}
+.arcade-btn-volver:hover { border-color: #fff; color: #fff; }
+.arcade-btn-volver:active { transform: scale(0.96); }
+
+/* Toast "próximamente" — se crea dinámicamente desde js/arcade-lobby.js */
+.arcade-proximamente-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 12px);
+    background: #111;
+    border: 2px solid var(--amarillo, #FFCC00);
+    border-radius: 10px;
+    padding: 10px 16px;
+    max-width: 88vw;
+    font-family: 'Bangers', sans-serif;
+    font-size: 0.95rem;
+    color: #FFCC00;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10005;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.arcade-proximamente-toast.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
 .arcade-game-wrap {
     position: relative;
     width: 100%;
@@ -313,4 +457,7 @@ body.arcade-body {
 @media (max-width: 480px) {
     .arcade-titulo { font-size: 1.05rem; }
     .arcade-game-wrap { max-width: 260px; }
+    .arcade-lobby-wrap { max-width: 260px; }
+    .arcade-dpad { grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); }
+    .arcade-btn-a { width: 58px; height: 58px; }
 }

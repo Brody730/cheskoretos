@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <!--
     ChesKoretos — ARCADE DE PUNTOS (arcade.html)
-    Minijuego retro "Flappy Chesko": un botón (tap/clic/espacio) para
-    volar y esquivar obstáculos. Cada partida otorga PUNTOS (moneda
+    Biblioteca de minijuegos con una sala vista desde arriba (estilo
+    Pac-Man): el avatar del jugador camina entre gabinetes de arcade
+    (js/arcade-lobby.js, catálogo en window.ARCADE_MACHINES) y al
+    acercarse a uno "activo" entra a jugarlo. Por ahora solo
+    "Flappy Chesko" (js/arcade.js) está implementado; los demás
+    gabinetes se muestran en gris con "PRÓXIMAMENTE" y no hacen nada
+    al tocarlos (solo un aviso). Cada partida otorga PUNTOS (moneda
     canjeable por cheskos/sabritas) con un multiplicador que baja
     mientras más se juega el mismo día; el puntaje del leaderboard
     siempre se guarda completo. Ver docs/JS_MODULES.md y
@@ -16,7 +21,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Arcade ChesKoretos - ¡Junta puntos y canjea premios!</title>
-    <meta name="description" content="Juega Flappy Chesko, junta puntos y canjéalos por cheskos y sabritas gratis.">
+    <meta name="description" content="Camina por la sala de arcade, juega Flappy Chesko, junta puntos y canjéalos por cheskos y sabritas gratis.">
     <meta name="author" content="ChesKoretos Team">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,8 +54,8 @@
     <div class="container arcade-container">
 
         <header class="arcade-header">
-            <h1 class="arcade-titulo">🕹️ FLAPPY CHESKO</h1>
-            <p class="arcade-subtitulo">Junta puntos y cámbialos por premios reales</p>
+            <h1 class="arcade-titulo">🕹️ ARCADE CHESKORETOS</h1>
+            <p class="arcade-subtitulo">Camina hasta una máquina y presiona A para jugar</p>
         </header>
 
         <!-- Banner: solo se muestra sin sesión activa -->
@@ -58,47 +63,81 @@
             🔒 <a href="perfil.html">Inicia sesión en tu Perfil</a> para guardar tus puntos y salir en la tabla de posiciones.
         </div>
 
-        <!-- HUD: puntos totales + puntaje de la partida actual + sonido -->
-        <div class="arcade-hud">
-            <div class="arcade-hud-item">
-                <span class="arcade-hud-label">MIS PUNTOS</span>
-                <span class="arcade-hud-valor" id="arcadePuntosTotales">0</span>
-            </div>
-            <div class="arcade-hud-item">
-                <span class="arcade-hud-label">PARTIDA</span>
-                <span class="arcade-hud-valor" id="hudScoreActual">0</span>
-            </div>
-            <button type="button" class="arcade-sound-btn" id="soundToggleArcade" title="Silenciar/activar sonido">🔊</button>
+        <!-- HUD persistente (visible tanto en el lobby como dentro de un juego) -->
+        <div class="arcade-hud-top">
+            <span class="arcade-hud-label">MIS PUNTOS</span>
+            <span class="arcade-hud-valor" id="arcadePuntosTotales">0</span>
         </div>
 
-        <!-- Juego -->
-        <div class="arcade-game-wrap">
-            <canvas id="arcadeCanvas" width="128" height="224"></canvas>
+        <!-- ═══════════════════════════════════════
+             ÁREA DE JUEGO: alterna entre el LOBBY
+             (sala top-down) y la pantalla del juego
+             activo (js/arcade-lobby.js controla cuál
+             de las dos está visible).
+             ═══════════════════════════════════════ -->
+        <div id="arcadePlayArea">
 
-            <div class="arcade-overlay" id="arcadeStartOverlay">
-                <div class="arcade-overlay-box">
-                    <div class="arcade-overlay-titulo">FLAPPY<br>CHESKO</div>
-                    <div class="arcade-overlay-texto">Toca la pantalla<br>o presiona ESPACIO<br>para volar</div>
-                    <div class="arcade-overlay-blink">▶ TOCA PARA EMPEZAR ◀</div>
+            <!-- ─── LOBBY: sala vista desde arriba ─── -->
+            <div id="arcadeLobbyScreen">
+                <p class="arcade-hint">Camina con las flechas / WASD (o el control de abajo). Acércate a una máquina y presiona <strong>ENTER</strong> o el botón <strong>A</strong> para jugar.</p>
+                <div class="arcade-lobby-wrap">
+                    <canvas id="lobbyCanvas" width="176" height="220"></canvas>
                 </div>
-            </div>
 
-            <div class="arcade-overlay" id="arcadeGameOverPanel" style="display:none;">
-                <div class="arcade-overlay-box">
-                    <div class="arcade-overlay-titulo">GAME OVER</div>
-                    <div class="arcade-go-stat">Puntaje: <span id="goPuntaje">0</span></div>
-                    <div class="arcade-go-stat" id="goMensajeSesion" style="display:none;"></div>
-                    <div class="arcade-go-detalle">
-                        <span>Puntos ganados: <strong id="goPuntosGanados">0</strong></span>
-                        <span>Multiplicador: <strong id="goMultiplicador">x1.00</strong></span>
-                        <span>Intento hoy: <strong id="goIntentosHoy">1</strong></span>
+                <!-- Control táctil tipo mando retro (D-pad + botón A) -->
+                <div class="arcade-controls">
+                    <div class="arcade-dpad">
+                        <button type="button" class="dpad-btn dpad-up"    data-dir="up"    aria-label="Arriba">▲</button>
+                        <button type="button" class="dpad-btn dpad-left"  data-dir="left"  aria-label="Izquierda">◀</button>
+                        <button type="button" class="dpad-btn dpad-right" data-dir="right" aria-label="Derecha">▶</button>
+                        <button type="button" class="dpad-btn dpad-down"  data-dir="down"  aria-label="Abajo">▼</button>
                     </div>
-                    <button type="button" class="arcade-btn-reintentar" id="btnReintentar">▶ JUGAR DE NUEVO</button>
+                    <button type="button" class="arcade-btn-a" id="btnArcadeA">A</button>
                 </div>
             </div>
-        </div>
 
-        <p class="arcade-hint">Toca la pantalla del juego o presiona <strong>ESPACIO</strong> para volar. ¡Entre más obstáculos esquives, más alto tu puntaje!</p>
+            <!-- ─── PANTALLA DE JUEGO: Flappy Chesko ─── -->
+            <div id="arcadeGameScreen" style="display:none;">
+                <button type="button" class="arcade-btn-volver" id="btnVolverArcade">⬅ VOLVER AL ARCADE</button>
+
+                <div class="arcade-hud">
+                    <div class="arcade-hud-item">
+                        <span class="arcade-hud-label">PARTIDA</span>
+                        <span class="arcade-hud-valor" id="hudScoreActual">0</span>
+                    </div>
+                    <button type="button" class="arcade-sound-btn" id="soundToggleArcade" title="Silenciar/activar sonido">🔊</button>
+                </div>
+
+                <div class="arcade-game-wrap">
+                    <canvas id="arcadeCanvas" width="128" height="224"></canvas>
+
+                    <div class="arcade-overlay" id="arcadeStartOverlay">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">FLAPPY<br>CHESKO</div>
+                            <div class="arcade-overlay-texto">Toca la pantalla<br>o presiona ESPACIO<br>para volar</div>
+                            <div class="arcade-overlay-blink">▶ TOCA PARA EMPEZAR ◀</div>
+                        </div>
+                    </div>
+
+                    <div class="arcade-overlay" id="arcadeGameOverPanel" style="display:none;">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">GAME OVER</div>
+                            <div class="arcade-go-stat">Puntaje: <span id="goPuntaje">0</span></div>
+                            <div class="arcade-go-stat" id="goMensajeSesion" style="display:none;"></div>
+                            <div class="arcade-go-detalle">
+                                <span>Puntos ganados: <strong id="goPuntosGanados">0</strong></span>
+                                <span>Multiplicador: <strong id="goMultiplicador">x1.00</strong></span>
+                                <span>Intento hoy: <strong id="goIntentosHoy">1</strong></span>
+                            </div>
+                            <button type="button" class="arcade-btn-reintentar" id="btnReintentar">▶ JUGAR DE NUEVO</button>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="arcade-hint">Toca la pantalla del juego o presiona <strong>ESPACIO</strong> para volar. ¡Entre más obstáculos esquives, más alto tu puntaje!</p>
+            </div>
+
+        </div>
 
         <!-- Tabla de posiciones -->
         <section class="arcade-leaderboard">
@@ -148,6 +187,7 @@
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/arcade.js"></script>
+    <script src="js/arcade-lobby.js"></script>
     <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {

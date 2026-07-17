@@ -5,7 +5,7 @@
    sin conexión (en el parque sin datos).
    ═══════════════════════════════════════════ */
 
-var CACHE_NAME = 'cheskoretos-v8';
+var CACHE_NAME = 'cheskoretos-v9';
 var URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -27,6 +27,7 @@ var URLS_TO_CACHE = [
   '/js/api.js',
   '/js/app.js',
   '/js/arcade.js',
+  '/js/arcade-lobby.js',
   '/js/buzon.js',
   '/js/landing.js',
   '/manifest.json'
