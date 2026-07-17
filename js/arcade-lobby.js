@@ -6,16 +6,20 @@
  * cámara que sigue al avatar: los gabinetes están agrupados en
  * secciones de ~4 contra la pared de arriba, separadas por zonas de
  * ambientación (mesas con sillas, estación de pizza, rincón de
- * curiosidades) para que el pasillo se sienta como un arcade real y
- * no un corredor vacío. El jugador camina por el piso de abajo para
- * acercarse al gabinete que quiera jugar.
+ * curiosidades) y desorden (pizza tirada, helado derritiéndose) para
+ * que el pasillo se sienta vivo y no un corredor vacío. Además hay
+ * niños NPC deambulando y todo — gabinetes, muebles, tele retro,
+ * desorden, niños — responde a ENTER/A con un mensaje de sabor.
+ *
+ * El avatar tiene físico "orgánico": acelera/frena en vez de moverse
+ * a velocidad constante, tiene animación de piernas al caminar, y se
+ * cansa si caminas mucho rato seguido (más lento + gotita de sudor;
+ * se recupera parado).
  *
  * Al acercarse a un gabinete "disponible" y presionar ENTER/A, se
  * oculta el lobby y se muestra la pantalla del juego correspondiente
  * (ver window.ArcadeGames en js/arcade.js). Los gabinetes marcados
- * `disponible:false` solo muestran un aviso de "próximamente". Las
- * piezas de ambientación no son interactuables, solo estorban el paso
- * (hay que rodearlas) para que la sala se sienta viva.
+ * `disponible:false` solo muestran un aviso de "próximamente".
  *
  * Este archivo es dueño de la transición entre las dos pantallas de
  * arcade.html (#arcadeLobbyScreen / #arcadeGameScreen); js/arcade.js
@@ -69,9 +73,49 @@
             gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
             osc.start(t); osc.stop(t + dur);
         },
-        entrar:    function() { this.tono(660, 0.12); this.tono(990, 0.1); },
-        bloqueado: function() { this.tono(160, 0.15); }
+        entrar:     function() { this.tono(660, 0.12); this.tono(990, 0.1); },
+        bloqueado:  function() { this.tono(160, 0.15); },
+        curiosidad: function() { this.tono(520, 0.09); }
     };
+
+    /* Frases de sabor al interactuar con cosas que NO son un juego —
+       mesas, la tele, el desorden, los niños. Se elige una al azar
+       cada vez para que no se sienta repetitivo. */
+    var FRASES = {
+        lounge: [
+            '🪑 Mesa reservada para los que pierden en Flappy Chesko y necesitan un momento.',
+            '🪑 Alguien dejó una servilleta doblada en forma de avioncito. Arte.'
+        ],
+        pizza: [
+            '🍕 Huele delicioso. El de la caja jura que "en un rato sale más".',
+            '🍕 Hay una rebanada con más queso que las demás. Es la elegida.'
+        ],
+        curiosidades: [
+            '🕹️ La máquina de peluches: nadie ha ganado nada aquí desde 2019.',
+            '🏆 Los trofeos son del torneo de Flappy Chesko del año pasado. ¿Serás el próximo?'
+        ],
+        tv_retro: [
+            '📺 Están pasando el especial de "LOS SÚPER SABIOS DEL BARRIO" (temp. 47, sigue igual de buena).',
+            '📺 Puro ruido y estática... pero con mucho estilo ochentero.'
+        ],
+        pizza_tirada: [
+            '🍕 Alguien tiró su pizza. La regla de los 5 segundos ya expiró hace rato.',
+            '🍕 Pizza en el piso: 0/10, muy triste, no recomendado.'
+        ],
+        helado_derretido: [
+            '🍦 Se está derritiendo bajo las luces del arcade. Un momento de silencio.',
+            '🍦 Charquito pegajoso. Alguien lo va a pisar y se va a arrepentir.'
+        ],
+        npc: [
+            '🏃 ¡Un niño pasó corriendo y casi te tropieza!',
+            '🧒 "¡Cuidado!" — grita sin dejar de correr.',
+            '🏃 Está jugando a que es más rápido que la ruleta. Va ganando.'
+        ]
+    };
+    function fraseAlAzar(clave) {
+        var lista = FRASES[clave] || ['✨ Justo lo que buscabas.'];
+        return lista[Math.floor(Math.random() * lista.length)];
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         var canvas = document.getElementById('lobbyCanvas');
@@ -86,11 +130,8 @@
 
         /* ═══════════════════════════════════════════
            RESOLUCIÓN REAL DEL CANVAS (evita el texto
-           borroso: en vez de dibujar a 176x220 y estirar
-           con CSS, el backing store del canvas se ajusta
-           al tamaño real en pantalla × devicePixelRatio,
-           y se usa setTransform para poder seguir
-           programando todo en coordenadas 176x220).
+           borroso: el backing store se ajusta al tamaño
+           real en pantalla × devicePixelRatio).
            ═══════════════════════════════════════════ */
         function ajustarResolucionCanvas() {
             var rect = canvas.getBoundingClientRect();
@@ -115,18 +156,16 @@
 
         /* ═══════════════════════════════════════════
            LAYOUT: secciones de ~4 gabinetes separadas por
-           zonas de ambientación (mesas, pizza, curiosidades)
-           para que el pasillo se sienta lleno de vida. La
-           cámara sigue al avatar en X.
+           zonas de ambientación. La cámara sigue al avatar en X.
            ═══════════════════════════════════════════ */
         var MURO = 10;
         var CAB_W = 34, CAB_H = 26;
-        var GAP_CLUSTER = 10;    /* separación entre gabinetes de la misma sección */
-        var DECOR_GAP_W = 92;    /* ancho de cada zona de ambientación entre secciones */
-        var END_GAP_W = 74;      /* ancho del rincón de curiosidades al final */
+        var GAP_CLUSTER = 10;
+        var DECOR_GAP_W = 92;
+        var END_GAP_W = 74;
         var MARGEN_MUNDO = 24;
         var SECCION_TAMANO = 4;
-        var FURN_Y = 132; /* línea base donde se paran los muebles/decoración en el piso */
+        var FURN_Y = 132;
 
         var gabinetes = [];
         var decoraciones = [];
@@ -138,10 +177,12 @@
             var coreW = tipo === 'lounge' ? 50 : 44;
             var coreH = tipo === 'curiosidades' ? 34 : 28;
             var x = xIzquierda + (anchoZona - coreW) / 2;
+            var y = FURN_Y;
             return {
-                tipo: tipo,
-                x: x, y: FURN_Y, w: coreW, h: coreH,
-                wallCX: xIzquierda + anchoZona / 2
+                tipo: tipo, solido: true, frasesClave: tipo,
+                x: x, y: y, w: coreW, h: coreH,
+                wallCX: xIzquierda + anchoZona / 2,
+                zonaX: x - 6, zonaY: y - 6, zonaW: coreW + 12, zonaH: coreH + 20
             };
         }
 
@@ -176,6 +217,34 @@
         var WORLD_W = cursorX;
         var TOTAL_SECCIONES = Math.ceil(ARCADE_MACHINES.length / SECCION_TAMANO);
 
+        /* ── Referencias rápidas a las zonas de decoración ya construidas
+           (pizza = idx0, lounge = idx1, curiosidades = idx2) para anclar
+           el desorden y la tele cerca de algo que ya existe. ── */
+        var zonaPizza = decoraciones[0];
+        var zonaLounge = decoraciones[1];
+
+        /* ── Desorden (NO sólido: se puede caminar encima, es piso sucio) ── */
+        var desorden = [
+            {
+                tipo: 'pizza_tirada', solido: false, frasesClave: 'pizza_tirada',
+                x: zonaPizza.x - 22, y: zonaPizza.y + 16, w: 14, h: 10,
+                zonaX: zonaPizza.x - 30, zonaY: zonaPizza.y + 6, zonaW: 30, zonaH: 28
+            },
+            {
+                tipo: 'helado_derretido', solido: false, frasesClave: 'helado_derretido',
+                x: (gabinetes[5] ? gabinetes[5].x : zonaLounge.x) + 6, y: FURN_Y + 30, w: 10, h: 8,
+                zonaX: (gabinetes[5] ? gabinetes[5].x : zonaLounge.x) - 4, zonaY: FURN_Y + 18, zonaW: 26, zonaH: 26
+            }
+        ];
+
+        /* ── Tele retro (SÍ sólida: tiene mueble/base) junto al lounge ── */
+        var teleRetro = {
+            tipo: 'tv_retro', solido: true, frasesClave: 'tv_retro',
+            x: zonaLounge.x + zonaLounge.w + 12, y: zonaLounge.y - 10, w: 16, h: 20,
+            zonaX: zonaLounge.x + zonaLounge.w + 4, zonaY: zonaLounge.y - 16, zonaW: 32, zonaH: 40
+        };
+        decoraciones.push(teleRetro);
+
         var sSecciones = gabinetes.reduce(function(rangos, g) {
             var r = rangos[g.seccion] || { min: Infinity, max: -Infinity };
             r.min = Math.min(r.min, g.x);
@@ -184,9 +253,9 @@
             return rangos;
         }, {});
         var PALETAS_SECCION = [
-            { a: '#1d1d1d', b: '#181818', muro: '#3a1a00' }, /* naranja tenue */
-            { a: '#181d1d', b: '#141818', muro: '#001a1a' }, /* cian tenue */
-            { a: '#1d181d', b: '#181418', muro: '#2a0a2a' }  /* morado tenue */
+            { a: '#1d1d1d', b: '#181818' },
+            { a: '#181d1d', b: '#141818' },
+            { a: '#1d181d', b: '#181418' }
         ];
         function paletaEnX(x) {
             for (var s = 0; s < TOTAL_SECCIONES; s++) {
@@ -198,21 +267,72 @@
             return PALETAS_SECCION[0];
         }
 
-        var solidos = gabinetes.concat(decoraciones);
+        var solidos = gabinetes.concat(decoraciones.filter(function(d) { return d.solido; }));
 
         /* ═══════════════════════════════════════════
-           AVATAR (arranca justo bajo Flappy Chesko, el
-           único gabinete jugable ahorita)
+           NIÑOS NPC — deambulan cerca de su "hogar" (wander AI simple),
+           le dan vida al pasillo. No estorban el paso (no colisionan),
+           solo se pueden saludar/interactuar para una frase de sabor.
+           ═══════════════════════════════════════════ */
+        var NPC_VELOCIDAD = 46;
+        function crearNPC(hogarX, hogarY, color) {
+            return {
+                hogarX: hogarX, hogarY: hogarY,
+                x: hogarX, y: hogarY, r: 4.5, color: color,
+                dirX: 0, dirY: 1, pasoT: Math.random() * 10,
+                objetivoX: hogarX, objetivoY: hogarY,
+                esperando: 0, caminando: false
+            };
+        }
+        var npcs = [
+            crearNPC(gabinetes[1] ? gabinetes[1].x : 60, 160, '#66BBFF'),
+            crearNPC(zonaPizza.x + 10, 168, '#FF6699'),
+            crearNPC(cursorX - END_GAP_W - 30, 155, '#8CFF66')
+        ];
+
+        function actualizarNPCs(dt) {
+            npcs.forEach(function(n) {
+                n.esperando -= dt;
+                if (n.esperando <= 0) {
+                    n.objetivoX = Math.max(MURO + 10, Math.min(WORLD_W - MURO - 10, n.hogarX + (Math.random() * 2 - 1) * 46));
+                    n.objetivoY = Math.max(FURN_Y - 30, Math.min(H - MURO - 14, n.hogarY + (Math.random() * 2 - 1) * 26));
+                    n.esperando = 1 + Math.random() * 2.2;
+                }
+                var dx = n.objetivoX - n.x, dy = n.objetivoY - n.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 3) {
+                    var vx = dx / dist, vy = dy / dist;
+                    n.dirX = vx; n.dirY = vy;
+                    n.x += vx * NPC_VELOCIDAD * dt;
+                    n.y += vy * NPC_VELOCIDAD * dt;
+                    n.pasoT += dt;
+                    n.caminando = true;
+                } else {
+                    n.caminando = false;
+                }
+            });
+        }
+
+        /* ═══════════════════════════════════════════
+           AVATAR — física orgánica (acelera/frena en vez
+           de "snap" instantáneo) + energía que baja al
+           caminar y sube al parar.
            ═══════════════════════════════════════════ */
         var avatar = {
             x: gabinetes[0].x + gabinetes[0].w / 2,
             y: gabinetes[0].zonaY + gabinetes[0].zonaH + 26,
-            r: 6,
+            r: 6.5,
+            vx: 0, vy: 0,
             dirX: 0, dirY: -1,
             caminando: false,
-            pasoT: 0
+            pasoT: 0,
+            energia: 100,
+            cansado: false
         };
-        var VELOCIDAD = 62; /* px/s, mundo */
+        var VELOCIDAD_NORMAL = 62, VELOCIDAD_CANSADO = 36;
+        var ACELERACION = 380, FRICCION = 460;
+        var DRENAJE_ENERGIA = 9, REGEN_ENERGIA = 20;
+        var UMBRAL_CANSADO = 26;
 
         var camaraX = 0;
         function actualizarCamara() {
@@ -246,12 +366,10 @@
             var dir = MAPA_TECLAS[e.code];
             if (dir) { teclas[dir] = false; }
         });
-        /* si la pestaña pierde foco a medio movimiento, no se debe quedar "pegado" caminando */
         window.addEventListener('blur', function() {
             teclas.up = teclas.down = teclas.left = teclas.right = false;
         });
 
-        /* D-pad táctil: mismo patrón pointerdown/up que el resto del sitio */
         document.querySelectorAll('.dpad-btn').forEach(function(btn) {
             var dir = btn.getAttribute('data-dir');
             var activar = function(e) { e.preventDefault(); teclas[dir] = true; };
@@ -268,18 +386,41 @@
         /* ═══════════════════════════════════════════
            ACTUALIZAR / COLISIONES (todo en coordenadas de mundo)
            ═══════════════════════════════════════════ */
-        function actualizarAvatar(dt) {
-            var vx = (teclas.right ? 1 : 0) - (teclas.left ? 1 : 0);
-            var vy = (teclas.down ? 1 : 0) - (teclas.up ? 1 : 0);
+        function acercar(actual, objetivo, maxDelta) {
+            var diff = objetivo - actual;
+            if (Math.abs(diff) <= maxDelta) return objetivo;
+            return actual + (diff > 0 ? maxDelta : -maxDelta);
+        }
 
-            avatar.caminando = vx !== 0 || vy !== 0;
-            if (avatar.caminando) {
-                var mag = Math.sqrt(vx * vx + vy * vy) || 1;
-                vx /= mag; vy /= mag;
-                avatar.dirX = vx; avatar.dirY = vy;
-                avatar.pasoT += dt;
-                moverConColision(vx * VELOCIDAD * dt, vy * VELOCIDAD * dt);
+        function actualizarAvatar(dt) {
+            var inputX = (teclas.right ? 1 : 0) - (teclas.left ? 1 : 0);
+            var inputY = (teclas.down ? 1 : 0) - (teclas.up ? 1 : 0);
+            var hayInput = inputX !== 0 || inputY !== 0;
+
+            if (hayInput) {
+                var mag = Math.sqrt(inputX * inputX + inputY * inputY) || 1;
+                inputX /= mag; inputY /= mag;
+                avatar.dirX = inputX; avatar.dirY = inputY;
+                avatar.energia = Math.max(0, avatar.energia - DRENAJE_ENERGIA * dt);
+            } else {
+                avatar.energia = Math.min(100, avatar.energia + REGEN_ENERGIA * dt);
             }
+            avatar.cansado = avatar.energia < UMBRAL_CANSADO;
+
+            var velObjetivo = avatar.cansado ? VELOCIDAD_CANSADO : VELOCIDAD_NORMAL;
+            var vObjX = hayInput ? inputX * velObjetivo : 0;
+            var vObjY = hayInput ? inputY * velObjetivo : 0;
+            var tasa = hayInput ? ACELERACION : FRICCION;
+
+            avatar.vx = acercar(avatar.vx, vObjX, tasa * dt);
+            avatar.vy = acercar(avatar.vy, vObjY, tasa * dt);
+
+            avatar.caminando = (avatar.vx * avatar.vx + avatar.vy * avatar.vy) > 16;
+            if (avatar.caminando) {
+                avatar.pasoT += dt;
+                moverConColision(avatar.vx * dt, avatar.vy * dt);
+            }
+            actualizarNPCs(dt);
             actualizarCamara();
         }
 
@@ -291,9 +432,6 @@
         }
 
         function moverConColision(dx, dy) {
-            /* Resolución de colisión separada por eje contra gabinetes
-               Y decoración (mesas, puestos, curiosidades) — todo lo
-               sólido vive en `solidos`. */
             var nx = avatar.x + dx;
             if (nx - avatar.r >= MURO && nx + avatar.r <= WORLD_W - MURO &&
                 !solidos.some(function(s) { return rectVsCirculo(s, nx, avatar.y, avatar.r); })) {
@@ -306,16 +444,34 @@
             }
         }
 
-        function gabineteCercano() {
+        /* ═══════════════════════════════════════════
+           PROXIMIDAD / INTERACCIÓN GENERALIZADA
+           Todo (gabinetes, muebles, tele, desorden, niños)
+           puede ser "lo más cercano" y reaccionar a ENTER/A.
+           ═══════════════════════════════════════════ */
+        function objetoCercano() {
             var mejor = null, mejorDist = Infinity;
-            gabinetes.forEach(function(g) {
-                var cx = g.zonaX + g.zonaW / 2, cy = g.zonaY + g.zonaH / 2;
+
+            function evaluarConZona(obj, kind) {
+                var cx = obj.zonaX + obj.zonaW / 2, cy = obj.zonaY + obj.zonaH / 2;
                 var dx = avatar.x - cx, dy = avatar.y - cy;
                 var dist = Math.sqrt(dx * dx + dy * dy);
-                var dentro = avatar.x >= g.zonaX - 4 && avatar.x <= g.zonaX + g.zonaW + 4 &&
-                             avatar.y >= g.zonaY - 6 && avatar.y <= g.zonaY + g.zonaH + 12;
-                if (dentro && dist < mejorDist) { mejor = g; mejorDist = dist; }
+                var dentro = avatar.x >= obj.zonaX - 4 && avatar.x <= obj.zonaX + obj.zonaW + 4 &&
+                             avatar.y >= obj.zonaY - 4 && avatar.y <= obj.zonaY + obj.zonaH + 6;
+                if (dentro && dist < mejorDist) { mejor = { kind: kind, ref: obj }; mejorDist = dist; }
+            }
+
+            gabinetes.forEach(function(g) { evaluarConZona(g, 'gabinete'); });
+            decoraciones.forEach(function(d) { evaluarConZona(d, 'decor'); });
+            desorden.forEach(function(d) { evaluarConZona(d, 'decor'); });
+
+            var RADIO_NPC = 15;
+            npcs.forEach(function(n) {
+                var dx = avatar.x - n.x, dy = avatar.y - n.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist <= RADIO_NPC && dist < mejorDist) { mejor = { kind: 'npc', ref: n }; mejorDist = dist; }
             });
+
             return mejor;
         }
 
@@ -335,11 +491,9 @@
                     ctx.fillRect(x, y, tile, tile);
                 }
             }
-            /* muros arriba/abajo (dentro del viewport actual) */
             ctx.fillStyle = '#000';
             ctx.fillRect(camaraX, 0, VIEW_W, MURO);
             ctx.fillRect(camaraX, H - MURO, VIEW_W, MURO);
-            /* muros de los extremos del mundo, solo se dibujan si están a la vista */
             if (camaraX <= MURO) { ctx.fillRect(0, 0, MURO, H); }
             if (camaraX + VIEW_W >= WORLD_W - MURO) { ctx.fillRect(WORLD_W - MURO, 0, MURO, H); }
         }
@@ -390,42 +544,37 @@
             }
         }
 
-        /* ── Ambientación: mesas/sillas, estación de pizza, curiosidades ── */
-        function dibujarPoster(cx, y) {
+        /* ── Ambientación ── */
+        function dibujarPoster(cx, y, semilla) {
             ctx.fillStyle = '#2a2a2a';
             ctx.fillRect(cx - 9, y, 18, 13);
             ctx.strokeStyle = '#555';
             ctx.strokeRect(cx - 9 + 0.5, y + 0.5, 17, 12);
-            ctx.fillStyle = ['#FF6600', '#00CCFF', '#FF44CC'][Math.floor(cx) % 3];
+            ctx.fillStyle = ['#FF6600', '#00CCFF', '#FF44CC'][Math.floor(semilla) % 3];
             ctx.fillRect(cx - 6, y + 3, 12, 7);
         }
 
         function dibujarLounge(d) {
-            dibujarPoster(d.wallCX, MURO + 4);
-            /* mesa */
+            dibujarPoster(d.wallCX, MURO + 4, d.wallCX);
             ctx.fillStyle = '#5a3a1a';
             ctx.fillRect(d.x + 8, d.y + 6, d.w - 16, d.h - 12);
             ctx.strokeStyle = '#3a2410';
             ctx.strokeRect(d.x + 8.5, d.y + 6.5, d.w - 17, d.h - 13);
-            /* sillas alrededor */
             ctx.fillStyle = '#7a4a1a';
-            var sillas = [
+            [
                 [d.x - 2, d.y + d.h / 2 - 4],
                 [d.x + d.w - 6, d.y + d.h / 2 - 4],
                 [d.x + d.w / 2 - 4, d.y - 4],
                 [d.x + d.w / 2 - 4, d.y + d.h + 2]
-            ];
-            sillas.forEach(function(s) { ctx.fillRect(s[0], s[1], 8, 8); });
+            ].forEach(function(s) { ctx.fillRect(s[0], s[1], 8, 8); });
         }
 
         function dibujarPizza(d) {
-            dibujarPoster(d.wallCX, MURO + 4);
-            /* mostrador */
+            dibujarPoster(d.wallCX, MURO + 4, d.wallCX);
             ctx.fillStyle = '#b02020';
             ctx.fillRect(d.x, d.y + d.h - 10, d.w, 10);
             ctx.fillStyle = '#fff';
             for (var i = 0; i < d.w; i += 8) { ctx.fillRect(d.x + i, d.y + d.h - 10, 4, 10); }
-            /* pizza redonda encima */
             var pcx = d.x + d.w / 2, pcy = d.y + d.h - 16;
             ctx.fillStyle = '#e8b84b';
             ctx.beginPath(); ctx.arc(pcx, pcy, 9, 0, Math.PI * 2); ctx.fill();
@@ -448,15 +597,14 @@
         }
 
         function dibujarCuriosidades(d) {
-            dibujarPoster(d.wallCX, MURO + 4);
-            /* máquina de peluches (garra) */
+            dibujarPoster(d.wallCX, MURO + 4, d.wallCX);
             var gx = d.x, gy = d.y - 4, gw = d.w * 0.55, gh = d.h + 6;
             ctx.fillStyle = '#7a1fa0';
             ctx.fillRect(gx, gy, gw, gh);
             ctx.fillStyle = 'rgba(150,220,255,0.35)';
             ctx.fillRect(gx + 3, gy + 3, gw - 6, gh * 0.55);
             ctx.fillStyle = '#FFCC00';
-            [0.3, 0.6].forEach(function(f, i) {
+            [0.3, 0.6].forEach(function(f) {
                 ctx.beginPath();
                 ctx.arc(gx + gw * f, gy + gh * 0.42, 2.4, 0, Math.PI * 2);
                 ctx.fill();
@@ -464,7 +612,6 @@
             ctx.fillStyle = '#333';
             ctx.fillRect(gx + gw / 2 - 1, gy - 3, 2, 6);
 
-            /* repisa de trofeos */
             var rx = d.x + gw + 6, ry = d.y + d.h - 6;
             ctx.fillStyle = '#4a3220';
             ctx.fillRect(rx, ry, d.w - gw - 6, 3);
@@ -473,7 +620,6 @@
             ctx.fillText('🏆', rx + 6, ry - 1);
             ctx.fillText('🏆', rx + 15, ry - 1);
 
-            /* planta */
             ctx.fillStyle = '#7a4a1a';
             ctx.fillRect(d.x + d.w + 4, d.y + d.h - 6, 8, 6);
             ctx.fillStyle = '#2e7d32';
@@ -482,65 +628,170 @@
             ctx.fill();
         }
 
+        function dibujarTeleRetro(d) {
+            /* base/mueble */
+            ctx.fillStyle = '#3a2a1a';
+            ctx.fillRect(d.x - 2, d.y + d.h - 4, d.w + 4, 6);
+            /* caja de la tele */
+            ctx.fillStyle = '#e8e0c8';
+            ctx.fillRect(d.x, d.y, d.w, d.h - 4);
+            ctx.strokeStyle = '#8a8262';
+            ctx.strokeRect(d.x + 0.5, d.y + 0.5, d.w - 1, d.h - 5);
+            /* pantalla con "estática" de colores (guiño retro, sin IP real) */
+            var pantX = d.x + 2, pantY = d.y + 2, pantW = d.w - 4, pantH = d.h - 9;
+            ctx.fillStyle = '#101018';
+            ctx.fillRect(pantX, pantY, pantW, pantH);
+            var coloresEstatica = ['#FF6600', '#00CCFF', '#FFCC00', '#FF44CC', '#39FF14'];
+            for (var i = 0; i < 10; i++) {
+                var sx = pantX + ((i * 37 + Math.floor(tiempoGlobal * 6) * 7) % Math.round(pantW));
+                var sy = pantY + ((i * 13) % Math.round(pantH));
+                ctx.fillStyle = coloresEstatica[i % coloresEstatica.length];
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+            /* antena en V */
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(d.x + d.w / 2, d.y);
+            ctx.lineTo(d.x + d.w / 2 - 5, d.y - 6);
+            ctx.moveTo(d.x + d.w / 2, d.y);
+            ctx.lineTo(d.x + d.w / 2 + 5, d.y - 6);
+            ctx.stroke();
+        }
+
         function dibujarDecoracion(d) {
             if (d.tipo === 'lounge') return dibujarLounge(d);
             if (d.tipo === 'pizza') return dibujarPizza(d);
             if (d.tipo === 'curiosidades') return dibujarCuriosidades(d);
+            if (d.tipo === 'tv_retro') return dibujarTeleRetro(d);
         }
 
-        function dibujarPrompt(g) {
-            var texto = g.def.disponible ? ('▲ ' + g.def.nombre) : '🔒 PRÓXIMAMENTE';
-            var sub = g.def.disponible ? 'ENTER / A' : '';
-            var cx = g.x + g.w / 2;
-            var y = g.zonaY + g.zonaH + 11;
+        function dibujarPizzaTirada(d) {
+            ctx.save();
+            ctx.translate(d.x, d.y);
+            ctx.rotate(0.3);
+            ctx.fillStyle = '#e8b84b';
+            ctx.beginPath();
+            ctx.moveTo(0, 0); ctx.arc(0, 0, 7, -0.5, 0.9); ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#c0392b';
+            ctx.beginPath(); ctx.arc(-1, -2, 1, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(2, 1, 1, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            /* migajas */
+            ctx.fillStyle = '#c89a4a';
+            ctx.fillRect(d.x - 6, d.y + 5, 1.5, 1.5);
+            ctx.fillRect(d.x + 5, d.y + 4, 1.5, 1.5);
+        }
 
-            ctx.font = 'bold 7px monospace';
-            var anchoTexto = Math.max(ctx.measureText(texto).width, sub ? ctx.measureText(sub).width : 0) + 12;
-            var boxX = Math.min(Math.max(cx - anchoTexto / 2, camaraX + MURO + 2), camaraX + VIEW_W - MURO - anchoTexto - 2);
+        function dibujarHeladoDerretido(d) {
+            var pulso = 0.5 + 0.5 * Math.sin(tiempoGlobal * 2);
+            /* charco */
+            ctx.fillStyle = 'rgba(255, 210, 235, ' + (0.5 + 0.2 * pulso) + ')';
+            ctx.beginPath();
+            ctx.ellipse(d.x, d.y + 5, 9, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            /* bolita derritiéndose */
+            ctx.fillStyle = '#ffb6d9';
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 4.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#e89ac2';
+            ctx.beginPath();
+            ctx.arc(d.x - 1, d.y - 1, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            /* palito/cono */
+            ctx.fillStyle = '#c98a3f';
+            ctx.fillRect(d.x - 1, d.y + 2, 2, 5);
+        }
 
-            var alpha = 0.55 + 0.35 * Math.sin(tiempoGlobal * 5);
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            ctx.fillRect(boxX, y - 10, anchoTexto, sub ? 22 : 14);
-            ctx.strokeStyle = g.def.disponible ? ('rgba(255,204,0,' + alpha + ')') : 'rgba(150,150,150,0.7)';
-            ctx.strokeRect(boxX, y - 10, anchoTexto, sub ? 22 : 14);
+        function dibujarDesorden(d) {
+            if (d.tipo === 'pizza_tirada') return dibujarPizzaTirada(d);
+            if (d.tipo === 'helado_derretido') return dibujarHeladoDerretido(d);
+        }
 
-            ctx.textAlign = 'center';
-            ctx.fillStyle = g.def.disponible ? '#FFCC00' : '#bbb';
-            ctx.fillText(texto, boxX + anchoTexto / 2, y);
-            if (sub) {
-                ctx.font = '6px monospace';
-                ctx.fillStyle = '#fff';
-                ctx.fillText(sub, boxX + anchoTexto / 2, y + 10);
+        /* ── Figura genérica (avatar y niños) con ciclo de caminata top-down ── */
+        function dibujarFigura(opts) {
+            /* opts: x, y, r, colorCuerpo, dirX, dirY, pasoT, caminando, cansado */
+            var cadencia = opts.cansado ? 5.5 : 9.5;
+            var fase = opts.pasoT * cadencia;
+            var bounce = opts.caminando ? Math.abs(Math.sin(fase)) * (opts.cansado ? 1 : 1.8) : 0;
+            var achatado = opts.cansado ? 0.92 : 1;
+
+            ctx.save();
+            ctx.translate(opts.x, opts.y - bounce);
+
+            /* sombra fija en el piso (no rebota con el cuerpo) */
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, opts.r + 1 + bounce, opts.r * 0.8, opts.r * 0.32, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            /* piernas/pies: dos óvalos que se turnan hacia adelante/atrás
+               respecto a la dirección de movimiento (ciclo de caminata
+               "top-down" clásico de RPG). */
+            if (opts.caminando) {
+                var perpX = -opts.dirY, perpY = opts.dirX;
+                var avance = Math.sin(fase) * opts.r * 0.6;
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                [1, -1].forEach(function(lado, idx) {
+                    var av = idx === 0 ? avance : -avance;
+                    var px = perpX * lado * opts.r * 0.55 + opts.dirX * av;
+                    var py = perpY * lado * opts.r * 0.55 + opts.dirY * av;
+                    ctx.beginPath();
+                    ctx.ellipse(px, py + opts.r * 0.6, opts.r * 0.32, opts.r * 0.42, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            /* cuerpo */
+            ctx.scale(1, achatado);
+            ctx.fillStyle = '#000';
+            ctx.beginPath(); ctx.arc(0, 0, opts.r + 1, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = opts.colorCuerpo;
+            ctx.beginPath(); ctx.arc(0, 0, opts.r, 0, Math.PI * 2); ctx.fill();
+            ctx.scale(1, 1 / achatado);
+
+            /* "nariz": hacia dónde mira */
+            ctx.fillStyle = opts.colorAcento || '#FF6600';
+            ctx.beginPath();
+            ctx.arc(opts.dirX * opts.r * 0.7, opts.dirY * opts.r * 0.7, opts.r * 0.28, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            /* gotita de sudor si está cansado (solo aplica al jugador) */
+            if (opts.cansado) {
+                var flotar = Math.sin(tiempoGlobal * 4) * 1.2;
+                ctx.font = (opts.r + 3) + 'px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('💧', opts.x + opts.r * 0.9, opts.y - opts.r - 3 + flotar);
             }
         }
 
         function dibujarAvatar() {
-            var bounce = avatar.caminando ? Math.sin(avatar.pasoT * 10) * 1.5 : 0;
-            ctx.save();
-            ctx.translate(avatar.x, avatar.y + bounce);
+            dibujarFigura({
+                x: avatar.x, y: avatar.y, r: avatar.r,
+                colorCuerpo: '#FFCC00', colorAcento: '#FF6600',
+                dirX: avatar.dirX, dirY: avatar.dirY,
+                pasoT: avatar.pasoT, caminando: avatar.caminando, cansado: avatar.cansado
+            });
+        }
 
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.beginPath();
-            ctx.ellipse(0, avatar.r + 1, avatar.r * 0.8, avatar.r * 0.35, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#000';
-            ctx.beginPath(); ctx.arc(0, 0, avatar.r + 1, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#FFCC00';
-            ctx.beginPath(); ctx.arc(0, 0, avatar.r, 0, Math.PI * 2); ctx.fill();
-
-            ctx.fillStyle = '#FF6600';
-            ctx.beginPath();
-            ctx.arc(avatar.dirX * avatar.r * 0.7, avatar.dirY * avatar.r * 0.7, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
+        function dibujarNPCs() {
+            npcs.forEach(function(n) {
+                dibujarFigura({
+                    x: n.x, y: n.y, r: n.r,
+                    colorCuerpo: n.color, colorAcento: '#222',
+                    dirX: n.dirX, dirY: n.dirY,
+                    pasoT: n.pasoT, caminando: n.caminando, cansado: false
+                });
+            });
         }
 
         /* pistas visuales de "hay más máquinas" en los bordes del viewport.
            Se dibuja DESPUÉS de ctx.restore() del mundo, o sea en espacio
-           de pantalla normal (sin la traslación de cámara) — por eso usa
-           coordenadas fijas del viewport (0..VIEW_W), no de mundo. */
+           de pantalla normal (sin la traslación de cámara). */
         function dibujarIndicadoresScroll() {
             if (camaraX > 2) {
                 ctx.fillStyle = 'rgba(255,204,0,0.65)';
@@ -556,6 +807,41 @@
             }
         }
 
+        function tituloParaCercano(obj) {
+            if (obj.kind === 'gabinete') return obj.ref.def.disponible ? ('▲ ' + obj.ref.def.nombre) : '🔒 PRÓXIMAMENTE';
+            if (obj.kind === 'npc') return '🧒 NIÑO CORRIENDO';
+            var nombres = { lounge: '🪑 MESAS', pizza: '🍕 ESTACIÓN DE PIZZA', curiosidades: '🎁 CURIOSIDADES', tv_retro: '📺 TELE RETRO', pizza_tirada: '🍕 DESORDEN', helado_derretido: '🍦 DESORDEN' };
+            return nombres[obj.ref.tipo] || '❓ ALGO INTERESANTE';
+        }
+
+        function dibujarPrompt(obj) {
+            var g = obj.ref;
+            var puedeEntrar = obj.kind === 'gabinete';
+            var texto = tituloParaCercano(obj);
+            var sub = puedeEntrar ? 'ENTER / A' : 'ENTER / A: VER';
+            var refX = obj.kind === 'npc' ? g.x : (g.x + g.w / 2);
+            var refYBase = obj.kind === 'npc' ? g.y : (g.zonaY + g.zonaH);
+            var cx = refX;
+            var y = refYBase + 11;
+
+            ctx.font = 'bold 7px monospace';
+            var anchoTexto = Math.max(ctx.measureText(texto).width, ctx.measureText(sub).width) + 12;
+            var boxX = Math.min(Math.max(cx - anchoTexto / 2, camaraX + MURO + 2), camaraX + VIEW_W - MURO - anchoTexto - 2);
+
+            var alpha = 0.55 + 0.35 * Math.sin(tiempoGlobal * 5);
+            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillRect(boxX, y - 10, anchoTexto, 22);
+            ctx.strokeStyle = puedeEntrar && g.def && g.def.disponible ? ('rgba(255,204,0,' + alpha + ')') : 'rgba(150,150,150,0.7)';
+            ctx.strokeRect(boxX, y - 10, anchoTexto, 22);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = puedeEntrar && g.def && g.def.disponible ? '#FFCC00' : '#bbb';
+            ctx.fillText(texto, boxX + anchoTexto / 2, y);
+            ctx.font = '6px monospace';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(sub, boxX + anchoTexto / 2, y + 10);
+        }
+
         function dibujarLobby() {
             ctx.save();
             ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -566,8 +852,10 @@
             ctx.translate(-camaraX, 0);
             dibujarPiso();
             decoraciones.forEach(dibujarDecoracion);
-            var cercano = gabineteCercano();
-            gabinetes.forEach(function(g) { dibujarGabinete(g, g === cercano); });
+            desorden.forEach(dibujarDesorden);
+            var cercano = objetoCercano();
+            gabinetes.forEach(function(g) { dibujarGabinete(g, cercano && cercano.kind === 'gabinete' && cercano.ref === g); });
+            dibujarNPCs();
             dibujarAvatar();
             if (cercano) dibujarPrompt(cercano);
             ctx.restore();
@@ -575,32 +863,40 @@
         }
 
         /* ═══════════════════════════════════════════
-           ENTRAR A UNA MÁQUINA
+           ENTRAR / INTERACTUAR
            ═══════════════════════════════════════════ */
         function intentarEntrar() {
             if (!lobbyVisible()) return;
-            var g = gabineteCercano();
-            if (!g) return;
+            var obj = objetoCercano();
+            if (!obj) return;
 
             Blip.init();
-            if (!g.def.disponible) {
-                Blip.bloqueado();
-                mostrarAvisoProximamente(g.def.nombre);
+
+            if (obj.kind === 'gabinete') {
+                var g = obj.ref;
+                if (!g.def.disponible) {
+                    Blip.bloqueado();
+                    mostrarToast('🚧 ' + g.def.nombre + ' — ¡muy pronto en el arcade!');
+                    return;
+                }
+                var juego = window.ArcadeGames && window.ArcadeGames[g.def.id];
+                if (!juego || typeof juego.mostrar !== 'function') {
+                    Blip.bloqueado();
+                    mostrarToast('🚧 ' + g.def.nombre + ' — ¡muy pronto en el arcade!');
+                    return;
+                }
+                Blip.entrar();
+                if (lobbyScreen) lobbyScreen.style.display = 'none';
+                if (gameScreen) gameScreen.style.display = 'flex';
+                teclas.up = teclas.down = teclas.left = teclas.right = false;
+                juego.mostrar();
                 return;
             }
 
-            var juego = window.ArcadeGames && window.ArcadeGames[g.def.id];
-            if (!juego || typeof juego.mostrar !== 'function') {
-                Blip.bloqueado();
-                mostrarAvisoProximamente(g.def.nombre);
-                return;
-            }
-
-            Blip.entrar();
-            if (lobbyScreen) lobbyScreen.style.display = 'none';
-            if (gameScreen) gameScreen.style.display = 'flex';
-            teclas.up = teclas.down = teclas.left = teclas.right = false;
-            juego.mostrar();
+            /* Muebles, tele, desorden o niños: solo una frase de sabor */
+            Blip.curiosidad();
+            var clave = obj.kind === 'npc' ? 'npc' : (obj.ref.frasesClave || 'npc');
+            mostrarToast(fraseAlAzar(clave));
         }
 
         function volverAlLobby() {
@@ -614,9 +910,9 @@
         }
         if (btnVolver) btnVolver.addEventListener('click', volverAlLobby);
 
-        /* Aviso simple de "próximamente" (toast flotante, no bloquea). */
-        var avisoTimeoutId = null;
-        function mostrarAvisoProximamente(nombre) {
+        /* Toast flotante genérico (avisos + frases de sabor), no bloquea. */
+        var toastTimeoutId = null;
+        function mostrarToast(mensaje) {
             var toast = document.getElementById('arcadeProximamenteToast');
             if (!toast) {
                 toast = document.createElement('div');
@@ -624,10 +920,10 @@
                 toast.className = 'arcade-proximamente-toast';
                 document.body.appendChild(toast);
             }
-            toast.textContent = '🚧 ' + nombre + ' — ¡muy pronto en el arcade!';
+            toast.textContent = mensaje;
             toast.classList.add('visible');
-            if (avisoTimeoutId) clearTimeout(avisoTimeoutId);
-            avisoTimeoutId = setTimeout(function() { toast.classList.remove('visible'); }, 2200);
+            if (toastTimeoutId) clearTimeout(toastTimeoutId);
+            toastTimeoutId = setTimeout(function() { toast.classList.remove('visible'); }, 2400);
         }
 
         /* ═══════════════════════════════════════════
