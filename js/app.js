@@ -707,19 +707,35 @@
         }
     }
 
+    /* [NUEVO] Estado del escáner nativo */
+    var _videoEl        = null;
+    var _mediaStream     = null;
+    var _barcodeDetector = null;
+    var _rafId           = null;
+    var _escaneando      = false;
+    var _diagBox         = null;
+
+    function _diagLog(msg) {
+        console.log('[APP.JS DIAG] ' + msg);
+        if (_diagBox) _diagBox.textContent = 'diag: ' + msg;
+    }
+
     async function abrirScannerCamara() {
         console.log('[APP.JS DIAG] abrirScannerCamara() inició');   /* [DIAG] */
-        if (typeof Html5Qrcode === 'undefined') {
-            console.log('[APP.JS DIAG] Html5Qrcode NO está definido (librería no cargó)');   /* [DIAG] */
-            mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
-            return;
+
+        scannerOverlay.style.display = 'flex';
+
+        /* [DIAG] Indicador visible en pantalla */
+        _diagBox = document.getElementById('_diagScanner');
+        if (!_diagBox) {
+            _diagBox = document.createElement('div');
+            _diagBox.id = '_diagScanner';
+            _diagBox.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:100000;background:rgba(0,0,0,.85);color:#0f0;font:12px monospace;padding:6px 8px;border-radius:6px;white-space:pre-wrap;';
+            document.body.appendChild(_diagBox);
         }
-        console.log('[APP.JS DIAG] Html5Qrcode sí está disponible');   /* [DIAG] */
+        _diagLog('abriendo cámara…');
 
         try {
-            /* Si el navegador ya tiene la cámara bloqueada para este sitio,
-               getUserMedia rechaza al instante sin mostrar ningún diálogo:
-               eso es lo que se percibe como "abre y cierra sin avisar". */
             var permiso = await verificarPermisoCamara();
             console.log('[APP.JS DIAG] permiso de cámara:', permiso);   /* [DIAG] */
             if (permiso === 'denied') {
@@ -729,28 +745,24 @@
                     'Tu navegador tiene la cámara bloqueada para este sitio. Toca el ícono 🔒 junto a la URL → Permisos del sitio → Cámara → Permitir, y vuelve a intentar.',
                     'error'
                 );
+                cerrarScannerCamara();
                 return;
             }
 
-            scannerOverlay.style.display = 'flex';
-            /* useBarCodeDetectorIfSupported: usa el decodificador nativo del
-               navegador (mucho mejor en Android/Brave, incluso desde pantallas). */
-            qrCameraScanner = new Html5Qrcode('qrReader', {
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-                verbose: false
-            });
-
+            /* Listar cámaras (solo para el selector; html5-qrcode expone esta
+               utilidad aunque no la usemos para decodificar) */
             var camaras = [];
             try {
-                camaras = await Html5Qrcode.getCameras();
+                if (typeof Html5Qrcode !== 'undefined') {
+                    camaras = await Html5Qrcode.getCameras();
+                }
             } catch (err) {
                 console.error('No se pudieron listar cámaras:', err);
             }
-
             poblarSelectorCamaras(camaras);
             console.log('[APP.JS DIAG] cámaras encontradas:', camaras.length, camaras.map(function(c){return c.label;}));   /* [DIAG] */
+
             await iniciarCamara(obtenerCamaraPreferida(camaras));
-            console.log('[APP.JS DIAG] iniciarCamara() terminó sin lanzar error');   /* [DIAG] */
         } catch (err) {
             console.log('[APP.JS DIAG] abrirScannerCamara CATCH:', err);   /* [DIAG] */
             console.error('abrirScannerCamara:', err);
@@ -799,70 +811,63 @@
         return (trasera || camaras[0]).id;
     }
 
+    /* ═══════════════════════════════════════════
+       13B. CÁMARA + DECODIFICACIÓN NATIVA
+       ═══════════════════════════════════════════
+       Usa getUserMedia + BarcodeDetector del navegador
+       en vez de la librería html5-qrcode (ZXing-js), que
+       resultó muy poco confiable decodificando en este
+       dispositivo. BarcodeDetector es la misma tecnología
+       que usa la cámara nativa del celular por debajo, así
+       que decodifica igual de bien. Si el navegador no lo
+       soporta, cae de regreso a html5-qrcode. */
     async function iniciarCamara(camaraId) {
-        /* Sin qrbox: escanea TODO el cuadro de video, no solo un recuadro
-           central de 220px. Esto es clave al escanear pantallas o QR grandes,
-           donde el código no cabía dentro del recuadro fijo y nunca decodificaba.
-           videoConstraints: pide más resolución a la cámara para mejorar la
-           decodificación de QRs chicos o mostrados en una pantalla (moiré). */
-        var config = {
-            fps: 10,
-            videoConstraints: {
-                facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            }
-        };
-        var fuente = camaraId ? { deviceId: { exact: camaraId } } : { facingMode: 'environment' };
-
-        /* [DIAG] Indicador en pantalla: nos dice si el bucle de escaneo corre
-           (intentos suben) y si alguna vez decodifica algo (último). */
-        var _diagBox = document.getElementById('_diagScanner');
-        if (!_diagBox) {
-            _diagBox = document.createElement('div');
-            _diagBox.id = '_diagScanner';
-            _diagBox.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:100000;background:rgba(0,0,0,.85);color:#0f0;font:12px monospace;padding:6px 8px;border-radius:6px;white-space:pre-wrap;';
-            document.body.appendChild(_diagBox);
+        var qrReaderEl = document.getElementById('qrReader');
+        if (!qrReaderEl) {
+            _diagLog('ERROR: no existe #qrReader en el DOM');
+            return;
         }
-        _diagBox.textContent = 'diag: iniciando cámara…';
-        var _intentos = 0;
-        var _ultimoUpd = 0;
 
         try {
-            await qrCameraScanner.start(
-                fuente,
-                config,
-                function onScanSuccess(decodedText) {
-                    /* [DIAG] Si esto se ve, la cámara SÍ decodifica. */
-                    if (_diagBox) _diagBox.textContent = 'diag: DECODIFICÓ → ' + String(decodedText).slice(0, 120);
-                    /* Extraer UUID del URL */
-                    var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
-                    if (match && match[1]) {
-                        cerrarScannerCamara();
-                        manejarEscaneoQR(match[1]);
-                    } else {
-                        /* [DIAG] Antes: silencio total si el QR no traía el parámetro.
-                           Ahora avisamos qué se leyó realmente. */
-                        cerrarScannerCamara();
-                        mostrarAlerta('⚠️', 'QR no reconocido', 'El código no contiene validar_usuario_id. Se leyó: ' + String(decodedText).slice(0, 140), 'error');
-                    }
-                },
-                function onScanFailure(error) {
-                    /* [DIAG] Contar intentos (throttle a ~1/seg) para ver si el
-                       bucle corre. Si "intentos" sube pero nunca decodifica,
-                       es problema de enfoque/calidad del QR, no del código. */
-                    _intentos++;
-                    var ahora = Date.now();
-                    if (ahora - _ultimoUpd > 1000) {
-                        _ultimoUpd = ahora;
-                        var msg = 'diag: escaneando… intentos=' + _intentos + ' (aún no decodifica)';
-                        if (_diagBox) _diagBox.textContent = msg;
-                        console.log('[APP.JS DIAG] ' + msg);   /* [DIAG] ahora también en consola */
-                    }
-                }
-            );
+            /* Crear <video> propio dentro del contenedor */
+            qrReaderEl.innerHTML = '';
+            _videoEl = document.createElement('video');
+            _videoEl.setAttribute('playsinline', 'true');
+            _videoEl.setAttribute('autoplay', 'true');
+            _videoEl.muted = true;
+            _videoEl.style.width = '100%';
+            _videoEl.style.height = '100%';
+            _videoEl.style.objectFit = 'cover';
+            qrReaderEl.appendChild(_videoEl);
+
+            var constraints = {
+                video: camaraId
+                    ? { deviceId: { exact: camaraId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                    : { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+                audio: false
+            };
+
+            _mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            _videoEl.srcObject = _mediaStream;
+            await _videoEl.play();
+            _diagLog('cámara abierta, resolución: ' + _videoEl.videoWidth + 'x' + _videoEl.videoHeight);
+
+            if ('BarcodeDetector' in window) {
+                var formatosSoportados = [];
+                try { formatosSoportados = await window.BarcodeDetector.getSupportedFormats(); } catch (e) {}
+                console.log('[APP.JS DIAG] BarcodeDetector formatos soportados:', formatosSoportados);   /* [DIAG] */
+                _barcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+                _diagLog('usando BarcodeDetector NATIVO');
+                _escaneando = true;
+                loopDeteccionNativa();
+            } else {
+                _diagLog('BarcodeDetector NO soportado, usando fallback html5-qrcode');
+                console.log('[APP.JS DIAG] window.BarcodeDetector no existe en este navegador');   /* [DIAG] */
+                await iniciarCamaraFallback(camaraId);
+            }
         } catch (err) {
             console.error('Error al iniciar cámara:', err);
+            console.log('[APP.JS DIAG] iniciarCamara CATCH:', err);   /* [DIAG] */
             cerrarScannerCamara();
 
             var mensaje = 'No se pudo acceder a la cámara. Verifica los permisos.';
@@ -877,31 +882,124 @@
         }
     }
 
+    var _intentosNativos = 0;
+    var _ultimoLogNativo = 0;
+
+    async function loopDeteccionNativa() {
+        if (!_escaneando || !_barcodeDetector || !_videoEl) return;
+
+        try {
+            var codigos = await _barcodeDetector.detect(_videoEl);
+            if (codigos && codigos.length > 0) {
+                var texto = codigos[0].rawValue || '';
+                _diagLog('DECODIFICÓ → ' + texto.slice(0, 120));
+                console.log('[APP.JS DIAG] DECODIFICÓ (nativo) → ' + texto);   /* [DIAG] */
+
+                var match = texto.match(/validar_usuario_id=([a-f0-9-]+)/i);
+                cerrarScannerCamara();
+                if (match && match[1]) {
+                    manejarEscaneoQR(match[1]);
+                } else {
+                    mostrarAlerta('⚠️', 'QR no reconocido', 'El código no contiene validar_usuario_id. Se leyó: ' + texto.slice(0, 140), 'error');
+                }
+                return; /* detener el bucle, ya se resolvió */
+            } else {
+                _intentosNativos++;
+                var ahora = Date.now();
+                if (ahora - _ultimoLogNativo > 1000) {
+                    _ultimoLogNativo = ahora;
+                    _diagLog('(nativo) buscando… intentos=' + _intentosNativos);
+                }
+            }
+        } catch (err) {
+            console.log('[APP.JS DIAG] error en detect():', err);   /* [DIAG] */
+        }
+
+        _rafId = requestAnimationFrame(loopDeteccionNativa);
+    }
+
+    /* Fallback: solo si el navegador no tiene BarcodeDetector (ej. Firefox/iOS viejos) */
+    async function iniciarCamaraFallback(camaraId) {
+        if (typeof Html5Qrcode === 'undefined') {
+            mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
+            cerrarScannerCamara();
+            return;
+        }
+        /* Liberar el <video> propio antes de dejar que html5-qrcode use el contenedor */
+        detenerStreamPropio();
+        var qrReaderEl = document.getElementById('qrReader');
+        qrReaderEl.innerHTML = '';
+
+        qrCameraScanner = new Html5Qrcode('qrReader');
+        var config = { fps: 10 };
+        var fuente = camaraId ? { deviceId: { exact: camaraId } } : { facingMode: 'environment' };
+
+        await qrCameraScanner.start(
+            fuente,
+            config,
+            function onScanSuccess(decodedText) {
+                _diagLog('DECODIFICÓ (fallback) → ' + decodedText.slice(0, 120));
+                var match = decodedText.match(/validar_usuario_id=([a-f0-9-]+)/i);
+                cerrarScannerCamara();
+                if (match && match[1]) {
+                    manejarEscaneoQR(match[1]);
+                } else {
+                    mostrarAlerta('⚠️', 'QR no reconocido', 'El código no contiene validar_usuario_id. Se leyó: ' + String(decodedText).slice(0, 140), 'error');
+                }
+            },
+            function onScanFailure() { /* silenciar */ }
+        );
+    }
+
     async function cambiarCamara() {
-        if (!scannerCameraSelect || !qrCameraScanner) return;
+        if (!scannerCameraSelect) return;
 
         var nuevaId = scannerCameraSelect.value;
         if (!nuevaId) return;
 
         localStorage.setItem(CAMARA_STORAGE_KEY, nuevaId);
 
-        try {
-            await qrCameraScanner.stop();
-            await qrCameraScanner.clear();
-        } catch (err) { /* puede no estar corriendo aún */ }
+        _escaneando = false;
+        if (_rafId) cancelAnimationFrame(_rafId);
+        detenerStreamPropio();
+
+        if (qrCameraScanner) {
+            try { await qrCameraScanner.stop(); await qrCameraScanner.clear(); } catch (err) {}
+            qrCameraScanner = null;
+        }
 
         await iniciarCamara(nuevaId);
     }
 
+    function detenerStreamPropio() {
+        if (_mediaStream) {
+            _mediaStream.getTracks().forEach(function(track) { track.stop(); });
+            _mediaStream = null;
+        }
+        if (_videoEl) {
+            _videoEl.pause();
+            _videoEl.srcObject = null;
+            _videoEl = null;
+        }
+    }
+
     function cerrarScannerCamara() {
         scannerOverlay.style.display = 'none';
-        var _diagBox = document.getElementById('_diagScanner');   /* [DIAG] */
-        if (_diagBox) _diagBox.remove();
+
+        _escaneando = false;
+        if (_rafId) cancelAnimationFrame(_rafId);
+        _rafId = null;
+        _barcodeDetector = null;
+
+        detenerStreamPropio();
+
         if (qrCameraScanner) {
             qrCameraScanner.stop().catch(function() {});
             qrCameraScanner.clear().catch(function() {});
             qrCameraScanner = null;
         }
+
+        if (_diagBox) { _diagBox.remove(); _diagBox = null; }
     }
 
     /* ═══════════════════════════════════════════
