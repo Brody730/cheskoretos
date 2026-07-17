@@ -14,6 +14,7 @@ var Auth = (function() {
     'use strict';
 
     var STORAGE_KEY = 'chesko_session';
+    var SESSION_TTL_MS = 30 * 60 * 1000; /* 30 minutos: ventana de confianza sin re-verificar contra la DB */
 
     /* ── Estado en memoria ── */
     var _usuarioActual = null;   /* { id, username, telefono, rol, ... } */
@@ -144,7 +145,8 @@ var Auth = (function() {
 
     function guardarSesion(usuario) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(usuario));
+            var sesion = Object.assign({}, usuario, { _ts: Date.now() });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sesion));
         } catch (e) { /* storage lleno, ignora */ }
     }
 
@@ -156,40 +158,66 @@ var Auth = (function() {
 
     /**
      * Restaurar sesión desde localStorage.
+     *
+     * La sesión se restaura de inmediato desde caché local sin depender
+     * de la red: si tiene menos de SESSION_TTL_MS, se confía en ella tal
+     * cual (evita que un reload cierre sesión por un CDN lento o un
+     * hiccup de conexión). Pasado ese tiempo se re-verifica contra la DB
+     * en segundo plano, pero solo se cierra sesión si la DB confirma que
+     * el usuario ya no existe; cualquier error de red/servidor deja la
+     * sesión intacta.
      * @returns {boolean} true si hay sesión válida
      */
     async function restaurarSesion() {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+
+        var usuario;
         try {
-            var raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return false;
+            usuario = JSON.parse(raw);
+        } catch (e) { return false; }
+        if (!usuario || !usuario.id) return false;
 
-            var usuario = JSON.parse(raw);
-            if (!usuario || !usuario.id) return false;
+        /* Restaurar de inmediato: la UI no debe esperar (ni depender de)
+           una respuesta de red para mostrar la sesión ya guardada. */
+        _usuarioActual = usuario;
+        _perfil = usuario;
 
-            /* Verificar que el usuario sigue existiendo en la DB */
+        try {
+            _lealtad = await DataStore.obtenerLealtad(usuario.id);
+        } catch (e) { /* ignora, se reintenta en la próxima carga */ }
+
+        var edadSesion = Date.now() - (usuario._ts || 0);
+        if (edadSesion < SESSION_TTL_MS) {
+            return true;
+        }
+
+        /* Sesión con más de 30 min: re-verificar que el usuario siga
+           existiendo y refrescar sus datos + timestamp. */
+        try {
             var perfil = await DataStore.obtenerPerfil(usuario.id);
 
             if (perfil === null) {
                 /* Confirmado: el usuario ya no existe en la DB */
                 limpiarSesion();
+                _usuarioActual = null;
+                _perfil = null;
+                _lealtad = null;
                 return false;
             }
-            if (!perfil) {
-                /* Error transitorio (red, servidor). No borrar la sesión:
-                   puede recuperarse en el próximo intento. */
-                return false;
+            if (perfil) {
+                _usuarioActual = perfil;
+                _perfil = perfil;
+                guardarSesion(perfil);
             }
-
-            _usuarioActual = perfil;
-            _perfil = perfil;
-            _lealtad = await DataStore.obtenerLealtad(perfil.id);
-
-            return true;
+            /* Si perfil es undefined (error transitorio), seguimos con
+               los datos ya cacheados; no se cierra sesión. */
         } catch (e) {
             /* Error inesperado (SDK sin cargar, etc.). No borrar la sesión. */
             console.error('restaurarSesion:', e);
-            return false;
         }
+
+        return true;
     }
 
     /**
