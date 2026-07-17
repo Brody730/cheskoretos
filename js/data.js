@@ -250,6 +250,65 @@ var DataStore = (function() {
     }
 
     /* ═══════════════════════════════════════════
+       ARCADE DE PUNTOS (minijuego Flappy Chesko)
+       ═══════════════════════════════════════════
+       El saldo de puntos vive en lealtad.puntos_arcade (se lee junto
+       con el resto de obtenerLealtad(), no hace falta un getter aparte).
+       Toda la lógica de negocio (multiplicador decreciente, validar
+       saldo al canjear) vive en las funciones RPC — ver
+       sql/arcade-schema.sql. */
+
+    /**
+     * Registrar el resultado de una partida y otorgar puntos.
+     * @param {string} userId
+     * @param {string} juego - id del juego, ej. 'flappy_chesko'
+     * @param {number} puntaje - puntaje logrado en la partida (obstáculos pasados)
+     * @returns {object} { ok, puntaje, puntos_ganados, multiplicador, intentos_hoy, puntos_totales } | { ok:false, mensaje }
+     */
+    async function registrarPartidaArcade(userId, juego, puntaje) {
+        var { data, error } = await db().rpc('registrar_partida_arcade', {
+            p_usuario_id: userId,
+            p_juego:      juego,
+            p_puntaje:    puntaje
+        });
+        if (error) { console.error('registrarPartidaArcade:', error); return { ok: false, mensaje: 'Error de conexión.' }; }
+        return data;
+    }
+
+    /**
+     * Obtener la tabla de posiciones (mejor puntaje por usuario).
+     * @param {string} [juego='flappy_chesko']
+     * @param {number} [limite=10]
+     * @returns {object[]} [{ usuario_id, username, puntaje, jugado_en }, ...]
+     */
+    async function obtenerLeaderboardArcade(juego, limite) {
+        var { data, error } = await db().rpc('obtener_leaderboard_arcade', {
+            p_juego:  juego  || 'flappy_chesko',
+            p_limite: limite || 10
+        });
+        if (error) { console.error('obtenerLeaderboardArcade:', error); return []; }
+        return data || [];
+    }
+
+    /**
+     * Canjear una recompensa del catálogo de arcade (costo definido en
+     * el frontend, ver ARCADE_REWARDS en js/arcade.js).
+     * @param {string} userId
+     * @param {string} recompensaId
+     * @param {number} costo
+     * @returns {object} { ok, mensaje, puntos_totales }
+     */
+    async function canjearRecompensaArcade(userId, recompensaId, costo) {
+        var { data, error } = await db().rpc('canjear_recompensa_arcade', {
+            p_usuario_id:    userId,
+            p_recompensa_id: recompensaId,
+            p_costo:         costo
+        });
+        if (error) { console.error('canjearRecompensaArcade:', error); return { ok: false, mensaje: 'Error de conexión.' }; }
+        return data;
+    }
+
+    /* ═══════════════════════════════════════════
        PROMOCIONES
        ═══════════════════════════════════════════ */
 
@@ -481,6 +540,10 @@ var DataStore = (function() {
         /* Verificaciones RPC */
         telefonoExiste:         telefonoExiste,
         registrarVisita:        registrarVisita,
+        /* Arcade de puntos */
+        registrarPartidaArcade:  registrarPartidaArcade,
+        obtenerLeaderboardArcade: obtenerLeaderboardArcade,
+        canjearRecompensaArcade: canjearRecompensaArcade,
         /* Promos */
         obtenerPromoActiva:     obtenerPromoActiva,
         obtenerPromosActivas:   obtenerPromosActivas,

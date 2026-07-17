@@ -5,7 +5,7 @@
    sin conexión (en el parque sin datos).
    ═══════════════════════════════════════════ */
 
-var CACHE_NAME = 'cheskoretos-v7';
+var CACHE_NAME = 'cheskoretos-v8';
 var URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -13,9 +13,11 @@ var URLS_TO_CACHE = [
   '/menu.html',
   '/ruleta.html',
   '/retos.html',
+  '/arcade.html',
   '/css/theme.css',
   '/css/landing.css',
   '/css/profile.css',
+  '/css/arcade.css',
   '/js/config.js',
   '/js/challenges.js',
   '/js/data.js',
@@ -24,6 +26,7 @@ var URLS_TO_CACHE = [
   '/js/retos-album.js',
   '/js/api.js',
   '/js/app.js',
+  '/js/arcade.js',
   '/js/buzon.js',
   '/js/landing.js',
   '/manifest.json'

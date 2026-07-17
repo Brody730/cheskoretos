@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!--
+    ChesKoretos — ARCADE DE PUNTOS (arcade.html)
+    Minijuego retro "Flappy Chesko": un botón (tap/clic/espacio) para
+    volar y esquivar obstáculos. Cada partida otorga PUNTOS (moneda
+    canjeable por cheskos/sabritas) con un multiplicador que baja
+    mientras más se juega el mismo día; el puntaje del leaderboard
+    siempre se guarda completo. Ver docs/JS_MODULES.md y
+    docs/DATABASE.md para el detalle de js/arcade.js y
+    sql/arcade-schema.sql. No requiere sesión para jugar, pero sí para
+    guardar puntaje/puntos y canjear recompensas (lee
+    localStorage['chesko_session'], la misma que perfil.html).
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arcade ChesKoretos - ¡Junta puntos y canjea premios!</title>
+    <meta name="description" content="Juega Flappy Chesko, junta puntos y canjéalos por cheskos y sabritas gratis.">
+    <meta name="author" content="ChesKoretos Team">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6600">
+
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/arcade.css">
+</head>
+<body class="arcade-body">
+
+    <nav class="navbar-comic">
+        <a href="index.html" class="nav-brand-comic">
+            <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        </a>
+        <div class="nav-menu-comic">
+            <a href="index.html" class="nav-link-comic">🏠 Inicio</a>
+            <a href="menu.html" class="nav-link-comic">🥤 Menú</a>
+            <a href="retos.html" class="nav-link-comic">🎲 Retos</a>
+            <a href="ruleta.html" class="nav-link-comic btn-girar-ruleta nav-link-ruleta">🎡 Ruleta</a>
+            <a href="arcade.html" class="nav-link-comic" style="color: var(--amarillo);">🕹️ Arcade</a>
+            <a href="perfil.html" class="nav-link-comic">👤 Perfil</a>
+        </div>
+    </nav>
+
+    <div class="container arcade-container">
+
+        <header class="arcade-header">
+            <h1 class="arcade-titulo">🕹️ FLAPPY CHESKO</h1>
+            <p class="arcade-subtitulo">Junta puntos y cámbialos por premios reales</p>
+        </header>
+
+        <!-- Banner: solo se muestra sin sesión activa -->
+        <div class="arcade-login-banner" id="arcadeLoginBanner" style="display:none;">
+            🔒 <a href="perfil.html">Inicia sesión en tu Perfil</a> para guardar tus puntos y salir en la tabla de posiciones.
+        </div>
+
+        <!-- HUD: puntos totales + puntaje de la partida actual + sonido -->
+        <div class="arcade-hud">
+            <div class="arcade-hud-item">
+                <span class="arcade-hud-label">MIS PUNTOS</span>
+                <span class="arcade-hud-valor" id="arcadePuntosTotales">0</span>
+            </div>
+            <div class="arcade-hud-item">
+                <span class="arcade-hud-label">PARTIDA</span>
+                <span class="arcade-hud-valor" id="hudScoreActual">0</span>
+            </div>
+            <button type="button" class="arcade-sound-btn" id="soundToggleArcade" title="Silenciar/activar sonido">🔊</button>
+        </div>
+
+        <!-- Juego -->
+        <div class="arcade-game-wrap">
+            <canvas id="arcadeCanvas" width="128" height="224"></canvas>
+
+            <div class="arcade-overlay" id="arcadeStartOverlay">
+                <div class="arcade-overlay-box">
+                    <div class="arcade-overlay-titulo">FLAPPY<br>CHESKO</div>
+                    <div class="arcade-overlay-texto">Toca la pantalla<br>o presiona ESPACIO<br>para volar</div>
+                    <div class="arcade-overlay-blink">▶ TOCA PARA EMPEZAR ◀</div>
+                </div>
+            </div>
+
+            <div class="arcade-overlay" id="arcadeGameOverPanel" style="display:none;">
+                <div class="arcade-overlay-box">
+                    <div class="arcade-overlay-titulo">GAME OVER</div>
+                    <div class="arcade-go-stat">Puntaje: <span id="goPuntaje">0</span></div>
+                    <div class="arcade-go-stat" id="goMensajeSesion" style="display:none;"></div>
+                    <div class="arcade-go-detalle">
+                        <span>Puntos ganados: <strong id="goPuntosGanados">0</strong></span>
+                        <span>Multiplicador: <strong id="goMultiplicador">x1.00</strong></span>
+                        <span>Intento hoy: <strong id="goIntentosHoy">1</strong></span>
+                    </div>
+                    <button type="button" class="arcade-btn-reintentar" id="btnReintentar">▶ JUGAR DE NUEVO</button>
+                </div>
+            </div>
+        </div>
+
+        <p class="arcade-hint">Toca la pantalla del juego o presiona <strong>ESPACIO</strong> para volar. ¡Entre más obstáculos esquives, más alto tu puntaje!</p>
+
+        <!-- Tabla de posiciones -->
+        <section class="arcade-leaderboard">
+            <h2 class="arcade-section-title">🏆 TABLA DE POSICIONES</h2>
+            <table class="arcade-table">
+                <thead>
+                    <tr><th>#</th><th>Jugador</th><th>Puntaje</th></tr>
+                </thead>
+                <tbody id="arcadeLeaderboardBody">
+                    <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Catálogo de recompensas -->
+        <section class="arcade-rewards">
+            <h2 class="arcade-section-title">🎁 CANJEAR PUNTOS</h2>
+            <div class="arcade-rewards-grid" id="arcadeRewardsGrid"></div>
+        </section>
+
+    </div>
+
+    <!-- Modal de confirmación de canje -->
+    <div class="arcade-canje-modal" id="arcadeCanjeModal">
+        <div class="arcade-canje-backdrop"></div>
+        <div class="arcade-canje-box">
+            <p id="canjeMensaje"></p>
+            <button type="button" id="btnCerrarCanjeArcade">¡ENTENDIDO!</button>
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <div class="info-local">
+            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.
+        </div>
+        <div class="footer-actions">
+            <a href="index.html" class="btn-comic">🏠 Inicio</a>
+            <a href="perfil.html" class="btn-comic btn-secondary">👤 Mi Perfil</a>
+        </div>
+        <p class="footer-credits">
+            © 2026 ChesKoretos. ¡El refresco que te reta! Todos los derechos reservados. ⚡
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/arcade.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+    </script>
+</body>
+</html>
