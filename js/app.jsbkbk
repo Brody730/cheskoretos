@@ -10,12 +10,6 @@
 (function() {
     'use strict';
 
-    /* [DIAG] Se ve apenas carga la página, ANTES de tocar nada.
-       Si esto no aparece en la consola, el navegador no está
-       cargando este archivo (caché/SW/deploy), no es problema
-       del escáner. */
-    console.log('%c[APP.JS DIAG] versión cargada: ' + new Date().toISOString(), 'background:#0f0;color:#000;font-weight:bold;padding:2px 6px;');
-
     var $ = function(id) { return document.getElementById(id); };
 
     /* ═══════════════════════════════════════════
@@ -264,7 +258,6 @@
         /* Escáner de cámara */
         if (btnEscanearQR) {
             btnEscanearQR.addEventListener('click', function() {
-                console.log('[APP.JS DIAG] click en btnEscanearQR detectado');   /* [DIAG] */
                 abrirScannerCamara();
             });
         }
@@ -708,20 +701,16 @@
     }
 
     async function abrirScannerCamara() {
-        console.log('[APP.JS DIAG] abrirScannerCamara() inició');   /* [DIAG] */
         if (typeof Html5Qrcode === 'undefined') {
-            console.log('[APP.JS DIAG] Html5Qrcode NO está definido (librería no cargó)');   /* [DIAG] */
             mostrarAlerta('❌', 'Error', 'No se pudo cargar el lector QR. Recarga la página.', 'error');
             return;
         }
-        console.log('[APP.JS DIAG] Html5Qrcode sí está disponible');   /* [DIAG] */
 
         try {
             /* Si el navegador ya tiene la cámara bloqueada para este sitio,
                getUserMedia rechaza al instante sin mostrar ningún diálogo:
                eso es lo que se percibe como "abre y cierra sin avisar". */
             var permiso = await verificarPermisoCamara();
-            console.log('[APP.JS DIAG] permiso de cámara:', permiso);   /* [DIAG] */
             if (permiso === 'denied') {
                 mostrarAlerta(
                     '🚫',
@@ -748,11 +737,8 @@
             }
 
             poblarSelectorCamaras(camaras);
-            console.log('[APP.JS DIAG] cámaras encontradas:', camaras.length, camaras.map(function(c){return c.label;}));   /* [DIAG] */
             await iniciarCamara(obtenerCamaraPreferida(camaras));
-            console.log('[APP.JS DIAG] iniciarCamara() terminó sin lanzar error');   /* [DIAG] */
         } catch (err) {
-            console.log('[APP.JS DIAG] abrirScannerCamara CATCH:', err);   /* [DIAG] */
             console.error('abrirScannerCamara:', err);
             cerrarScannerCamara();
             mostrarAlerta('❌', 'Error al Abrir Cámara', 'No se pudo iniciar el escáner: ' + (err && err.message ? err.message : 'error desconocido') + '.', 'error');
