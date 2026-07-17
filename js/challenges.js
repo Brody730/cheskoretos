@@ -4,6 +4,25 @@
  * ═══════════════════════════════════════════
  * CHESKORETOS - LISTA DE RETOS Y RENDERIZADO
  * ═══════════════════════════════════════════
+ * Este archivo tiene DOS responsabilidades distintas en un mismo lugar:
+ *
+ *  1. DATOS COMPARTIDOS (arriba): window.CHALLENGES, CHALLENGE_COLORS,
+ *     CHALLENGE_EMOJIS, CHALLENGE_WEIGHTS y sus getters. Es la única
+ *     fuente de verdad de "qué retos existen"; la usan retos.html,
+ *     ruleta.html, y (para el álbum de estampitas) retos-album.js
+ *     dentro de perfil.html.
+ *
+ *  2. MOTOR DE LA RULETA (IIFE al final del archivo): dibuja la ruleta
+ *     en <canvas>, la anima al girar, elige un ganador con pesos por
+ *     dificultad, muestra el modal de resultado, el confeti, el
+ *     "scoreboard" de participantes del día (localStorage) y el panel
+ *     para que "El Inventor" guarde su minireto. Solo se activa si la
+ *     página tiene el <canvas id="wheelCanvas"> (o sea, solo en
+ *     ruleta.html); en retos.html este bloque simplemente no encuentra
+ *     el canvas y no hace nada.
+ *
+ * Para agregar/editar un reto: solo toca el array CHALLENGES y sus
+ * mapas de color/emoji. El resto del archivo se adapta solo.
  */
 window.CHALLENGES = [
   // ═══ NIVEL FÁCIL (Descuento: $5) ═══
@@ -253,6 +272,9 @@ function getDiscountTextDescription(ch) {
   return '¡Cumple el reto y obtén un descuento de ' + ch.discount + '!';
 }
 
+/* Renderiza la cuadrícula estática de tarjetas de reto en retos.html
+   (id="contenedorRetos"). No hace nada en las demás páginas porque
+   ese contenedor solo existe ahí. */
 document.addEventListener("DOMContentLoaded", function() {
     var contenedor = document.getElementById("contenedorRetos");
     if (!contenedor) return;
@@ -278,6 +300,14 @@ document.addEventListener("DOMContentLoaded", function() {
  * ═══════════════════════════════════════════
  * SISTEMA INTERACTIVO DE LA RULETA (canvas)
  * ═══════════════════════════════════════════
+ * Solo se activa si existe #wheelCanvas (ruleta.html). Estado clave
+ * que guarda en localStorage (persiste entre visitas, es local al
+ * dispositivo/navegador, NO se sincroniza con Supabase):
+ *   - 'cheskoretos_inventor_retos'      → minirretos guardados por "El Inventor"
+ *   - 'cheskoretos_scoreboard_<fecha>'  → tabla de participantes DEL DÍA (se reinicia solo)
+ *   - 'chesko_session' (leído, no escrito aquí) → si hay sesión de perfil.html
+ *     activa, se usa para auto-registrar al ganador en el scoreboard y,
+ *     si DataStore está disponible, guardar el reto cumplido en Supabase.
  */
 (function() {
     'use strict';

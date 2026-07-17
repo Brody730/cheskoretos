@@ -1,4 +1,21 @@
 <!DOCTYPE html>
+<!--
+    ChesKoretos — MI PERFIL (perfil.html)
+    La única página "app" del sitio: login/registro por PIN, tarjeta
+    de lealtad (CheskoCard) con QR de validación, racha de sábados,
+    cupón de Chesko gratis, álbum de retos y (si el rol es admin o
+    empleado) el escáner de cámara para validar visitas de otros
+    usuarios. Es también el start_url de la PWA (manifest.json) y la
+    única página que carga toda la pila de módulos internos, en este
+    orden estricto: config.js → challenges.js → data.js → auth.js →
+    loyalty.js → retos-album.js → api.js → app.js (cada uno depende
+    de que el anterior ya haya definido su objeto global). Después de
+    app.js corren dos <script> propios de esta página (no son módulos
+    reutilizables en otras páginas): personalización de la tarjeta
+    (skins, animación de marco, avatar emoji libre, fondo con imagen y
+    detección automática de color) y el manejador de subida de foto de
+    avatar. Ver docs/FRONTEND.md y docs/JS_MODULES.md para el detalle.
+-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -355,6 +372,135 @@
         box-shadow: 2px 2px 0 #000;
         pointer-events: none;
     }
+
+    /* ══════════════════════════════════════════════
+       PERSONALIZADO — panel de color / imagen
+       ══════════════════════════════════════════════ */
+    #personalizadoPanel { display: none; flex-direction: column; gap: 12px; padding: 12px; background: #111; border: 1px solid #222; border-radius: 14px; }
+    .mode-tabs { display: flex; gap: 7px; }
+    .mode-tab {
+        flex: 1; text-align: center; padding: 8px; border-radius: 10px;
+        border: 1.5px solid #2a2a2a; background: #0d0d0d; color: #999;
+        font-family: 'Bangers', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+        cursor: pointer; transition: all 0.12s ease;
+    }
+    .mode-tab.selected { border-color: #FFCC00; color: #FFCC00; background: rgba(255, 204, 0, 0.08); }
+    .color-mode-row { display: flex; gap: 8px; }
+    .color-picks { display: flex; align-items: center; gap: 14px; }
+    .color-pick-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .color-pick-item label { font-family: 'Bangers', sans-serif; font-size: 10px; color: #777; }
+    .color-pick-item input[type="color"] {
+        width: 46px; height: 46px; border-radius: 12px; border: 2px solid #2a2a2a;
+        background: none; padding: 0; cursor: pointer;
+    }
+    .custom-gradient-preview {
+        width: 100%; height: 34px; border-radius: 10px; border: 1px solid #2a2a2a;
+    }
+    .btn-subir-imagen {
+        padding: 12px; border-radius: 12px; border: 1.5px dashed #333; background: #0d0d0d;
+        color: #ccc; font-family: 'Bangers', sans-serif; font-size: 14px; letter-spacing: 0.5px;
+        cursor: pointer; text-align: center;
+    }
+    .btn-subir-imagen:hover { border-color: #FFCC00; color: #FFCC00; }
+    .bg-image-thumb { width: 100%; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid #2a2a2a; }
+
+    #customTitleInput {
+        margin-top: 8px; width: 100%; box-sizing: border-box;
+        padding: 10px 12px; border-radius: 10px; border: 1.5px solid #2a2a2a;
+        background: #0d0d0d; color: #fff; font-family: 'Bangers', sans-serif;
+        font-size: 14px; letter-spacing: 0.5px;
+    }
+    #customTitleInput:focus { outline: none; border-color: #FFCC00; }
+
+    /* ── Modal de recorte de imagen de fondo ── */
+    .crop-box {
+        position: relative; width: 260px; height: 347px; margin: 0 auto;
+        border-radius: 20px; overflow: hidden; border: 2px solid #2a2a2a;
+        background: #000; touch-action: none; cursor: grab;
+    }
+    .crop-box:active { cursor: grabbing; }
+    .crop-box img { position: absolute; left: 0; top: 0; transform-origin: 0 0; user-select: none; pointer-events: none; }
+    .crop-zoom-row { display: flex; align-items: center; gap: 10px; }
+    .crop-zoom-row input[type="range"] { flex: 1; }
+    .crop-actions { display: flex; gap: 10px; }
+    .crop-actions button {
+        flex: 1; padding: 12px; border-radius: 12px; border: none;
+        font-family: 'Luckiest Guy', sans-serif; font-size: 12px; letter-spacing: 1px;
+        cursor: pointer;
+    }
+    #btnCropAplicar { background: #FFCC00; color: #111; }
+    #btnCropCancelar { background: #222; color: #ccc; }
+
+    /* ── Descargar / Compartir tarjeta ── */
+    .card-share-row { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-descargar-tarjeta, .btn-compartir-tarjeta {
+        flex: 1; padding: 13px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.05); color: #fff; font-family: 'Luckiest Guy', sans-serif;
+        font-size: 11px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-descargar-tarjeta:hover, .btn-compartir-tarjeta:hover { background: rgba(255,204,0,0.10); border-color: var(--amarillo); }
+
+    /* ══════════════════════════════════════════════
+       ANIMACIONES DE MARCO PERSONALIZABLES
+       Activadas vía [data-anim] en los mismos wrappers
+       que [data-skin]. Usan !important para poder
+       sustituir la animación propia de cada skin.
+       ══════════════════════════════════════════════ */
+    [data-anim="pulso"] .ncard-frame {
+        animation: animPulso 1.6s ease-in-out infinite !important;
+    }
+    @keyframes animPulso {
+        0%, 100% { box-shadow: 0 0 0 1px var(--s-ring), 0 0 30px 4px var(--s-glow), 0 16px 48px rgba(0,0,0,0.65); }
+        50%      { box-shadow: 0 0 0 1px var(--s-ring), 0 0 62px 18px var(--s-glow), 0 16px 48px rgba(0,0,0,0.65); }
+    }
+    [data-anim="vibra"] .ncard-inner {
+        animation: animVibra 0.35s ease-in-out infinite !important;
+    }
+    @keyframes animVibra {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        25%      { transform: translate(-1px, 1px) rotate(-0.6deg); }
+        50%      { transform: translate(1px, -1px) rotate(0.6deg); }
+        75%      { transform: translate(-1px, -1px) rotate(-0.4deg); }
+    }
+    [data-anim="brillo"] .ncard-frame {
+        position: relative;
+    }
+    [data-anim="brillo"] .ncard-frame::after {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        border-radius: inherit;
+        background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 48%, transparent 66%);
+        background-size: 250% 250%;
+        animation: animBrillo 2.4s linear infinite;
+        mix-blend-mode: overlay;
+    }
+    @keyframes animBrillo {
+        0%   { background-position: 200% 200%; }
+        100% { background-position: -50% -50%; }
+    }
+    [data-anim="flotar"] .ncard-frame {
+        animation: animFlotar 3s ease-in-out infinite !important;
+    }
+    @keyframes animFlotar {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-6px); }
+    }
+
+    /* ── Avatar personalizado con emoji libre ── */
+    .custom-avatar-input-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    #customAvatarInput {
+        width: 64px; box-sizing: border-box; text-align: center;
+        padding: 8px 6px; border-radius: 10px; border: 1.5px solid #2a2a2a;
+        background: #0d0d0d; color: #fff; font-size: 20px;
+    }
+    #customAvatarInput:focus { outline: none; border-color: #FFCC00; }
+    #customAvatarInput.avatar-input-error { border-color: #FF3333; }
+    .custom-avatar-hint { font-family: 'Bangers', sans-serif; font-size: 10px; color: #666; letter-spacing: 0.3px; }
+
+    .custom-imagen-hint {
+        font-family: 'Bangers', sans-serif; font-size: 10px; color: #666;
+        letter-spacing: 0.3px; margin-top: 8px; line-height: 1.4;
+    }
     </style>
 </head>
 <body>
@@ -515,11 +661,11 @@
                 <button class="btn-personalizar" id="btnPersonalizar" title="Personalizar tarjeta">🎨</button>
             </div>
 
-            <!-- ─── BOTÓN GOOGLE WALLET ─── -->
-            <button class="btn-wallet" id="btnGoogleWallet" style="display:none;">
-                <span class="wallet-badge-icon"></span>
-                AGREGAR A GOOGLE WALLET
-            </button>
+            <!-- ─── DESCARGAR / COMPARTIR TARJETA ─── -->
+            <div class="card-share-row">
+                <button class="btn-descargar-tarjeta" id="btnDescargarTarjeta">⬇️ Descargar</button>
+                <button class="btn-compartir-tarjeta" id="btnCompartirTarjeta">📤 Compartir</button>
+            </div>
 
             <!-- ─── BOTÓN ACTIVAR NOTIFICACIONES ─── -->
             <button class="btn-wallet" id="btnActivarNotis" style="display:none; background:#333; margin-top:8px;">
@@ -699,6 +845,51 @@
                     <div class="chip" data-skin="loco">🌈 Loco</div>
                     <div class="chip" data-skin="hielo">❄️ Hielo</div>
                     <div class="chip" data-skin="dorado">✨ Oro</div>
+                    <div class="chip" data-skin="personalizado">🎨 Personalizado</div>
+                </div>
+
+                <div id="personalizadoPanel">
+                    <div class="mode-tabs" id="customModeTabs">
+                        <div class="mode-tab selected" data-mode="color">🎨 Color</div>
+                        <div class="mode-tab" data-mode="imagen">🖼️ Imagen</div>
+                    </div>
+
+                    <div id="customColorPanel">
+                        <div class="color-mode-row" id="colorModeTabs">
+                            <div class="mode-tab selected" data-colormode="solido">Sólido</div>
+                            <div class="mode-tab" data-colormode="gradiente">Gradiente</div>
+                        </div>
+                        <div class="color-picks" style="margin-top:10px;">
+                            <div class="color-pick-item">
+                                <label>Color 1</label>
+                                <input type="color" id="customColor1" value="#FF6600">
+                            </div>
+                            <div class="color-pick-item" id="color2Wrap" style="display:none;">
+                                <label>Color 2</label>
+                                <input type="color" id="customColor2" value="#FFCC00">
+                            </div>
+                        </div>
+                        <div class="custom-gradient-preview" id="gradientPreview" style="margin-top:10px;"></div>
+                    </div>
+
+                    <div id="customImagenPanel" style="display:none;">
+                        <div class="btn-subir-imagen" id="btnSubirFondo">📷 Toca para elegir una foto de fondo</div>
+                        <input type="file" id="inputFondoImagen" accept="image/*" style="display:none;">
+                        <img id="fondoThumb" class="bg-image-thumb" style="display:none; margin-top:10px;">
+                        <p class="custom-imagen-hint">✨ El marco ajustará sus colores automáticamente según tu foto.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANIMACIÓN DEL MARCO -->
+            <div>
+                <div class="custom-section-label">Animación del marco</div>
+                <div class="chip-row" id="animChips">
+                    <div class="chip selected" data-anim="ninguna">🚫 Ninguna</div>
+                    <div class="chip" data-anim="pulso">💓 Pulso</div>
+                    <div class="chip" data-anim="vibra">📳 Vibración</div>
+                    <div class="chip" data-anim="brillo">✨ Brillo</div>
+                    <div class="chip" data-anim="flotar">🎈 Flotar</div>
                 </div>
             </div>
 
@@ -717,6 +908,10 @@
                     <div class="chip chip-lg" data-avatar="🤡">🤡</div>
                     <div class="chip chip-lg" data-avatar="🎸">🎸</div>
                 </div>
+                <div class="custom-avatar-input-row">
+                    <input type="text" id="customAvatarInput" maxlength="8" placeholder="😀">
+                    <span class="custom-avatar-hint">✍️ O escribe cualquier emoji para tu avatar</span>
+                </div>
             </div>
 
             <!-- TÍTULO -->
@@ -730,9 +925,35 @@
                     <div class="chip" data-title="DARK KORETO">DARK KORETO</div>
                     <div class="chip" data-title="SUPREMO">SUPREMO</div>
                     <div class="chip" data-title="REY DEL PARQUE">REY DEL PARQUE</div>
+                    <div class="chip" data-title="__custom__">✏️ Otro</div>
                 </div>
+                <input type="text" id="customTitleInput" maxlength="20" placeholder="Escribe tu título..." style="display:none;">
             </div>
 
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE RECORTE — IMAGEN DE FONDO
+         ═══════════════════════════════════════════ -->
+    <div class="custom-modal" id="bgCropModal">
+        <div class="custom-modal-backdrop" id="bgCropBackdrop"></div>
+        <div class="custom-modal-box">
+            <div class="custom-modal-header">
+                <span>🖼️ Ajusta tu foto</span>
+                <button class="custom-modal-close" id="btnCloseCrop">✕ Cerrar</button>
+            </div>
+            <div class="crop-box" id="cropBox">
+                <img id="cropImg" alt="Fondo">
+            </div>
+            <div class="crop-zoom-row">
+                <span style="font-family:'Bangers',sans-serif;color:#888;font-size:12px;">🔍</span>
+                <input type="range" id="cropZoom" min="100" max="300" value="100">
+            </div>
+            <div class="crop-actions">
+                <button id="btnCropCancelar">Cancelar</button>
+                <button id="btnCropAplicar">✅ Aplicar</button>
+            </div>
         </div>
     </div>
 
@@ -758,6 +979,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <!-- ═══════════════════════════════════════════
          SCRIPTS INTERNOS (mismo orden que perfil.html)
@@ -774,19 +996,74 @@
     <!-- ═══════════════════════════════════════════
          PERSONALIZACIÓN DE TARJETA
          Corre independiente de app.js. Solo toca:
-         [data-skin], avatarDisplay, titleDisplay.
+         [data-skin], [data-anim], avatarDisplay, titleDisplay.
          ═══════════════════════════════════════════ -->
     <script>
     (function() {
         'use strict';
 
-        var state = { skin: 'clasico', avatar: '🥤', title: 'KORETO VIP' };
+        var state = {
+            skin: 'clasico', avatar: '🥤', title: 'KORETO VIP', anim: 'ninguna',
+            custom: { mode: 'color', colorMode: 'solido', color1: '#FF6600', color2: '#FFCC00', bgImage: null }
+        };
+
+        var EMOJI_RE = /\p{Extended_Pictographic}/u;
+        function esEmojiValido(val) {
+            val = (val || '').trim();
+            if (!val || val.length > 8) return false;
+            if (/[a-zA-Z0-9]/.test(val)) return false;
+            return EMOJI_RE.test(val);
+        }
+
+        function getSessionId() {
+            try {
+                var s = JSON.parse(localStorage.getItem('chesko_session'));
+                return s && s.id ? s.id : null;
+            } catch (_) { return null; }
+        }
+
+        function luminance(hex) {
+            var c = hex.replace('#', '');
+            var r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+            return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(function(v) {
+                return Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+            }).join('').toUpperCase();
+        }
+
+        function mixWithWhite(hex, amount) {
+            var c = hex.replace('#', '');
+            var r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+            return rgbToHex(r + (255 - r) * amount, g + (255 - g) * amount, b + (255 - b) * amount);
+        }
+
+        /* Detecta el color dominante de la imagen subida para ajustar
+           automáticamente el marco (ring/glow/acentos) a la foto. */
+        function extractDominantColor(sourceCanvas) {
+            try {
+                var w = 24, h = 24;
+                var tmp = document.createElement('canvas');
+                tmp.width = w; tmp.height = h;
+                var tctx = tmp.getContext('2d');
+                tctx.drawImage(sourceCanvas, 0, 0, w, h);
+                var data = tctx.getImageData(0, 0, w, h).data;
+                var r = 0, g = 0, b = 0, n = 0;
+                for (var i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] < 128) continue;
+                    r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+                }
+                if (!n) return null;
+                return rgbToHex(r / n, g / n, b / n);
+            } catch (_) { return null; }
+        }
 
         function applyCardState() {
             var cw = document.getElementById('cardSkinWrapper');
             var fw = document.getElementById('fsCardSkinWrapper');
-            if (cw) cw.dataset.skin = state.skin;
-            if (fw) fw.dataset.skin = state.skin;
+            [cw, fw].forEach(function(w) { if (w) { w.dataset.skin = state.skin; w.dataset.anim = state.anim; } });
 
             var ca = document.getElementById('cardAvatarDisplay');
             var fa = document.getElementById('fsAvatarDisplay');
@@ -797,38 +1074,320 @@
             var ft = document.getElementById('fsTitleDisplay');
             if (ct) ct.textContent = state.title;
             if (ft) ft.textContent = state.title;
+
+            var frames = document.querySelectorAll('#cardSkinWrapper .ncard-frame, #fsCardSkinWrapper .ncard-frame');
+            var inners = document.querySelectorAll('#cardSkinWrapper .ncard-inner, #fsCardSkinWrapper .ncard-inner');
+
+            if (state.skin !== 'personalizado') {
+                frames.forEach(function(f) { f.style.background = ''; });
+                inners.forEach(function(i) { i.style.background = ''; });
+                [cw, fw].forEach(function(w) { if (w) { w.style.removeProperty('--s-accent'); w.style.removeProperty('--s-accent2'); w.style.removeProperty('--s-brand-c'); w.style.removeProperty('--s-brand-k'); w.style.removeProperty('--s-pill-bg'); w.style.removeProperty('--s-pill-color'); w.style.removeProperty('--s-ring'); w.style.removeProperty('--s-glow'); } });
+                return;
+            }
+
+            var c1 = state.custom.color1, c2 = state.custom.color2;
+            var frameGrad = state.custom.colorMode === 'gradiente'
+                ? 'linear-gradient(155deg, ' + c1 + ' 0%, ' + c2 + ' 45%, ' + c1 + ' 100%)'
+                : 'linear-gradient(155deg, ' + c1 + ' 0%, ' + c1 + ' 100%)';
+            frames.forEach(function(f) { f.style.background = frameGrad; });
+
+            if (state.custom.mode === 'imagen' && state.custom.bgImage) {
+                var bg = 'linear-gradient(180deg, rgba(0,0,0,0.30), rgba(0,0,0,0.62)), url(' + state.custom.bgImage + ') center/cover no-repeat';
+                inners.forEach(function(i) { i.style.background = bg; });
+            } else {
+                var innerGrad = state.custom.colorMode === 'gradiente'
+                    ? 'linear-gradient(160deg, ' + c1 + '33 0%, #110e0c 55%, #070505 100%)'
+                    : 'radial-gradient(ellipse at 50% 8%, ' + c1 + '2b 0%, #110e0c 50%, #070505 100%)';
+                inners.forEach(function(i) { i.style.background = innerGrad; });
+            }
+
+            var pillColor = luminance(c1) > 0.6 ? '#111111' : '#ffffff';
+            [cw, fw].forEach(function(w) {
+                if (!w) return;
+                w.style.setProperty('--s-accent', c1);
+                w.style.setProperty('--s-accent2', state.custom.colorMode === 'gradiente' ? c2 : c1);
+                w.style.setProperty('--s-brand-c', c1);
+                w.style.setProperty('--s-brand-k', state.custom.colorMode === 'gradiente' ? c2 : c1);
+                w.style.setProperty('--s-pill-bg', c1);
+                w.style.setProperty('--s-pill-color', pillColor);
+                w.style.setProperty('--s-ring', c1);
+                w.style.setProperty('--s-glow', 'rgba(0,0,0,0.35)');
+            });
+        }
+
+        function saveState() {
+            var id = getSessionId();
+            var payload = JSON.stringify(state);
+            if (id) localStorage.setItem('chesko_card_custom_' + id, payload);
+            if (id && typeof DataStore !== 'undefined' && DataStore.actualizarPerfil) {
+                DataStore.actualizarPerfil(id, { card_custom: payload }).catch(function() {});
+            }
+        }
+
+        function reflectUI() {
+            document.querySelectorAll('#skinChips .chip').forEach(function(c) { c.classList.toggle('selected', c.getAttribute('data-skin') === state.skin); });
+            document.querySelectorAll('#animChips .chip').forEach(function(c) { c.classList.toggle('selected', c.getAttribute('data-anim') === state.anim); });
+
+            var isCustomAvatar = !document.querySelector('#avatarChips .chip[data-avatar="' + state.avatar + '"]');
+            document.querySelectorAll('#avatarChips .chip').forEach(function(c) {
+                c.classList.toggle('selected', !isCustomAvatar && c.getAttribute('data-avatar') === state.avatar);
+            });
+            var avatarInput = document.getElementById('customAvatarInput');
+            if (avatarInput && document.activeElement !== avatarInput) {
+                avatarInput.value = isCustomAvatar ? state.avatar : '';
+            }
+
+            var isCustomTitle = !document.querySelector('#titleChips .chip[data-title="' + state.title + '"]');
+            document.querySelectorAll('#titleChips .chip').forEach(function(c) {
+                c.classList.toggle('selected', !isCustomTitle && c.getAttribute('data-title') === state.title);
+            });
+            var input = document.getElementById('customTitleInput');
+            if (isCustomTitle) {
+                document.querySelector('#titleChips .chip[data-title="__custom__"]').classList.add('selected');
+                input.style.display = 'block';
+                input.value = state.title;
+            }
+            var panel = document.getElementById('personalizadoPanel');
+            panel.style.display = state.skin === 'personalizado' ? 'flex' : 'none';
+            document.querySelectorAll('#customModeTabs .mode-tab').forEach(function(t) { t.classList.toggle('selected', t.getAttribute('data-mode') === state.custom.mode); });
+            document.getElementById('customColorPanel').style.display = state.custom.mode === 'color' ? 'block' : 'none';
+            document.getElementById('customImagenPanel').style.display = state.custom.mode === 'imagen' ? 'block' : 'none';
+            document.querySelectorAll('#colorModeTabs .mode-tab').forEach(function(t) { t.classList.toggle('selected', t.getAttribute('data-colormode') === state.custom.colorMode); });
+            document.getElementById('color2Wrap').style.display = state.custom.colorMode === 'gradiente' ? 'flex' : 'none';
+            document.getElementById('customColor1').value = state.custom.color1;
+            document.getElementById('customColor2').value = state.custom.color2;
+            document.getElementById('gradientPreview').style.background = state.custom.colorMode === 'gradiente'
+                ? 'linear-gradient(90deg,' + state.custom.color1 + ',' + state.custom.color2 + ')' : state.custom.color1;
+            var thumb = document.getElementById('fondoThumb');
+            if (state.custom.bgImage) { thumb.src = state.custom.bgImage; thumb.style.display = 'block'; }
+        }
+
+        function loadState() {
+            var id = getSessionId();
+            if (!id) return;
+            var raw = localStorage.getItem('chesko_card_custom_' + id);
+            if (!raw) return;
+            try {
+                var saved = JSON.parse(raw);
+                state = Object.assign(state, saved);
+                state.custom = Object.assign({ mode: 'color', colorMode: 'solido', color1: '#FF6600', color2: '#FFCC00', bgImage: null }, saved.custom || {});
+            } catch (_) {}
+            applyCardState();
+            reflectUI();
         }
 
         /* Bottom-sheet: abrir / cerrar */
         var modal = document.getElementById('customModal');
-        document.getElementById('btnPersonalizar').addEventListener('click', function() {
-            modal.classList.add('open');
-        });
-        document.getElementById('btnCloseCustom').addEventListener('click', function() {
-            modal.classList.remove('open');
-        });
-        document.getElementById('customModalBackdrop').addEventListener('click', function() {
-            modal.classList.remove('open');
-        });
+        document.getElementById('btnPersonalizar').addEventListener('click', function() { modal.classList.add('open'); });
+        document.getElementById('btnCloseCustom').addEventListener('click', function() { modal.classList.remove('open'); });
+        document.getElementById('customModalBackdrop').addEventListener('click', function() { modal.classList.remove('open'); });
 
-        /* Selección de chips */
+        /* Selección de chips (skin / avatar) */
         function setupChips(containerId, stateKey, attr) {
             var c = document.getElementById(containerId);
             if (!c) return;
             c.addEventListener('click', function(e) {
                 var chip = e.target.closest('[' + attr + ']');
                 if (!chip) return;
-                c.querySelectorAll('.chip').forEach(function(el) { el.classList.remove('selected'); });
-                chip.classList.add('selected');
                 state[stateKey] = chip.getAttribute(attr);
-                applyCardState();
+                applyCardState(); reflectUI(); saveState();
             });
         }
-
-        setupChips('skinChips',   'skin',   'data-skin');
+        setupChips('skinChips', 'skin', 'data-skin');
         setupChips('avatarChips', 'avatar', 'data-avatar');
-        setupChips('titleChips',  'title',  'data-title');
+        setupChips('animChips', 'anim', 'data-anim');
 
+        /* Avatar personalizado: cualquier emoji escrito a mano */
+        var avatarInput = document.getElementById('customAvatarInput');
+        function commitCustomAvatar() {
+            var val = avatarInput.value.trim();
+            if (!val) return;
+            if (!esEmojiValido(val)) {
+                avatarInput.classList.add('avatar-input-error');
+                setTimeout(function() { avatarInput.classList.remove('avatar-input-error'); }, 900);
+                return;
+            }
+            state.avatar = val;
+            applyCardState(); reflectUI(); saveState();
+        }
+        avatarInput.addEventListener('blur', commitCustomAvatar);
+        avatarInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { commitCustomAvatar(); avatarInput.blur(); } });
+
+        /* Título: chips + "Otro" */
+        document.getElementById('titleChips').addEventListener('click', function(e) {
+            var chip = e.target.closest('[data-title]');
+            if (!chip) return;
+            var val = chip.getAttribute('data-title');
+            var input = document.getElementById('customTitleInput');
+            if (val === '__custom__') {
+                input.style.display = 'block';
+                input.focus();
+                document.querySelectorAll('#titleChips .chip').forEach(function(c) { c.classList.remove('selected'); });
+                chip.classList.add('selected');
+                return;
+            }
+            input.style.display = 'none';
+            state.title = val;
+            applyCardState(); reflectUI(); saveState();
+        });
+        var titleInput = document.getElementById('customTitleInput');
+        function commitCustomTitle() {
+            var val = titleInput.value.trim().toUpperCase();
+            if (!val) return;
+            state.title = val;
+            applyCardState(); saveState();
+        }
+        titleInput.addEventListener('blur', commitCustomTitle);
+        titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { commitCustomTitle(); titleInput.blur(); } });
+
+        /* Modo Color / Imagen */
+        document.getElementById('customModeTabs').addEventListener('click', function(e) {
+            var tab = e.target.closest('[data-mode]');
+            if (!tab) return;
+            state.custom.mode = tab.getAttribute('data-mode');
+            state.skin = 'personalizado';
+            applyCardState(); reflectUI(); saveState();
+        });
+        document.getElementById('colorModeTabs').addEventListener('click', function(e) {
+            var tab = e.target.closest('[data-colormode]');
+            if (!tab) return;
+            state.custom.colorMode = tab.getAttribute('data-colormode');
+            applyCardState(); reflectUI(); saveState();
+        });
+        document.getElementById('customColor1').addEventListener('input', function(e) {
+            state.custom.color1 = e.target.value; state.skin = 'personalizado';
+            applyCardState(); reflectUI();
+        });
+        document.getElementById('customColor2').addEventListener('input', function(e) {
+            state.custom.color2 = e.target.value; state.skin = 'personalizado';
+            applyCardState(); reflectUI();
+        });
+        ['customColor1', 'customColor2'].forEach(function(id) {
+            document.getElementById(id).addEventListener('change', saveState);
+        });
+
+        /* ── Imagen de fondo: subir + recortar ── */
+        var cropImg = document.getElementById('cropImg');
+        var cropBox = document.getElementById('cropBox');
+        var cropZoom = document.getElementById('cropZoom');
+        var BOX_W = 260, BOX_H = 347;
+        var cropState = { natW: 0, natH: 0, baseScale: 1, zoom: 1, px: 0, py: 0, dragging: false, lastX: 0, lastY: 0 };
+
+        document.getElementById('btnSubirFondo').addEventListener('click', function() {
+            document.getElementById('inputFondoImagen').click();
+        });
+        document.getElementById('inputFondoImagen').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                cropImg.onload = function() {
+                    cropState.natW = cropImg.naturalWidth;
+                    cropState.natH = cropImg.naturalHeight;
+                    cropState.baseScale = Math.max(BOX_W / cropState.natW, BOX_H / cropState.natH);
+                    cropState.zoom = 1;
+                    cropState.px = (BOX_W - cropState.natW * cropState.baseScale) / 2;
+                    cropState.py = (BOX_H - cropState.natH * cropState.baseScale) / 2;
+                    cropZoom.value = 100;
+                    renderCrop();
+                    document.getElementById('bgCropModal').classList.add('open');
+                };
+                cropImg.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        });
+
+        function clampCrop() {
+            var scale = cropState.baseScale * cropState.zoom;
+            var dispW = cropState.natW * scale, dispH = cropState.natH * scale;
+            cropState.px = Math.min(0, Math.max(BOX_W - dispW, cropState.px));
+            cropState.py = Math.min(0, Math.max(BOX_H - dispH, cropState.py));
+        }
+        function renderCrop() {
+            clampCrop();
+            var scale = cropState.baseScale * cropState.zoom;
+            cropImg.style.width = (cropState.natW * scale) + 'px';
+            cropImg.style.height = (cropState.natH * scale) + 'px';
+            cropImg.style.transform = 'translate(' + cropState.px + 'px,' + cropState.py + 'px)';
+        }
+        cropZoom.addEventListener('input', function() {
+            cropState.zoom = cropZoom.value / 100;
+            renderCrop();
+        });
+        cropBox.addEventListener('pointerdown', function(e) {
+            cropState.dragging = true; cropState.lastX = e.clientX; cropState.lastY = e.clientY;
+            cropBox.setPointerCapture(e.pointerId);
+        });
+        cropBox.addEventListener('pointermove', function(e) {
+            if (!cropState.dragging) return;
+            cropState.px += e.clientX - cropState.lastX;
+            cropState.py += e.clientY - cropState.lastY;
+            cropState.lastX = e.clientX; cropState.lastY = e.clientY;
+            renderCrop();
+        });
+        ['pointerup', 'pointercancel'].forEach(function(ev) {
+            cropBox.addEventListener(ev, function() { cropState.dragging = false; });
+        });
+
+        function closeCropModal() { document.getElementById('bgCropModal').classList.remove('open'); }
+        document.getElementById('btnCloseCrop').addEventListener('click', closeCropModal);
+        document.getElementById('btnCropCancelar').addEventListener('click', closeCropModal);
+        document.getElementById('bgCropBackdrop').addEventListener('click', closeCropModal);
+
+        document.getElementById('btnCropAplicar').addEventListener('click', function() {
+            var K = 2.3; // factor de resolución para calidad de exportación
+            var canvas = document.createElement('canvas');
+            canvas.width = BOX_W * K; canvas.height = BOX_H * K;
+            var ctx = canvas.getContext('2d');
+            var scale = cropState.baseScale * cropState.zoom;
+            ctx.drawImage(cropImg, 0, 0, cropState.natW, cropState.natH,
+                cropState.px * K, cropState.py * K, cropState.natW * scale * K, cropState.natH * scale * K);
+
+            var dominante = extractDominantColor(canvas);
+            if (dominante) {
+                state.custom.color1 = dominante;
+                state.custom.color2 = mixWithWhite(dominante, 0.35);
+            }
+
+            state.custom.bgImage = canvas.toDataURL('image/jpeg', 0.9);
+            state.custom.mode = 'imagen';
+            state.skin = 'personalizado';
+            applyCardState(); reflectUI(); saveState();
+            closeCropModal();
+        });
+
+        /* ── Descargar / Compartir ── */
+        function exportCardCanvas(cb) {
+            if (typeof html2canvas === 'undefined') return;
+            html2canvas(document.getElementById('cardSkinWrapper'), { scale: 3, backgroundColor: null, useCORS: true }).then(cb);
+        }
+        document.getElementById('btnDescargarTarjeta').addEventListener('click', function() {
+            exportCardCanvas(function(canvas) {
+                var link = document.createElement('a');
+                link.download = 'mi-tarjeta-cheskoretos.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+        document.getElementById('btnCompartirTarjeta').addEventListener('click', function() {
+            exportCardCanvas(function(canvas) {
+                canvas.toBlob(function(blob) {
+                    var file = new File([blob], 'mi-tarjeta-cheskoretos.png', { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({ files: [file], title: 'Mi tarjeta ChesKoretos', text: '¡Mira mi tarjeta VIP de ChesKoretos! 🥤⚡' }).catch(function() {});
+                    } else {
+                        var link = document.createElement('a');
+                        link.download = 'mi-tarjeta-cheskoretos.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    }
+                }, 'image/png');
+            });
+        });
+
+        loadState();
+        setTimeout(loadState, 900);
     })();
     </script>
 

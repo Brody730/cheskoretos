@@ -1,4 +1,18 @@
 <!DOCTYPE html>
+<!--
+    ChesKoretos — RULETA INTERACTIVA (ruleta.html)
+    Única página donde gira la ruleta de verdad: usa el <canvas
+    id="wheelCanvas"> que activa el motor definido al final de
+    js/challenges.js (dibujo, giro, selección ponderada por
+    dificultad, modal de resultado, confeti, sonidos con Web Audio,
+    scoreboard de participantes del día y panel de "El Inventor").
+    A diferencia de las otras páginas NO carga js/landing.js, así que
+    el enlace "Ruleta" de la barra de navegación aquí navega normal
+    (ya estás en ella) en vez de abrir el modal de aviso del tianguis.
+    Si hay sesión activa en localStorage ('chesko_session') y
+    DataStore está cargado, el reto ganado también se guarda en
+    Supabase (historial_retos) para alimentar el álbum de perfil.html.
+-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">

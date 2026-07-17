@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<!--
+    ChesKoretos — LANDING PAGE (index.html)
+    Página pública de entrada: hero, "quiénes somos", redes sociales
+    y buzón de sugerencias. No requiere sesión ni toca Supabase.
+    Scripts: js/landing.js (luces de feria, modal de aviso de tianguis,
+    envío local del formulario de sugerencias) + registro del Service
+    Worker (sw.js) para funcionar como PWA offline.
+    Nota: el enlace "🎡 Ruleta" del menú (clase .btn-girar-ruleta) NO
+    navega a ruleta.html — landing.js intercepta el clic y muestra un
+    modal avisando que la ruleta solo se gira en persona los sábados
+    en el tianguis. Ver docs/FRONTEND.md para el detalle de este flujo.
+-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
