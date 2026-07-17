@@ -523,6 +523,19 @@
             }
         };
 
+        /* El saldo de puntos ("MIS PUNTOS") y el catálogo de recompensas
+           son compartidos por TODOS los juegos del arcade (una sola
+           cuenta de puntos, ver sql/arcade-schema.sql). Cuando otro
+           juego (snake, boxeo, ...) termina una partida y cambia el
+           saldo, usa este puente para refrescar este HUD/recompensas
+           sin duplicar esa lógica en cada archivo de juego. */
+        window.ArcadeUI = window.ArcadeUI || {};
+        window.ArcadeUI.actualizarPuntos = function(total) {
+            puntosActuales = total;
+            actualizarHudPuntos();
+            actualizarEstadoRecompensas();
+        };
+
         /* ═══════════════════════════════════════════
            ARRANQUE
            ═══════════════════════════════════════════ */

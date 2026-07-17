@@ -4,10 +4,14 @@
     Biblioteca de minijuegos con una sala vista desde arriba (estilo
     Pac-Man): el avatar del jugador camina entre gabinetes de arcade
     (js/arcade-lobby.js, catálogo en window.ARCADE_MACHINES) y al
-    acercarse a uno "activo" entra a jugarlo. Por ahora solo
-    "Flappy Chesko" (js/arcade.js) está implementado; los demás
-    gabinetes se muestran en gris con "PRÓXIMAMENTE" y no hacen nada
-    al tocarlos (solo un aviso). Cada partida otorga PUNTOS (moneda
+    acercarse a uno "activo" entra a jugarlo. Hay 3 implementados, uno
+    por sección del pasillo: "Flappy Chesko" (js/arcade.js), "Snake
+    del Parque" (js/arcade-snake.js) y "Boxeo de Sábado"
+    (js/arcade-boxeo.js) — cada uno con su propia pantalla
+    (#arcadeGameScreen / #snakeGameScreen / #boxeoGameScreen) y tabla
+    de posiciones. Los demás gabinetes se muestran en gris con
+    "PRÓXIMAMENTE" y no hacen nada al tocarlos (solo un aviso). Cada
+    partida otorga PUNTOS (moneda
     canjeable por cheskos/sabritas) con un multiplicador que baja
     mientras más se juega el mismo día; el puntaje del leaderboard
     siempre se guarda completo. Ver docs/JS_MODULES.md y
@@ -135,22 +139,136 @@
                 </div>
 
                 <p class="arcade-hint">Toca la pantalla del juego o presiona <strong>ESPACIO</strong> para volar. ¡Entre más obstáculos esquives, más alto tu puntaje!</p>
+
+                <section class="arcade-leaderboard">
+                    <h2 class="arcade-section-title">🏆 TABLA — FLAPPY CHESKO</h2>
+                    <table class="arcade-table">
+                        <thead><tr><th>#</th><th>Jugador</th><th>Puntaje</th></tr></thead>
+                        <tbody id="arcadeLeaderboardBody">
+                            <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ─── PANTALLA DE JUEGO: Snake del Parque ─── -->
+            <div id="snakeGameScreen" style="display:none;">
+                <button type="button" class="arcade-btn-volver" id="btnVolverArcadeSnake">⬅ VOLVER AL ARCADE</button>
+
+                <div class="arcade-hud">
+                    <div class="arcade-hud-item">
+                        <span class="arcade-hud-label">PARTIDA</span>
+                        <span class="arcade-hud-valor" id="snakeHudScore">0</span>
+                    </div>
+                    <button type="button" class="arcade-sound-btn" id="snakeSoundToggle" title="Silenciar/activar sonido">🔊</button>
+                </div>
+
+                <div class="arcade-game-wrap snake-game-wrap">
+                    <canvas id="snakeCanvas" width="160" height="160"></canvas>
+
+                    <div class="arcade-overlay" id="snakeStartOverlay">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">SNAKE<br>DEL PARQUE</div>
+                            <div class="arcade-overlay-texto">Flechas / WASD<br>o el control de abajo<br>para moverte</div>
+                            <div class="arcade-overlay-blink">▶ TOCA PARA EMPEZAR ◀</div>
+                        </div>
+                    </div>
+
+                    <div class="arcade-overlay" id="snakeGameOverPanel" style="display:none;">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">GAME OVER</div>
+                            <div class="arcade-go-stat">Puntaje: <span id="snakeGoPuntaje">0</span></div>
+                            <div class="arcade-go-stat" id="snakeGoMensajeSesion" style="display:none;"></div>
+                            <div class="arcade-go-detalle">
+                                <span>Puntos ganados: <strong id="snakeGoPuntosGanados">0</strong></span>
+                                <span>Multiplicador: <strong id="snakeGoMultiplicador">x1.00</strong></span>
+                                <span>Intento hoy: <strong id="snakeGoIntentosHoy">1</strong></span>
+                            </div>
+                            <button type="button" class="arcade-btn-reintentar" id="snakeBtnReintentar">▶ JUGAR DE NUEVO</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arcade-controls">
+                    <div class="arcade-dpad">
+                        <button type="button" class="snake-dpad-btn dpad-up"    data-dir="up"    aria-label="Arriba">▲</button>
+                        <button type="button" class="snake-dpad-btn dpad-left"  data-dir="left"  aria-label="Izquierda">◀</button>
+                        <button type="button" class="snake-dpad-btn dpad-right" data-dir="right" aria-label="Derecha">▶</button>
+                        <button type="button" class="snake-dpad-btn dpad-down"  data-dir="down"  aria-label="Abajo">▼</button>
+                    </div>
+                </div>
+
+                <p class="arcade-hint">Flechas / WASD o el control de arriba. Come y crece, ¡no te choques contigo mismo!</p>
+
+                <section class="arcade-leaderboard">
+                    <h2 class="arcade-section-title">🏆 TABLA — SNAKE DEL PARQUE</h2>
+                    <table class="arcade-table">
+                        <thead><tr><th>#</th><th>Jugador</th><th>Puntaje</th></tr></thead>
+                        <tbody id="snakeLeaderboardBody">
+                            <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- ─── PANTALLA DE JUEGO: Boxeo de Sábado ─── -->
+            <div id="boxeoGameScreen" style="display:none;">
+                <button type="button" class="arcade-btn-volver" id="btnVolverArcadeBoxeo">⬅ VOLVER AL ARCADE</button>
+
+                <div class="arcade-hud">
+                    <div class="arcade-hud-item">
+                        <span class="arcade-hud-label">PUNTAJE</span>
+                        <span class="arcade-hud-valor" id="boxeoHudScore">0</span>
+                    </div>
+                    <div class="arcade-hud-item">
+                        <span class="arcade-hud-label">RONDA</span>
+                        <span class="arcade-hud-valor" id="boxeoHudRonda">1 / 6</span>
+                    </div>
+                    <button type="button" class="arcade-sound-btn" id="boxeoSoundToggle" title="Silenciar/activar sonido">🔊</button>
+                </div>
+
+                <div class="arcade-game-wrap boxeo-game-wrap">
+                    <canvas id="boxeoCanvas" width="100" height="200"></canvas>
+
+                    <div class="arcade-overlay" id="boxeoStartOverlay">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">BOXEO<br>DE SÁBADO</div>
+                            <div class="arcade-overlay-texto">Golpea justo cuando<br>la aguja esté en la<br>zona verde de arriba</div>
+                            <div class="arcade-overlay-blink">▶ TOCA PARA EMPEZAR ◀</div>
+                        </div>
+                    </div>
+
+                    <div class="arcade-overlay" id="boxeoGameOverPanel" style="display:none;">
+                        <div class="arcade-overlay-box">
+                            <div class="arcade-overlay-titulo">GAME OVER</div>
+                            <div class="arcade-go-stat">Puntaje: <span id="boxeoGoPuntaje">0</span></div>
+                            <div class="arcade-go-stat" id="boxeoGoMensajeSesion" style="display:none;"></div>
+                            <div class="arcade-go-detalle">
+                                <span>Puntos ganados: <strong id="boxeoGoPuntosGanados">0</strong></span>
+                                <span>Multiplicador: <strong id="boxeoGoMultiplicador">x1.00</strong></span>
+                                <span>Intento hoy: <strong id="boxeoGoIntentosHoy">1</strong></span>
+                            </div>
+                            <button type="button" class="arcade-btn-reintentar" id="boxeoBtnReintentar">▶ JUGAR DE NUEVO</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="arcade-btn-golpear" id="boxeoBtnGolpear">🥊 GOLPEAR</button>
+
+                <p class="arcade-hint">Toca la pantalla, el botón GOLPEAR o presiona <strong>ESPACIO</strong>. 6 rondas, cada una más rápida.</p>
+
+                <section class="arcade-leaderboard">
+                    <h2 class="arcade-section-title">🏆 TABLA — BOXEO DE SÁBADO</h2>
+                    <table class="arcade-table">
+                        <thead><tr><th>#</th><th>Jugador</th><th>Puntaje</th></tr></thead>
+                        <tbody id="boxeoLeaderboardBody">
+                            <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </section>
             </div>
 
         </div>
-
-        <!-- Tabla de posiciones -->
-        <section class="arcade-leaderboard">
-            <h2 class="arcade-section-title">🏆 TABLA DE POSICIONES</h2>
-            <table class="arcade-table">
-                <thead>
-                    <tr><th>#</th><th>Jugador</th><th>Puntaje</th></tr>
-                </thead>
-                <tbody id="arcadeLeaderboardBody">
-                    <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
-                </tbody>
-            </table>
-        </section>
 
         <!-- Catálogo de recompensas -->
         <section class="arcade-rewards">
@@ -187,6 +305,8 @@
     <script src="js/config.js"></script>
     <script src="js/data.js"></script>
     <script src="js/arcade.js"></script>
+    <script src="js/arcade-snake.js"></script>
+    <script src="js/arcade-boxeo.js"></script>
     <script src="js/arcade-lobby.js"></script>
     <script>
     if ('serviceWorker' in navigator) {

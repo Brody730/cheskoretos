@@ -262,6 +262,61 @@ body.arcade-body {
     touch-action: manipulation;
 }
 
+/* ═══════════════════════════════════════════
+   SNAKE DEL PARQUE
+   ═══════════════════════════════════════════ */
+.snake-game-wrap { aspect-ratio: 160 / 160; max-width: 260px; }
+#snakeCanvas {
+    width: 100%; height: 100%; display: block;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    touch-action: manipulation;
+}
+/* Mismo look que .dpad-btn (D-pad del lobby) pero con su propia
+   clase para que arcade-lobby.js no los tome como controles suyos. */
+.snake-dpad-btn {
+    background: #111;
+    border: 2px solid #FF6600;
+    border-radius: 8px;
+    color: var(--amarillo, #FFCC00);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.snake-dpad-btn:active { background: #FF6600; color: #111; }
+
+/* ═══════════════════════════════════════════
+   BOXEO DE SÁBADO
+   ═══════════════════════════════════════════ */
+.boxeo-game-wrap { aspect-ratio: 100 / 200; max-width: 200px; }
+#boxeoCanvas {
+    width: 100%; height: 100%; display: block;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    touch-action: manipulation;
+}
+.arcade-btn-golpear {
+    width: 100%;
+    max-width: 300px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 3px solid #000;
+    background: linear-gradient(180deg, #FF3300, #B02000);
+    color: #fff;
+    font-family: 'Luckiest Guy', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #6a1300, 0 8px 16px rgba(0,0,0,0.5);
+}
+.arcade-btn-golpear:active {
+    box-shadow: 0 1px 0 #6a1300;
+    transform: translateY(4px);
+}
+
 .arcade-overlay {
     position: absolute;
     inset: 0;

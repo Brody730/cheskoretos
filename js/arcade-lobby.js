@@ -43,12 +43,12 @@
         { id: 'chesko_runner',   nombre: 'CHESKO RUNNER',    emoji: '🏃', disponible: false },
         { id: 'chesko_invaders', nombre: 'CHESKO INVADERS',  emoji: '👾', disponible: false },
         { id: 'tetrisko',        nombre: 'TETRISKO',         emoji: '🧱', disponible: false },
-        { id: 'snake_parque',    nombre: 'SNAKE DEL PARQUE', emoji: '🐍', disponible: false },
+        { id: 'snake_parque',    nombre: 'SNAKE DEL PARQUE', emoji: '🐍', disponible: true  },
         { id: 'rompe_vasos',     nombre: 'ROMPE VASOS',      emoji: '🥤', disponible: false },
         { id: 'memoria_extrema', nombre: 'MEMORIA EXTREMA',  emoji: '🧠', disponible: false },
         { id: 'ruleta_rush',     nombre: 'RULETA RUSH',      emoji: '🎡', disponible: false },
         { id: 'puzzle_koreto',   nombre: 'PUZZLE KORETO',    emoji: '🧩', disponible: false },
-        { id: 'boxeo_sabado',    nombre: 'BOXEO DE SÁBADO',  emoji: '🥊', disponible: false }
+        { id: 'boxeo_sabado',    nombre: 'BOXEO DE SÁBADO',  emoji: '🥊', disponible: true  }
     ];
     window.ARCADE_MACHINES = ARCADE_MACHINES;
 
@@ -150,9 +150,21 @@
         });
 
         var lobbyScreen = document.getElementById('arcadeLobbyScreen');
-        var gameScreen  = document.getElementById('arcadeGameScreen');
-        var btnVolver   = document.getElementById('btnVolverArcade');
         var btnA        = document.getElementById('btnArcadeA');
+
+        /* Cada juego implementado vive en su propia pantalla dentro de
+           #arcadePlayArea; el id de la máquina (ARCADE_MACHINES[].id)
+           es la clave para saber cuál mostrar/ocultar y qué botón
+           "volver" le pertenece. Si mañana se agrega un juego nuevo,
+           solo hace falta sumar su entrada aquí (y su <script> propio
+           que registre window.ArcadeGames[id]). */
+        var PANTALLAS_JUEGO = {
+            flappy_chesko: document.getElementById('arcadeGameScreen'),
+            snake_parque: document.getElementById('snakeGameScreen'),
+            boxeo_sabado: document.getElementById('boxeoGameScreen')
+        };
+        var BOTONES_VOLVER = ['btnVolverArcade', 'btnVolverArcadeSnake', 'btnVolverArcadeBoxeo'];
+        var pantallaActivaId = null;
 
         /* ═══════════════════════════════════════════
            LAYOUT: secciones de ~4 gabinetes separadas por
@@ -880,14 +892,16 @@
                     return;
                 }
                 var juego = window.ArcadeGames && window.ArcadeGames[g.def.id];
-                if (!juego || typeof juego.mostrar !== 'function') {
+                var pantallaJuego = PANTALLAS_JUEGO[g.def.id];
+                if (!juego || typeof juego.mostrar !== 'function' || !pantallaJuego) {
                     Blip.bloqueado();
                     mostrarToast('🚧 ' + g.def.nombre + ' — ¡muy pronto en el arcade!');
                     return;
                 }
                 Blip.entrar();
                 if (lobbyScreen) lobbyScreen.style.display = 'none';
-                if (gameScreen) gameScreen.style.display = 'flex';
+                pantallaJuego.style.display = 'flex';
+                pantallaActivaId = g.def.id;
                 teclas.up = teclas.down = teclas.left = teclas.right = false;
                 juego.mostrar();
                 return;
@@ -900,15 +914,20 @@
         }
 
         function volverAlLobby() {
-            ARCADE_MACHINES.filter(function(m) { return m.disponible; }).forEach(function(m) {
-                var juego = window.ArcadeGames && window.ArcadeGames[m.id];
-                if (juego && typeof juego.ocultar === 'function') juego.ocultar();
-            });
-            if (gameScreen) gameScreen.style.display = 'none';
+            if (pantallaActivaId) {
+                var juegoActivo = window.ArcadeGames && window.ArcadeGames[pantallaActivaId];
+                if (juegoActivo && typeof juegoActivo.ocultar === 'function') juegoActivo.ocultar();
+                var pantallaActiva = PANTALLAS_JUEGO[pantallaActivaId];
+                if (pantallaActiva) pantallaActiva.style.display = 'none';
+                pantallaActivaId = null;
+            }
             if (lobbyScreen) lobbyScreen.style.display = 'flex';
             ajustarResolucionCanvas();
         }
-        if (btnVolver) btnVolver.addEventListener('click', volverAlLobby);
+        BOTONES_VOLVER.forEach(function(id) {
+            var btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', volverAlLobby);
+        });
 
         /* Toast flotante genérico (avisos + frases de sabor), no bloquea. */
         var toastTimeoutId = null;
