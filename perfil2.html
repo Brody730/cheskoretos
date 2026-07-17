@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Perfil - ChesKoretos</title>
+    <meta name="description" content="Mi perfil de ChesKoretos: sellos de lealtad, cupón gratis y álbum de retos coleccionables.">
+    <meta name="author" content="ChesKoretos Team">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap" rel="stylesheet">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF6600">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ChesKoretos">
+
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/profile.css">
+
+    <style>
+    /* ══════════════════════════════════════════════
+       SKIN SYSTEM — CSS Custom Properties
+       Aplicado mediante [data-skin] en los wrappers
+       del card principal (#cardSkinWrapper) y el
+       fullscreen (#fsCardSkinWrapper).
+       ══════════════════════════════════════════════ */
+
+    [data-skin] {
+        --s-ring:        #5C1E00;
+        --s-glow:        rgba(255, 102, 0, 0.30);
+        --s-inner-top:   #201c18;
+        --s-accent:      #FF6600;
+        --s-accent2:     #FFCC00;
+        --s-brand-c:     #FF6600;
+        --s-brand-k:     #FFCC00;
+        --s-pill-bg:     #FFCC00;
+        --s-pill-color:  #111111;
+    }
+    [data-skin="fuego"] {
+        --s-ring:        #4A0000;
+        --s-glow:        rgba(255, 30, 0, 0.38);
+        --s-inner-top:   #1e0808;
+        --s-accent:      #FF3300;
+        --s-accent2:     #FF6600;
+        --s-brand-c:     #FF3300;
+        --s-brand-k:     #FF6600;
+        --s-pill-bg:     #FF3300;
+        --s-pill-color:  #fff;
+    }
+    [data-skin="neon"] {
+        --s-ring:        #003322;
+        --s-glow:        rgba(0, 255, 170, 0.28);
+        --s-inner-top:   #0a1a14;
+        --s-accent:      #00FFB3;
+        --s-accent2:     #00CCFF;
+        --s-brand-c:     #00FFB3;
+        --s-brand-k:     #00CCFF;
+        --s-pill-bg:     #00FFB3;
+        --s-pill-color:  #001a10;
+    }
+    [data-skin="loco"] {
+        --s-ring:        #660044;
+        --s-glow:        rgba(255, 80, 200, 0.30);
+        --s-inner-top:   #1a0a14;
+        --s-accent:      #FF44CC;
+        --s-accent2:     #FFCC00;
+        --s-brand-c:     #FF44CC;
+        --s-brand-k:     #FFCC00;
+        --s-pill-bg:     #FF44CC;
+        --s-pill-color:  #fff;
+    }
+    [data-skin="hielo"] {
+        --s-ring:        #001B3A;
+        --s-glow:        rgba(100, 180, 255, 0.28);
+        --s-inner-top:   #08101a;
+        --s-accent:      #66BBFF;
+        --s-accent2:     #CCF0FF;
+        --s-brand-c:     #66BBFF;
+        --s-brand-k:     #CCF0FF;
+        --s-pill-bg:     #66BBFF;
+        --s-pill-color:  #001030;
+    }
+    [data-skin="dorado"] {
+        --s-ring:        #5C3D00;
+        --s-glow:        rgba(255, 215, 0, 0.32);
+        --s-inner-top:   #1a1508;
+        --s-accent:      #FFD700;
+        --s-accent2:     #FFA500;
+        --s-brand-c:     #FFD700;
+        --s-brand-k:     #FFA500;
+        --s-pill-bg:     #FFD700;
+        --s-pill-color:  #3d2800;
+    }
+
+    /* ── Gradientes del marco metálico por skin ── */
+    [data-skin="clasico"] .ncard-frame {
+        background: linear-gradient(155deg, #7A2E00 0%, #FF7422 18%, #5C1E00 36%, #FF8C44 54%, #7A2E00 70%, #FF6A00 84%, #7A2E00 100%);
+    }
+    [data-skin="fuego"] .ncard-frame {
+        background: linear-gradient(155deg, #6B0000 0%, #FF2222 18%, #4A0000 36%, #FF5533 54%, #6B0000 70%, #FF3300 84%, #6B0000 100%);
+    }
+    [data-skin="neon"] .ncard-frame {
+        background: linear-gradient(155deg, #003322 0%, #00FFB3 18%, #001e0f 36%, #00DDAA 54%, #003322 70%, #00CCFF 84%, #001e0f 100%);
+        animation: neonPulse 1.8s ease-in-out infinite;
+    }
+    [data-skin="loco"] .ncard-frame {
+        background: linear-gradient(155deg, #FF0000, #FF8800, #FFFF00, #00FF88, #0088FF, #8800FF, #FF0088, #FF0000, #FF8800, #FFFF00, #00FF88);
+        background-size: 200% 200%;
+        animation: locoRainbow 3s linear infinite;
+    }
+    [data-skin="loco"] .ncard-inner { animation: locoWobble 5s ease-in-out infinite; }
+    [data-skin="hielo"] .ncard-frame {
+        background: linear-gradient(155deg, #001B3A 0%, #66BBFF 18%, #000D1F 36%, #99DDFF 54%, #001B3A 70%, #4499DD 84%, #000D1F 100%);
+    }
+    [data-skin="dorado"] .ncard-frame {
+        background: linear-gradient(155deg, #5C3D00 0%, #FFD700 18%, #3D2800 36%, #FFC200 54%, #5C3D00 70%, #FFE44D 84%, #5C3D00 100%);
+        animation: doradoGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes locoRainbow {
+        0%   { background-position: 0%   0%;   }
+        100% { background-position: 100% 100%; }
+    }
+    @keyframes locoWobble {
+        0%, 100% { transform: rotate(0deg); }
+        20%      { transform: rotate(0.4deg); }
+        60%      { transform: rotate(-0.4deg); }
+    }
+    @keyframes neonPulse {
+        0%, 100% { box-shadow: 0 0 0 1px var(--s-ring), 0 0 35px 5px rgba(0, 255, 170, 0.22), 0 16px 48px rgba(0, 0, 0, 0.65); }
+        50%      { box-shadow: 0 0 0 1px var(--s-ring), 0 0 55px 14px rgba(0, 255, 170, 0.44), 0 16px 48px rgba(0, 0, 0, 0.65); }
+    }
+    @keyframes doradoGlow {
+        0%, 100% { box-shadow: 0 0 0 1px var(--s-ring), 0 0 38px 6px rgba(255, 215, 0, 0.28), 0 16px 48px rgba(0, 0, 0, 0.65); }
+        50%      { box-shadow: 0 0 0 1px var(--s-ring), 0 0 58px 16px rgba(255, 215, 0, 0.52), 0 16px 48px rgba(0, 0, 0, 0.65); }
+    }
+
+    /* ══════════════════════════════════════════════
+       NUEVA TARJETA METÁLICA (ncard-*)
+       ══════════════════════════════════════════════ */
+    #cardSkinWrapper { width: 100%; max-width: 340px; margin: 0 auto; }
+
+    .ncard-frame {
+        width: 100%; border-radius: 30px; padding: 3px;
+        box-shadow: 0 0 0 1px var(--s-ring), 0 0 40px 8px var(--s-glow), 0 16px 48px rgba(0, 0, 0, 0.65);
+    }
+    .ncard-inner {
+        border-radius: 27px;
+        background: radial-gradient(ellipse at 50% 8%, var(--s-inner-top) 0%, #110e0c 50%, #070505 100%);
+        padding: 24px 20px 20px;
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
+        position: relative; overflow: hidden;
+    }
+    .ncard-inner::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 55px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%);
+        border-radius: 27px 27px 0 0; pointer-events: none;
+    }
+    .ncard-divider { width: 100%; height: 1px; background: rgba(255, 255, 255, 0.06); }
+
+    /* ─── Header ─── */
+    .ncard-header  { display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 1; }
+    .ncard-avatar  { font-size: 2rem; line-height: 1; filter: drop-shadow(2px 2px 0 #000); }
+    .ncard-brand   {
+        font-family: 'Luckiest Guy', sans-serif; font-size: 22px;
+        letter-spacing: 2px; text-transform: uppercase; line-height: 1;
+        text-shadow: 2px 2px 0 #000;
+    }
+    .ncard-brand .bc { color: var(--s-brand-c); }
+    .ncard-brand .bk { color: var(--s-brand-k); }
+    .ncard-uname {
+        font-family: 'Bangers', sans-serif; font-size: 12px; color: #888; letter-spacing: 1px;
+    }
+    .ncard-pill-membresia {
+        background: var(--s-pill-bg); color: var(--s-pill-color);
+        font-family: 'Luckiest Guy', sans-serif; font-size: 8px;
+        letter-spacing: 2px; text-transform: uppercase;
+        padding: 3px 12px; border-radius: 20px;
+    }
+    .ncard-title-badge {
+        font-family: 'Bangers', sans-serif; font-size: 10px;
+        color: var(--s-accent); letter-spacing: 1.5px; text-transform: uppercase;
+        text-shadow: 1px 1px 0 #000;
+    }
+
+    /* ─── Zona QR ─── */
+    .ncard-qr-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 1; }
+    .ncard-qr-panel {
+        background: #fff; border-radius: 14px; padding: 12px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+        display: flex; align-items: center; justify-content: center; line-height: 0;
+    }
+    .ncard-qr-panel img { display: block !important; max-width: 150px !important; border-radius: 4px; }
+    .ncard-qr-label {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        color: var(--s-accent); opacity: 0.8;
+        font-family: 'Luckiest Guy', sans-serif; font-size: 8px;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        padding: 4px 12px; border-radius: 20px;
+    }
+
+    /* ─── Racha / Sellos ─── */
+    .ncard-racha {
+        width: 100%; display: flex; flex-direction: column; align-items: center;
+        gap: 8px; padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06); z-index: 1;
+    }
+    .ncard-racha-title { font-family: 'Luckiest Guy', sans-serif; font-size: 12px; color: #fff; letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 1px 1px 0 #000; }
+    .ncard-racha-sub   { font-family: 'Bangers', sans-serif; font-size: 10px; color: #666; letter-spacing: 0.5px; }
+    /* Los sello-item son renderizados por app.js usando profile.css */
+    .ncard-racha .sellos-grid { margin: 0; }
+
+    /* ─── Footer interior ─── */
+    .ncard-footer {
+        width: 100%; display: flex; align-items: center;
+        justify-content: space-between; z-index: 1;
+    }
+    .ncard-footer-url  { font-family: 'Bangers', sans-serif; font-size: 8px; color: #333; letter-spacing: 0.5px; }
+    .ncard-footer-chip {
+        background: var(--s-accent2); color: var(--s-pill-color);
+        font-family: 'Luckiest Guy', sans-serif; font-size: 8px;
+        padding: 2px 8px; border-radius: 8px; letter-spacing: 1px;
+    }
+
+    /* ══════════════════════════════════════════════
+       FILA DE BOTONES: [Ver tarjeta] [🎨]
+       ══════════════════════════════════════════════ */
+    .card-btns-row {
+        display: flex; gap: 10px; align-items: stretch;
+        margin: 16px auto 0; width: 100%; max-width: 340px;
+    }
+    .card-btns-row .btn-fullscreen { flex: 1; margin: 0; display: block; }
+    .btn-personalizar {
+        padding: 12px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 204, 0, 0.25);
+        color: var(--amarillo);
+        border-radius: 14px; font-size: 1.15rem;
+        cursor: pointer; transition: all 0.15s ease;
+        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .btn-personalizar:hover  { background: rgba(255, 204, 0, 0.10); border-color: var(--amarillo); }
+    .btn-personalizar:active { transform: scale(0.95); }
+
+    /* Limitar ancho de wallet y escanear para que respeten la tarjeta */
+    #seccionCheskoCard .btn-wallet,
+    #seccionCheskoCard .btn-escanear {
+        max-width: 340px; box-sizing: border-box;
+    }
+
+    /* ══════════════════════════════════════════════
+       FULLSCREEN OVERLAY — skin wrapper
+       ══════════════════════════════════════════════ */
+    .fc-skin-wrapper {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 300px;
+        animation: cardEntrance 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    /* ══════════════════════════════════════════════
+       MODAL DE PERSONALIZACIÓN — Bottom sheet
+       ══════════════════════════════════════════════ */
+    .custom-modal {
+        display: none; position: fixed; inset: 0; z-index: 10003;
+        align-items: flex-end; justify-content: center;
+    }
+    .custom-modal.open { display: flex; }
+    .custom-modal-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.75); }
+    .custom-modal-box {
+        position: relative; z-index: 1;
+        background: #0d0d0d; border: 1.5px solid #222;
+        border-radius: 22px 22px 0 0;
+        width: 100%; max-width: 480px;
+        padding: 18px 16px 40px;
+        display: flex; flex-direction: column; gap: 16px;
+        animation: customSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        max-height: 85vh; overflow-y: auto;
+    }
+    @keyframes customSlideUp {
+        from { transform: translateY(100%); opacity: 0.5; }
+        to   { transform: translateY(0);    opacity: 1;   }
+    }
+    .custom-modal-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding-bottom: 12px; border-bottom: 1px solid #1e1e1e;
+    }
+    .custom-modal-header > span {
+        font-family: 'Luckiest Guy', sans-serif; font-size: 13px;
+        color: var(--amarillo); letter-spacing: 1.5px; text-transform: uppercase;
+        text-shadow: 1px 1px 0 #000;
+    }
+    .custom-modal-close {
+        background: #1a1a1a; border: 1px solid #333; color: #aaa;
+        font-family: 'Bangers', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+        padding: 6px 14px; border-radius: 8px; cursor: pointer;
+    }
+    .custom-modal-close:hover { background: #222; color: #fff; }
+
+    .custom-section-label {
+        font-family: 'Luckiest Guy', sans-serif; font-size: 9px;
+        color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chip {
+        padding: 7px 13px; border-radius: 20px;
+        border: 1.5px solid #2a2a2a; background: #111; color: #999;
+        font-family: 'Bangers', sans-serif; font-size: 13px; letter-spacing: 0.5px;
+        cursor: pointer; transition: all 0.12s ease;
+        user-select: none; white-space: nowrap;
+    }
+    .chip:hover { border-color: #444; color: #ddd; }
+    .chip.selected { border-color: #FFCC00; color: #FFCC00; background: rgba(255, 204, 0, 0.08); }
+    .chip-lg { font-size: 18px; padding: 5px 9px; }
+
+    /* ── Avatar upload ── */
+    .perfil-avatar-wrap {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 15px;
+        cursor: pointer;
+    }
+    .perfil-avatar-wrap .perfil-avatar {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0 !important;
+    }
+    .perfil-avatar-wrap .perfil-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .avatar-edit-btn {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        background: #FF6600;
+        border: 2px solid #000;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        z-index: 2;
+        box-shadow: 2px 2px 0 #000;
+        pointer-events: none;
+    }
+    </style>
+</head>
+<body>
+
+    <div class="lights" id="lights"></div>
+
+    <!-- ═══════════════════════════════════════════
+         BARRA DE NAVEGACIÓN
+         ═══════════════════════════════════════════ -->
+    <nav class="navbar-comic">
+        <a href="index.html" class="nav-brand-comic">
+            <span class="letter-c">C</span>hes<span class="letter-k">K</span>oretos
+        </a>
+        <div class="nav-menu-comic">
+            <a href="index.html" class="nav-link-comic">🏠 Inicio</a>
+            <a href="menu.html" class="nav-link-comic">🥤 Menú</a>
+            <a href="retos.html" class="nav-link-comic">🎲 Retos</a>
+            <a href="ruleta.html" class="nav-link-comic btn-girar-ruleta nav-link-ruleta">🎡 Ruleta</a>
+            <a href="perfil.html" class="nav-link-comic" style="color: var(--amarillo);">👤 Perfil</a>
+        </div>
+    </nav>
+
+    <div class="container perfil-container">
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 1: TARJETA DE LOGIN / PERFIL
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionPerfil">
+
+            <!-- ─── TARJETA LOGIN (oculta si hay sesión) ─── -->
+            <div class="login-card" id="vistaLogin">
+                <span class="login-icono">🥤</span>
+                <h2 class="login-titulo">¡ÚNETE AL CLUB!</h2>
+                <p class="login-subtitulo">Regístrate rápido y empieza a coleccionar sellos</p>
+
+                <div class="login-toggle">
+                    <button type="button" class="toggle-btn activo" id="btnModoRegistro">📝 Registro</button>
+                    <button type="button" class="toggle-btn" id="btnModoLogin">🔑 Ya tengo PIN</button>
+                </div>
+
+                <!-- FORMULARIO: REGISTRO (nickname + teléfono + PIN) -->
+                <form id="formRegistro" autocomplete="off">
+                    <div class="login-campo">
+                        <label for="inputUsername">@ Tu Nickname</label>
+                        <input type="text" id="inputUsername" placeholder="Ej: KoretoMaster"
+                            required minlength="2" maxlength="20" autocapitalize="none">
+                    </div>
+                    <div class="login-campo">
+                        <label for="inputTelefono">📱 Tu Teléfono (WhatsApp)</label>
+                        <input type="tel" id="inputTelefono" placeholder="Ej: 5512345678"
+                            required minlength="8" maxlength="15">
+                    </div>
+                    <div class="login-campo">
+                        <label for="inputPIN">🔐 Crea tu PIN (4 números)</label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="inputPIN"
+                            placeholder="Ej: 1234" required minlength="4" maxlength="4" autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-login">💥 ¡Crear Cuenta! 💥</button>
+                </form>
+
+                <!-- FORMULARIO: LOGIN (teléfono + PIN) -->
+                <form id="formLogin" autocomplete="off" style="display: none;">
+                    <div class="login-campo">
+                        <label for="inputTelefonoLogin">📱 Tu Teléfono</label>
+                        <input type="tel" id="inputTelefonoLogin" placeholder="Ej: 5512345678"
+                            required minlength="8" maxlength="15">
+                    </div>
+                    <div class="login-campo">
+                        <label for="inputPINLogin">🔐 Tu PIN (4 números)</label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="inputPINLogin"
+                            placeholder="Ej: 1234" required minlength="4" maxlength="4" autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn-login">🚀 ¡Entrar! 🚀</button>
+                </form>
+
+                <div class="login-error" id="loginError"></div>
+            </div>
+
+            <!-- ─── PERFIL DEL USUARIO (oculta si NO hay sesión) ─── -->
+            <div class="perfil-info" id="vistaPerfil" style="display: none;">
+                <div class="perfil-avatar-wrap" id="perfilAvatarWrap">
+                    <div class="perfil-avatar" id="perfilAvatarEl">🥤</div>
+                    <div class="avatar-edit-btn">📷</div>
+                    <input type="file" id="inputAvatar" accept="image/*" style="display:none">
+                </div>
+                <h2 class="perfil-nickname" id="perfilNickname"></h2>
+                <p class="perfil-telefono" id="perfilTelefono"></p>
+                <span class="perfil-rol-badge" id="perfilRol"></span>
+
+                <div class="perfil-stats">
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statRacha">0</div>
+                        <div class="perfil-stat-label">Racha Sábados</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statRetos">0</div>
+                        <div class="perfil-stat-label">Retos</div>
+                    </div>
+                    <div class="perfil-stat">
+                        <div class="perfil-stat-numero" id="statMedallas">0</div>
+                        <div class="perfil-stat-label">Medallas</div>
+                    </div>
+                </div>
+
+                <button class="btn-logout" id="btnLogout">🚪 Cerrar Sesión</button>
+            </div>
+
+        </section>
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 2: NUEVA TARJETA METÁLICA
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionCheskoCard" style="display: none;">
+
+            <!-- ─── MARCO METÁLICO CON SKIN ─── -->
+            <div id="cardSkinWrapper" data-skin="clasico">
+                <div class="ncard-frame">
+                    <div class="ncard-inner">
+
+                        <div class="ncard-header">
+                            <div class="ncard-avatar" id="cardAvatarDisplay">🥤</div>
+                            <div class="ncard-brand">
+                                <span class="bc">C</span>hes<span class="bk">K</span>oretos
+                            </div>
+                            <!-- app.js escribe en id="cardUsername" -->
+                            <div class="ncard-uname" id="cardUsername">@username</div>
+                            <div class="ncard-pill-membresia">Membresía Exclusiva</div>
+                            <div class="ncard-title-badge" id="cardTitleDisplay">KORETO VIP</div>
+                        </div>
+
+                        <div class="ncard-divider"></div>
+
+                        <!-- app.js genera el QR dentro de id="qrContainer" -->
+                        <div class="ncard-qr-zone">
+                            <div class="ncard-qr-panel" id="qrContainer"></div>
+                            <div class="ncard-qr-label">Validación Exclusiva de Staff</div>
+                        </div>
+
+                        <!-- app.js renderiza los sello-item en id="sellosGrid" -->
+                        <div class="ncard-racha">
+                            <div class="ncard-racha-title">Mi Racha de Sábados</div>
+                            <div class="ncard-racha-sub">5 visitas y el 6to Chesko es ¡GRATIS!</div>
+                            <div class="sellos-grid" id="sellosGrid"></div>
+                        </div>
+
+                        <div class="ncard-footer">
+                            <div class="ncard-footer-url">cheskoretos.vercel.app</div>
+                            <div class="ncard-footer-chip">⚡ VIP</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── FILA: [⚽ VER TARJETA] [🎨] ─── -->
+            <div class="card-btns-row">
+                <button class="btn-fullscreen" id="btnFullscreen">⚽ VER MI TARJETA</button>
+                <button class="btn-personalizar" id="btnPersonalizar" title="Personalizar tarjeta">🎨</button>
+            </div>
+
+            <!-- ─── BOTÓN GOOGLE WALLET ─── -->
+            <button class="btn-wallet" id="btnGoogleWallet" style="display:none;">
+                <span class="wallet-badge-icon"></span>
+                AGREGAR A GOOGLE WALLET
+            </button>
+
+            <!-- ─── BOTÓN ESCANEAR (solo admin/empleado) ─── -->
+            <button id="btnEscanearQR" class="btn-escanear" style="display:none;">📷 Escanear QR de cliente</button>
+
+            <!-- ─── CUPÓN GRATIS ─── -->
+            <div class="cupon-gratis" id="cuponGratis">
+                <span class="cupon-badge">🎉🥤🎉</span>
+                <h3 class="cupon-titulo">¡CHESCO GRATIS!</h3>
+                <p class="cupon-texto">Muestra este cupón en el puesto y llévate tu Chesko preparado sin costo. ¡Te lo mereces, crack!</p>
+                <button class="btn-canjejar" id="btnCanjearGratis">✅ YA LO CANJEÉ</button>
+            </div>
+
+        </section>
+
+        <!-- Botón instalar PWA -->
+        <section class="perfil-seccion" id="seccionInstalarPWA" style="display:none;">
+            <button id="btnInstalarPWA" class="btn-escanear" style="background:linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);">📲 Instalar App en tu celular</button>
+        </section>
+
+        <!-- ═══════════════════════════════════════════
+             SECCIÓN 3: ÁLBUM DE RETOS (Cromos)
+             ═══════════════════════════════════════════ -->
+        <section class="perfil-seccion" id="seccionAlbum" style="display: none;">
+            <div class="album-header">
+                <h2 class="album-titulo">📸 MI ÁLBUM DE RETOS 📸</h2>
+                <p class="album-subtitulo">Cromos coleccionables — ¿Cuántos retos has completado?</p>
+                <div class="album-contador" id="albumContador">0 / 0 retos</div>
+            </div>
+            <div class="album-grid" id="albumGrid"></div>
+        </section>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL GENÉRICO DE ALERTA
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco" id="modalAlerta">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono" id="modalIcono">⚠️</span>
+            <h3 class="modal-chesco-titulo" id="modalTitulo">¡Aviso!</h3>
+            <p class="modal-chesco-sub" id="modalSub"></p>
+            <p class="modal-chesco-mensaje" id="modalMensaje"></p>
+            <button class="modal-chesco-btn" id="btnCerrarModalAlerta">¡ENTENDIDO!</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE ESCÁNER (validar visita)
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco modal-scanner" id="modalScanner">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono">📱</span>
+            <h3 class="modal-chesco-titulo">VALIDAR VISITA</h3>
+            <p class="modal-chesco-sub">¿Registrar visita para este usuario?</p>
+            <div class="scanner-datos">
+                <div class="scanner-campo">
+                    <span class="scanner-label">Usuario:</span>
+                    <span class="scanner-valor" id="scannerUsername"></span>
+                </div>
+                <div class="scanner-campo">
+                    <span class="scanner-label">Racha actual:</span>
+                    <span class="scanner-valor" id="scannerRacha"></span>
+                </div>
+                <div class="scanner-campo">
+                    <span class="scanner-label">Medallas:</span>
+                    <span class="scanner-valor" id="scannerMedallas"></span>
+                </div>
+            </div>
+            <div class="scanner-acciones">
+                <button class="btn-scanner-confirmar" id="btnConfirmarVisita">✅ Confirmar Visita</button>
+                <button class="btn-scanner-cancelar" id="btnCancelarVisita">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE CONFIRMACIÓN DE CANJE
+         ═══════════════════════════════════════════ -->
+    <div class="modal-chesco modal-exito" id="modalCanje" style="display: none;">
+        <div class="modal-chesco-contenido">
+            <span class="modal-chesco-icono">🥤</span>
+            <h3 class="modal-chesco-titulo">¡CHESCO CANJEADO!</h3>
+            <p class="modal-chesco-mensaje">Presenta tu pantalla al de la caja y disfruta tu bebida gratis. ¡Vuelve pronto por más sellos!</p>
+            <button class="modal-chesco-btn" id="btnCerrarCanje">¡VALE, GRACIAS!</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         OVERLAY: ESCÁNER DE CÁMARA QR
+         ═══════════════════════════════════════════ -->
+    <div class="scanner-overlay" id="scannerOverlay" style="display: none;">
+        <div class="scanner-header">
+            <h3>📷 ESCANEAR QR</h3>
+            <button class="scanner-close" id="btnCerrarScanner">✕</button>
+        </div>
+        <div class="scanner-viewport">
+            <div id="qrReader"></div>
+            <div class="scanner-crosshair"></div>
+        </div>
+        <div class="scanner-camara-selector">
+            <label for="scannerCameraSelect">📷 Cámara:</label>
+            <select id="scannerCameraSelect"></select>
+        </div>
+        <p class="scanner-hint">Apunta la cámara al código QR del cliente</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         OVERLAY FULLSCREEN — TARJETA METÁLICA
+         app.js controla visibilidad; escribe en:
+         fcUsername, fcQrContainer, fcSellosGrid
+         ═══════════════════════════════════════════ -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay" style="display:none;">
+        <div class="fullscreen-bg"></div>
+        <button class="fullscreen-close" id="btnCloseFullscreen">✕</button>
+
+        <div id="fsCardSkinWrapper" data-skin="clasico" class="fc-skin-wrapper">
+            <div class="ncard-frame">
+                <div class="ncard-inner">
+
+                    <div class="ncard-header">
+                        <div class="ncard-avatar" id="fsAvatarDisplay">🥤</div>
+                        <div class="ncard-brand">
+                            <span class="bc">C</span>hes<span class="bk">K</span>oretos
+                        </div>
+                        <div class="ncard-uname" id="fcUsername">@username</div>
+                        <div class="ncard-pill-membresia">Membresía Exclusiva</div>
+                        <div class="ncard-title-badge" id="fsTitleDisplay">KORETO VIP</div>
+                    </div>
+
+                    <div class="ncard-divider"></div>
+
+                    <div class="ncard-qr-zone">
+                        <div class="ncard-qr-panel" id="fcQrContainer"></div>
+                        <div class="ncard-qr-label">Validación Exclusiva de Staff</div>
+                    </div>
+
+                    <div class="ncard-racha">
+                        <div class="ncard-racha-title">Mi Racha de Sábados</div>
+                        <div class="ncard-racha-sub">5 visitas y el 6to Chesko es ¡GRATIS!</div>
+                        <div class="sellos-grid" id="fcSellosGrid"></div>
+                    </div>
+
+                    <div class="ncard-footer">
+                        <div class="ncard-footer-url">cheskoretos.vercel.app</div>
+                        <div class="ncard-footer-chip">⚡ VIP</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL DE PERSONALIZACIÓN (Bottom Sheet)
+         ═══════════════════════════════════════════ -->
+    <div class="custom-modal" id="customModal">
+        <div class="custom-modal-backdrop" id="customModalBackdrop"></div>
+        <div class="custom-modal-box">
+
+            <div class="custom-modal-header">
+                <span>🎨 Personaliza tu tarjeta</span>
+                <button class="custom-modal-close" id="btnCloseCustom">✕ Cerrar</button>
+            </div>
+
+            <!-- SKIN -->
+            <div>
+                <div class="custom-section-label">Skin</div>
+                <div class="chip-row" id="skinChips">
+                    <div class="chip selected" data-skin="clasico">🔥 Clásico</div>
+                    <div class="chip" data-skin="fuego">🌋 Fuego</div>
+                    <div class="chip" data-skin="neon">⚡ Neon</div>
+                    <div class="chip" data-skin="loco">🌈 Loco</div>
+                    <div class="chip" data-skin="hielo">❄️ Hielo</div>
+                    <div class="chip" data-skin="dorado">✨ Oro</div>
+                </div>
+            </div>
+
+            <!-- AVATAR -->
+            <div>
+                <div class="custom-section-label">Avatar</div>
+                <div class="chip-row" id="avatarChips">
+                    <div class="chip chip-lg selected" data-avatar="🥤">🥤</div>
+                    <div class="chip chip-lg" data-avatar="🌶️">🌶️</div>
+                    <div class="chip chip-lg" data-avatar="🎲">🎲</div>
+                    <div class="chip chip-lg" data-avatar="👑">👑</div>
+                    <div class="chip chip-lg" data-avatar="⭐">⭐</div>
+                    <div class="chip chip-lg" data-avatar="💀">💀</div>
+                    <div class="chip chip-lg" data-avatar="🦁">🦁</div>
+                    <div class="chip chip-lg" data-avatar="🐉">🐉</div>
+                    <div class="chip chip-lg" data-avatar="🤡">🤡</div>
+                    <div class="chip chip-lg" data-avatar="🎸">🎸</div>
+                </div>
+            </div>
+
+            <!-- TÍTULO -->
+            <div>
+                <div class="custom-section-label">Título</div>
+                <div class="chip-row" id="titleChips">
+                    <div class="chip selected" data-title="KORETO VIP">KORETO VIP</div>
+                    <div class="chip" data-title="LEYENDA">LEYENDA</div>
+                    <div class="chip" data-title="EL MÁS LOCO">EL MÁS LOCO</div>
+                    <div class="chip" data-title="CAMPEÓN">CAMPEÓN</div>
+                    <div class="chip" data-title="DARK KORETO">DARK KORETO</div>
+                    <div class="chip" data-title="SUPREMO">SUPREMO</div>
+                    <div class="chip" data-title="REY DEL PARQUE">REY DEL PARQUE</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <div class="info-local">
+            📍 Parque Dr. Montes De Oca, Detrás del Kiosco principal.<br>
+            ¡Búscanos por la ruleta gigante y disfruta el mejor sabor!
+        </div>
+        <div class="footer-actions">
+            <a href="index.html" class="btn-comic">🏠 Inicio</a>
+            <a href="menu.html" class="btn-comic btn-secondary">🥤 Ver Menú</a>
+            <a href="ruleta.html" class="btn-comic btn-girar-ruleta">🎡 Ruleta</a>
+        </div>
+        <p class="footer-credits">
+            © 2026 ChesKoretos. ¡El refresco que te reta! Todos los derechos reservados. ⚡
+        </p>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════
+         SCRIPTS EXTERNOS (CDN)
+         ═══════════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- ═══════════════════════════════════════════
+         SCRIPTS INTERNOS (mismo orden que perfil.html)
+         ═══════════════════════════════════════════ -->
+    <script src="js/config.js"></script>
+    <script src="js/challenges.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/loyalty.js"></script>
+    <script src="js/retos-album.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- ═══════════════════════════════════════════
+         PERSONALIZACIÓN DE TARJETA
+         Corre independiente de app.js. Solo toca:
+         [data-skin], avatarDisplay, titleDisplay.
+         ═══════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        var state = { skin: 'clasico', avatar: '🥤', title: 'KORETO VIP' };
+
+        function applyCardState() {
+            var cw = document.getElementById('cardSkinWrapper');
+            var fw = document.getElementById('fsCardSkinWrapper');
+            if (cw) cw.dataset.skin = state.skin;
+            if (fw) fw.dataset.skin = state.skin;
+
+            var ca = document.getElementById('cardAvatarDisplay');
+            var fa = document.getElementById('fsAvatarDisplay');
+            if (ca) ca.textContent = state.avatar;
+            if (fa) fa.textContent = state.avatar;
+
+            var ct = document.getElementById('cardTitleDisplay');
+            var ft = document.getElementById('fsTitleDisplay');
+            if (ct) ct.textContent = state.title;
+            if (ft) ft.textContent = state.title;
+        }
+
+        /* Bottom-sheet: abrir / cerrar */
+        var modal = document.getElementById('customModal');
+        document.getElementById('btnPersonalizar').addEventListener('click', function() {
+            modal.classList.add('open');
+        });
+        document.getElementById('btnCloseCustom').addEventListener('click', function() {
+            modal.classList.remove('open');
+        });
+        document.getElementById('customModalBackdrop').addEventListener('click', function() {
+            modal.classList.remove('open');
+        });
+
+        /* Selección de chips */
+        function setupChips(containerId, stateKey, attr) {
+            var c = document.getElementById(containerId);
+            if (!c) return;
+            c.addEventListener('click', function(e) {
+                var chip = e.target.closest('[' + attr + ']');
+                if (!chip) return;
+                c.querySelectorAll('.chip').forEach(function(el) { el.classList.remove('selected'); });
+                chip.classList.add('selected');
+                state[stateKey] = chip.getAttribute(attr);
+                applyCardState();
+            });
+        }
+
+        setupChips('skinChips',   'skin',   'data-skin');
+        setupChips('avatarChips', 'avatar', 'data-avatar');
+        setupChips('titleChips',  'title',  'data-title');
+
+    })();
+    </script>
+
+    <!-- Avatar upload -->
+    <script>
+    (function() {
+        'use strict';
+
+        function actualizarDisplayAvatar(dataUrl) {
+            var el = document.getElementById('perfilAvatarEl');
+            var ca = document.getElementById('cardAvatarDisplay');
+            var fa = document.getElementById('fsAvatarDisplay');
+            if (el) {
+                el.innerHTML = dataUrl
+                    ? '<img src="' + dataUrl + '" alt="Avatar">'
+                    : '🥤';
+            }
+            if (dataUrl) {
+                var imgHtml = '<img src="' + dataUrl + '" style="width:44px;height:44px;object-fit:cover;border-radius:50%;border:2px solid var(--s-accent2,#FFCC00);">';
+                if (ca) ca.innerHTML = imgHtml;
+                if (fa) fa.innerHTML = imgHtml;
+            }
+        }
+
+        window.mostrarAvatarPerfil = function(perfil) {
+            if (!perfil || !perfil.id) return;
+            var lsKey = 'chesko_avatar_' + perfil.id;
+            var dataUrl = localStorage.getItem(lsKey);
+            if (!dataUrl && perfil.avatar_url) {
+                dataUrl = perfil.avatar_url;
+                localStorage.setItem(lsKey, dataUrl);
+            }
+            if (dataUrl) actualizarDisplayAvatar(dataUrl);
+        };
+
+        var wrap  = document.getElementById('perfilAvatarWrap');
+        var input = document.getElementById('inputAvatar');
+        if (wrap && input) {
+            wrap.addEventListener('click', function() { input.click(); });
+            input.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var img = new Image();
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 160; canvas.height = 160;
+                        var ctx = canvas.getContext('2d');
+                        var size = Math.min(img.width, img.height);
+                        var ox = (img.width - size) / 2;
+                        var oy = (img.height - size) / 2;
+                        ctx.drawImage(img, ox, oy, size, size, 0, 0, 160, 160);
+                        var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                        var session = null;
+                        try { session = JSON.parse(localStorage.getItem('chesko_session')); } catch(_) {}
+                        if (!session || !session.id) return;
+                        localStorage.setItem('chesko_avatar_' + session.id, dataUrl);
+                        actualizarDisplayAvatar(dataUrl);
+                        if (typeof DataStore !== 'undefined') {
+                            DataStore.actualizarPerfil(session.id, { avatar_url: dataUrl }).catch(function() {});
+                        }
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+            });
+        }
+    })();
+    </script>
+
+    <!-- Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+    </script>
+
+    <!-- ═══════════════════════════════════════════
+         [DIAG TEMPORAL] Consola visual para depurar
+         desde el celular sin cable. Botón flotante
+         abre consola/errores/network. QUITAR cuando
+         ya no se necesite depurar el escáner. -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
+</body>
+</html>
