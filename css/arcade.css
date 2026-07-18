@@ -78,7 +78,7 @@ body.arcade-body {
 }
 
 #arcadePlayArea { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-#arcadeLobbyScreen, #arcadeGameScreen { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+#arcadeLobbyScreen, #arcadeGameScreen, #snakeGameScreen, #boxeoGameScreen { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
 /* ── HUD ── */
 .arcade-hud {
