@@ -1,0 +1,93 @@
+
+# 🎨 Guía de Estilo y Sistema de Diseño: Cheskoretos
+
+Esta documentación define la identidad visual y los estilos CSS implementados para la plataforma **Cheskoretos**.
+
+---
+
+## 🚀 1. Concepto e Identidad Estética
+
+* **Estilo Visual:** **Pop Art / Cómic Extremo & Retro Arcade**.
+
+
+* **Tono del Diseño:** Vibrante, saturado, dinámico, juvenil e irreverente.
+* **Técnicas Clave de UI:**
+* Uso de *Neubrutalism* (bordes gruesos negros `#000` con sombras sólidas desplazadas).
+
+
+* Degradados intensos y sombras de texto estilo bocadillo/viñeta.
+
+
+* Elementos asimétricos o rotados a propósito (`transform: rotate(...)`) para dar sensación de cómic.
+
+
+* Patrones de fondo dinámicos (puntos micro-dot, líneas diagonales estilo trama de impresión).
+
+
+
+
+
+---
+
+## 🎨 2. Paleta de Colores (Variables CSS)
+
+```css
+:root {
+    --naranja: #FF6600; /* Color principal de marca */
+    --amarillo: #FFCC00; /* Acentos, estrellas y texto destacado */
+    --rojo:     #FF3300; /* Sombras, alertas y degradados */
+    --oscuro:   #111111; /* Fondo principal de la app */
+    --blanco:   #FFFFFF; /* Texto primario y bordes destacados */
+    --borde-comic: 4px solid #000000; /* Borde brutalista distintivo */
+}
+```[cite: 2]
+
+* **Acentos Especiales:**
+  * **Verde Neón (`#39FF14`):** Utilizado exclusivamente para precios gratis, promociones activas y cupones de recompensa[cite: 2, 3].
+  * **Azul Scanner (`#2196F3`):** Utilizado para interfaces del módulo de administración/escáner QR[cite: 3].
+  * **Efectos Metálicos:** Degradados cromo y oro (`#FFD700`, `#FFA500`) para la tarjeta digital (*CheskoCard*) y álbum de medallas[cite: 3].
+
+---
+
+## 🔤 3. Tipografía
+* **Títulos y Logotipo (`font-family: 'Luckiest Guy'`):** Tipografía gruesa, desenfadada y de gran impacto visual. Se usa en titulares de sección, tarjetas de fidelidad y componentes principales[cite: 2, 3, 4].
+* **Cuerpo y Subtítulos (`font-family: 'Bangers'`):** Tipografía estilo diálogo de historieta, usada para navegación, botones, descripciones principales y textos secundarios[cite: 2, 3, 4].
+* **Texto de Lectura Noche (`font-family: 'Arial Black'`):** Aplicado en la descripción de ítems del menú para mantener la máxima legibilidad en ambientes nocturnos[cite: 2].
+
+---
+
+## 🧩 4. Componentes Principales
+
+### A. Botones Cómic (`.btn-comic`, `.btn-login`, `.btn-escanear`)
+* **Diseño:** Fondo en degradado cálido, bordes sólidos negros de `4px`, `border-radius` curvo[cite: 2, 3].
+* **Efectos:** Sombras rígidas sin difuminado (`box-shadow: 0 6px 0 #000`)[cite: 2, 3].
+* **Interacción (Hover & Active):** Al pasar el cursor suben ligeramente (`translateY(-2px)`) aumentando la sombra, y al hacer clic se "hunden" comprimiendo la sombra a 0[cite: 2, 3].
+
+### B. Logo y Títulos (`.logo-text`, `.section-title`)
+* **Tratamiento:** Múltiples capas de `text-shadow` combinando rojo y negro para simular proyección 3D de historieta[cite: 2].
+* **Detalle de Marca:** Las letras **"C"** y **"K"** dentro del logotipo tienen transformaciones individuales (rotación, cambio de escala y color) para darle dinamismo[cite: 2].
+
+### C. Menú y Tarjetas de Producto (`.item-producto`)
+* **Cajas:** Paneles cuadrados sin redondeo (`border-radius: 0px`) simulando viñetas de historieta[cite: 2].
+* **Etiquetas de Precio (`.item-precio-sticker`):** Estilo *sticker* en forma de pastilla amarilla inclinada a `5deg` con borde negro[cite: 2].
+
+### D. CheskoCard (Gafete Digital Metálico)
+* **Formato:** Tarjeta tipo credencial/gafete con ranura para cinta (*lanyard*)[cite: 3].
+* **Fondo:** Gradiente oscuro profundo con reflejos metálicos animados en diagonal (`@keyframes metalShine`) y micro-puntos[cite: 3].
+* **Modo Fullscreen:** Capa superpuesta (*overlay*) con animación de entrada 3D (`rotateX`), destello cromático de borde y código QR destacado[cite: 3].
+
+### E. Álbum de Retos Coleccionables (`.album-cromo`)
+* **Formato:** Cuadrícula de estampitas/cromos[cite: 3].
+* **Estados:**
+  * **Pendiente:** En escala de grises (`filter: grayscale(1)`), opacidad reducida y candado[cite: 3].
+  * **Completado:** A todo color con bordes de medallas en **Bronce**, **Plata** u **Oro** (esta última con animación de brillo suave)[cite: 3].
+
+---
+
+## 📱 5. Enfoque Responsivo & Performance
+* **Mobile-First / App-like:** Diseñado para comportarse como una aplicación web móvil nativa[cite: 3].
+* **Breakpoints:**
+  * `< 600px`: Ajuste fluido de tamaños de fuente mediante `clamp()`, compresión de padding en tarjetas y conversión de cuadrículas a vista vertical optimizada[cite: 2, 3].
+  * `< 400px`: Compactación extrema de elementos interactivos (botones, sello de cliente, vista de escáner QR)[cite: 3].
+
+```

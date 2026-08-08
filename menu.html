@@ -5,6 +5,10 @@
     No requiere sesión ni toca Supabase; solo usa js/landing.js
     (luces de feria + intercepción del enlace "Ruleta", igual que
     en index.html) y el registro del Service Worker.
+
+    Precios y catálogo sincronizados con la carta (14 bebidas,
+    5 categorías). Las bebidas marcadas "hasta agotar existencias"
+    dependen de inventario (Nestea, Predator, Monster).
 -->
 <html lang="es">
 <head>
@@ -98,7 +102,9 @@
                     </div>
                 </div>
                 
-                <!-- TÍTULOS CON ESTILO BURBUJA DE COMIC -->
+                <!-- ============================================================
+                     CATEGORÍA 1: LOS PREPARADOS
+                     ============================================================ -->
                 <div class="categoria-titulo-comic">🚀 Los Preparados (700 ml)</div>
 
                 <div class="productos-container">
@@ -106,18 +112,18 @@
                     <div class="item-producto">
                         <div class="item-menu-header">
                             <div class="item-nombre">🥭 La Pócima-Mangonosa</div>
-                            <div class="item-precio-sticker">$35</div>
+                            <div class="item-precio-sticker">$40</div>
                         </div>
-                        <div class="item-descripcion">Nuestra fórmula secreta más densa y tropical. El balance perfecto entre el fuego del cuartel y el golpe dulce de la fruta reina. ¡Un clásico de ChesKoretos!</div>
+                        <div class="item-descripcion">Nuestra fórmula secreta más densa y tropical. El balance perfecto entre el fuego del cuartel y el golpe dulce de la fruta reina. Escarchado de chamoy y Tajín. ¡Un clásico de ChesKoretos!</div>
                     </div>
 
                     <!-- Bebida 2 -->
                     <div class="item-producto">
                         <div class="item-menu-header">
-                            <div class="item-nombre">🍍 Burbujas-Tropic</div>
+                            <div class="item-nombre">🍍 Pineapple Burbujas-Tropic</div>
                             <div class="item-precio-sticker">$35</div>
                         </div>
-                        <div class="item-descripcion">Burbujas extremas con el toque exacto de acidez y frescura local. Un viaje directo al oasis que te va a reiniciar el día en un segundo.</div>
+                        <div class="item-descripcion">Burbujas extremas con el toque exacto de acidez y frescura local. Escarchado de Tajín. Un viaje directo al oasis que te va a reiniciar el día en un segundo.</div>
                     </div>
 
                     <!-- Bebida 3 -->
@@ -126,37 +132,137 @@
                             <div class="item-nombre">🔥 BLACK-TWIST</div>
                             <div class="item-precio-sticker">$35</div>
                         </div>
-                        <div class="item-descripcion">El misterio oscuro de la casa con un inesperado 'twist' frutal que desafía las reglas tradicionales. Si buscas algo diferente, esto te volará la cabeza.</div>
+                        <div class="item-descripcion">El misterio oscuro de la casa con un inesperado 'twist' frutal que desafía las reglas tradicionales. Escarchado de chamoy y Tajín. Si buscas algo diferente, esto te volará la cabeza.</div>
                     </div>
+                </div>
 
+                <!-- ============================================================
+                     CATEGORÍA 2: LOS DE SIEMPRE
+                     ============================================================ -->
+                <div class="categoria-titulo-comic">🍋 Los de Siempre (700 ml)</div>
+
+                <div class="productos-container">
                     <!-- Bebida 4 -->
                     <div class="item-producto">
                         <div class="item-menu-header">
-                            <div class="item-nombre">🍃 Punto Zen Blast</div>
-                            <div class="item-precio-sticker">$38</div>
+                            <div class="item-nombre">🍹 Piñada Mineral</div>
+                            <div class="item-precio-sticker">$40</div>
                         </div>
-                        <div class="item-descripcion">La fusión mística más ligera y balanceada de la barra. Notas herbales y cítricas chocando en un flujo refrescante para los que buscan calmar la sed con estilo.</div>
+                        <div class="item-descripcion">Piña bien cargada con mineral bien fría: cremosa por dentro, burbujeante por fuera. Escarchado de chamoy. La que pides cuando el calor del parque ya no perdona.</div>
                     </div>
 
                     <!-- Bebida 5 -->
                     <div class="item-producto">
                         <div class="item-menu-header">
-                            <div class="item-nombre">⚡ Special Power</div>
-                            <div class="item-precio-sticker">$45</div>
+                            <div class="item-nombre">🍋 Limonada Mineral</div>
+                            <div class="item-precio-sticker">$35</div>
                         </div>
-                        <div class="item-descripcion">Poder puro en el vaso. Un choque electrizante y oscuro diseñado para darte los beats de energía necesarios para conquistar la noche en el parque.</div>
+                        <div class="item-descripcion">La de toda la vida, pero con burbuja y sin miedo al limón. Escarchado de limón con sal. Simple, honesta y de las que se acaban antes de llegar a la banca.</div>
                     </div>
 
                     <!-- Bebida 6 -->
                     <div class="item-producto">
                         <div class="item-menu-header">
+                            <div class="item-nombre">🍊 Naranjada Simple</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Naranja natural, hielo hasta arriba y nada que estorbe. Escarchado ligero de limón con sal. Para los que quieren refrescarse sin tanto drama.</div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     CATEGORÍA 3: SANGRÍAS Y UVAS
+                     ============================================================ -->
+                <div class="categoria-titulo-comic">🍇 Sangrías y Uvas (700 ml)</div>
+
+                <div class="productos-container">
+                    <!-- Bebida 7 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🍇 Sangría con Uvas Enchamoyadas</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Sangría bien fría con uvas enchamoyadas hasta el fondo del vaso. Escarchado de chamoy. Te tomas la bebida y todavía te queda premio abajo.</div>
+                    </div>
+
+                    <!-- Bebida 8 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🌶️ Sangría Uva-Chile</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">La versión brava: dulce de uva al principio y golpe de chile al final. Escarchado de chamoy y Tajín. Para el que le gusta que la bebida le conteste.</div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     CATEGORÍA 4: DE TEMPORADA
+                     ============================================================ -->
+                <div class="categoria-titulo-comic">🌺 De Temporada (700 ml)</div>
+
+                <div class="productos-container">
+                    <!-- Bebida 9 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🌺 Jamaica Mineral</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Jamaica de la casa con mineral: color rojo intenso y ese ácido que despierta. Escarchado de limón con sal. Refresco de abuelita, pero con actitud.</div>
+                    </div>
+
+                    <!-- Bebida 10 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🍉 Sandía Splash</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Sandía fresca licuada al momento, suavecita y dulce. Escarchado de limón con sal. La más noble del menú y la favorita de la banda chica.</div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     CATEGORÍA 5: LOS FUERTES (sujetos a inventario)
+                     ============================================================ -->
+                <div class="categoria-titulo-comic">💥 Los Fuertes (hasta agotar existencias)</div>
+
+                <div class="productos-container">
+                    <!-- Bebida 11 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🍃 Punto Zen Blast</div>
+                            <div class="item-precio-sticker">$40</div>
+                        </div>
+                        <div class="item-descripcion">La fusión mística más ligera y balanceada de la barra. Notas herbales y cítricas chocando en un flujo refrescante para los que buscan calmar la sed con estilo. <strong>¡Hasta agotar existencias!</strong></div>
+                    </div>
+
+                    <!-- Bebida 12 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">⚡ Special Power</div>
+                            <div class="item-precio-sticker">$45</div>
+                        </div>
+                        <div class="item-descripcion">Poder puro en el vaso. Un choque electrizante y oscuro diseñado para darte los beats de energía necesarios para conquistar la noche en el parque. Escarchado de Tajín. <strong>¡Hasta agotar existencias!</strong></div>
+                    </div>
+
+                    <!-- Bebida 13 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
                             <div class="item-nombre">💥 MONSTER Max</div>
                             <div class="item-precio-sticker">$60</div>
                         </div>
-                        <div class="item-descripcion">El jefe pesado del menú. Nuestra fórmula secreta de alta densidad cítrica reservada solo para los verdaderos campeones del parque. ¡Máximo impacto de sabor!</div>
+                        <div class="item-descripcion">El jefe pesado del menú. Nuestra fórmula secreta de alta densidad cítrica reservada solo para los verdaderos campeones del parque. <strong>¡Hasta agotar existencias!</strong></div>
                     </div>
 
-                    <!-- Bebida 7 
+                    <!-- Bebida 14 -->
+                    <div class="item-producto">
+                        <div class="item-menu-header">
+                            <div class="item-nombre">🥤 Cola Turbo Chamoy Bomb</div>
+                            <div class="item-precio-sticker">$35</div>
+                        </div>
+                        <div class="item-descripcion">Cola bien helada convertida en bomba: chamoy, dulces picositos y burbuja que no se rinde. Escarchado de chamoy y Tajín. El sabor que todos conocen, pero pasado por el cuartel.</div>
+                    </div>
+
+                    <!-- Bebida extra
                     <div class="item-producto">
                         <div class="item-menu-header">
                             <div class="item-nombre">🌋 El Volcán ChesKoreto</div>
@@ -165,6 +271,7 @@
                         <div class="item-descripcion">¡Una explosión ácida! Topo Chico mezclada con mucho limón, sal, un extra de chamoy líquido y gomitas/dulces picantes en el fondo.</div>
                     </div>-->
                 </div> 
+
                 <!-- EXTRAS -->
                 <div class="categoria-titulo">➕ Extras y Solidaridad</div>
                 <div class="item-menu">

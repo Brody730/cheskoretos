@@ -1032,6 +1032,20 @@ document.addEventListener("DOMContentLoaded", function() {
         const RADIUS = canvas.width / 2 - 20; const NUM_SECTIONS = CHALLENGES.length;
         const ARC_ANGLE = (2 * Math.PI) / NUM_SECTIONS;
 
+        // Historial de retos caídos ESTA NOCHE (se reinicia solo al cambiar de día,
+        // igual que el scoreboard). Sirve para: 1) no repetir el mismo reto 4 veces
+        // seguidas y 2) darle más chance a los retos que aún no han caído, para que
+        // en una noche completa se vayan turnando todos en vez de repetirse siempre
+        // los mismos de mayor peso.
+        var NIGHT_HISTORY_KEY = 'cheskoretos_ruleta_historial_' + new Date().toLocaleDateString('es-MX');
+        function getNightHistory() {
+            try { return JSON.parse(localStorage.getItem(NIGHT_HISTORY_KEY) || '[]'); } catch (e) { return []; }
+        }
+        function saveNightHistory(history) {
+            try { localStorage.setItem(NIGHT_HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+        }
+        var nightHistory = getNightHistory();
+
         function drawWheel() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save(); ctx.translate(CENTER_X, CENTER_Y); ctx.rotate(currentRotation); ctx.translate(-CENTER_X, -CENTER_Y);
@@ -1058,10 +1072,44 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         function selectWinner() {
-            const totalWeight = CHALLENGES.reduce((sum, ch) => sum + getChallengeWeight(ch), 0);
+            // Si el mismo reto ya cayó 3 veces seguidas, se excluye de este giro
+            // para forzar que le toque a otro.
+            const last3 = nightHistory.slice(-3);
+            const forceExclude = (last3.length === 3 && last3[0] === last3[1] && last3[1] === last3[2]) ? last3[0] : -1;
+
+            // Cuántas veces ha caído cada reto esta noche, para bajarle peso a los
+            // que ya salieron mucho y subírselo (relativamente) a los que casi no
+            // han caído. Así en una noche completa se van turnando todos.
+            const counts = new Array(CHALLENGES.length).fill(0);
+            nightHistory.forEach(function(idx) { if (counts[idx] !== undefined) counts[idx]++; });
+
+            let weights = CHALLENGES.map(function(ch, i) {
+                if (i === forceExclude) return 0;
+                const base = getChallengeWeight(ch);
+                const timesShown = counts[i] || 0;
+                return base / (1 + timesShown);
+            });
+
+            let totalWeight = weights.reduce(function(sum, w) { return sum + w; }, 0);
+            if (totalWeight <= 0) {
+                // Seguridad: si por algún motivo todos quedaron en 0, se usan los
+                // pesos originales (sin excluir nada) para no trabar la ruleta.
+                weights = CHALLENGES.map(function(ch) { return getChallengeWeight(ch); });
+                totalWeight = weights.reduce(function(sum, w) { return sum + w; }, 0);
+            }
+
             let random = Math.random() * totalWeight;
-            for (let i = 0; i < CHALLENGES.length; i++) { random -= getChallengeWeight(CHALLENGES[i]); if (random <= 0) { return i; } }
-            return CHALLENGES.length - 1;
+            let winnerIndex = CHALLENGES.length - 1;
+            for (let i = 0; i < CHALLENGES.length; i++) {
+                random -= weights[i];
+                if (random <= 0) { winnerIndex = i; break; }
+            }
+
+            nightHistory.push(winnerIndex);
+            if (nightHistory.length > 200) nightHistory = nightHistory.slice(-200);
+            saveNightHistory(nightHistory);
+
+            return winnerIndex;
         }
 
         function calculateTargetAngle(winnerIndex) {
