@@ -58,6 +58,22 @@ window.CHALLENGES = [
     discount: "$5",
     complexity: "Fácil"
   },
+  {
+    id: "farmear-aura",
+    title: "FARMEAR AURA",
+    description: "Suelta tu mejor energía: presume tu pose, tu frase y tu carisma frente a la caja, como si estuvieras en un edit viral. Sin reírte, sin romper el personaje. Si el de la caja siente el aura al 100 por ciento, ¡reto superado!",
+    wheelText: "Farmear Aura",
+    discount: "$5",
+    complexity: "Fácil"
+  },
+  {
+    id: "mexicano",
+    title: "EL MEXICANO",
+    description: "Llena el pecho de aire y grita ¡¡VIVA MÉXICO!! a todo pulmón, y remátalo con un grito mexicano bien echado (¡güehuuuuu!). Tienes que hacerlo bien fuerte y con puro orgullo patrio. Si el parque entero se entera, ¡reto superado!",
+    wheelText: "¡Viva México!",
+    discount: "$5",
+    complexity: "Fácil"
+  },
 
   // ═══ NIVEL INTERMEDIO (Descuento: $10) ═══
   {
@@ -117,13 +133,13 @@ window.CHALLENGES = [
     complexity: "Intermedio"
   },
 
-  // ═══ NIVEL DIFÍCIL (Descuento: $15) ═══
+  // ═══ NIVEL DIFÍCIL (Descuento: $10) ═══
   {
     id: "posibilidad",
     title: "¿QUÉ POSIBILIDAD HAY?",
     description: "Conexión mental: a la de tres, tú y el de la caja van a decir un número del 1 al 3 al mismo tiempo. Si dicen exactamente el mismo número, ¡ganas!",
     wheelText: "Mismo Número",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -131,7 +147,7 @@ window.CHALLENGES = [
     title: "EL INFLUENCER",
     description: "Presume el antojo: sube una foto o video chido del puesto a tus historias de Instagram o Facebook etiquetándonos, enséñala en caja y ya ganaste tu descuento.",
     wheelText: "Subir Historia",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -139,7 +155,7 @@ window.CHALLENGES = [
     title: "EL RETADOR",
     description: "Te juegas el descuento en una sola ronda a muerte súbita contra el de la caja. Si ganas, te lo llevas a precio especial; si empatan o pierdes, te damos otra oportunidad para que nadie se vaya triste del puesto.",
     wheelText: "Muerte Súbita",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -147,7 +163,7 @@ window.CHALLENGES = [
     title: "EL INVENTOR",
     description: "¡Aquí tú pones las reglas! Invéntate un minireto rápido en ese momento y aplícaselo al cliente que sigue atrás de ti en la fila (ej. Que pida su chesco con voz de Mickey Mouse o cantando).",
     wheelText: "Inventor",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -155,7 +171,7 @@ window.CHALLENGES = [
     title: "EL MILIMÉTRICO",
     description: "Pones un vaso vacío en la mesa. El cliente toma una jarra y tiene que llenar el vaso hasta una línea exacta marcada con cinta, pero con los ojos bien cerrados. Si se queda a menos de un dedo de distancia de la línea (sin pasarse), ¡gana!",
     wheelText: "Cubero",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -163,7 +179,7 @@ window.CHALLENGES = [
     title: "REFLEJO X",
     description: "Pones tus manos con las palmas hacia arriba a la altura del pecho. El cliente pone las suyas encima flotando (sin tocarte). El cliente tiene que intentar darte un manotazo leve en las palmas antes de que tú las quites. Tienen 3 intentos para lograrlo.",
     wheelText: "Reflejos",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
   {
@@ -171,7 +187,7 @@ window.CHALLENGES = [
     title: "EL RELOJ HUMANO",
     description: "Le pides al cliente que cierre los ojos. Cuando diga 'ya', tú activas el cronómetro en caja. El cliente tiene que decir 'stop' exactamente cuando crea que pasaron 7 segundos (sin ver). Si lo detiene entre el segundo 6.5 y el 7.5, ¡reto superado!",
     wheelText: "Reloj",
-    discount: "$15",
+    discount: "$10",
     complexity: "Difícil"
   },
 
@@ -189,7 +205,7 @@ window.CHALLENGES = [
   {
     id: "donativo",
     title: "EL DONATIVO",
-    description: "Aquí no hay esfuerzo físico ni osos. Pagas un precio intermedio de $30 pesitos, y esos $5 extras de ganancia se van directo a la 'caja de buena onda' para patrocinar el chesco del próximo suertudote.",
+    description: "Aquí no hay esfuerzo físico ni osos. Pagas un precio intermedio de $40 pesitos, y esos $5 extras de ganancia se van directo a la 'caja de buena onda' para patrocinar el chesco del próximo suertudote.",
     wheelText: "Donativo",
     discount: "PRECIO COMPLETO",
     complexity: "Especial"
@@ -201,6 +217,8 @@ var CHALLENGE_COLORS = {
   volado: "#FF9800",
   miron: "#607D8B",
   chistosito: "#FF4081",
+  "farmear-aura": "#AA00FF",
+  mexicano: "#006847",
   botellazo: "#009688",
   griton: "#FF5722",
   mimo: "#795548",
@@ -224,6 +242,8 @@ var CHALLENGE_EMOJIS = {
   volado: "🪙",
   miron: "👀",
   chistosito: "🎭",
+  "farmear-aura": "🌟",
+  mexicano: "🎺",
   botellazo: "🍾",
   griton: "📣",
   mimo: "🤫",
@@ -700,7 +720,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div style="font-size: 1.2rem; color: #FFCC00; font-family: 'Luckiest Guy', sans-serif; letter-spacing: 2px;">¡RETO OBTENIDO!</div>
                 <h2 id="modalTitle">EL RETO</h2>
                 <p id="modalDesc">Descripción del juego...</p>
-                <div><span class="modal-price-badge" id="modalBadge">$25</span></div>
+                <div><span class="modal-price-badge" id="modalBadge">$10</span></div>
                 <div><button type="button" class="btn-cerrar-modal" id="btnCerrarModal">¡ACEPTAR RETO!</button></div>
             `;
             document.body.appendChild(modalGigante);
